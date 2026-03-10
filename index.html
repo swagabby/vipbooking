@@ -127,200 +127,168 @@
         </div>
     </div>
 
-    <script>
-        const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        const GAS_API = 'https://script.google.com/macros/s/AKfycbyJ4XOkzGnttpknKQSBGHDOuTxGfcj3J_qT62X7Soo1lsXnI-bprJC6l0SUubj4cNWgtw/exec';
+<!-- 替換 index.html 內的 script 部分 -->
+<script>
+    const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
+    const GAS_API = 'https://script.google.com/macros/s/AKfycbyJ4XOkzGnttpknKQSBGHDOuTxGfcj3J_qT62X7Soo1lsXnI-bprJC6l0SUubj4cNWgtw/exec';
 
-        let currentUser = { id: '', level: 0, username: '' };
-        let currentWelfare = null;
-        let bookedData = []; // 大神贊助的現有預約數據
+    let currentUser = { id: '', level: 0, username: '' };
+    let currentWelfare = null;
+    let bookedData = [];
 
-        const WELFARES = [
-            { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時' },
-            { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會交流互動' },
-            { id: '3', name: '訂製小鈴噹通知', lv: 60, desc: '為心儀主播客製化通知宣傳' },
-            { id: '4', name: '蓋板創作者封面', lv: 70, desc: '專屬全站進入蓋板曝光製作' },
-            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '指定創作者 ID 於搜尋框展示' },
-            { id: '6', name: '訂製專屬徽章', lv: 80, desc: '打造專屬直播間徽章身份象徵' },
-            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '打造專屬直播間動畫禮物' },
-            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光' }
-        ];
+    const WELFARES = [
+        { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時' },
+        { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會交流互動' },
+        { id: '3', name: '訂製小鈴噹通知', lv: 60, desc: '為心儀主播客製化通知宣傳' },
+        { id: '4', name: '蓋板創作者封面', lv: 70, desc: '專屬全站進入蓋板曝光製作' },
+        { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '指定創作者 ID 於搜尋框展示' },
+        { id: '6', name: '訂製專屬徽章', lv: 80, desc: '打造專屬直播間徽章身份象徵' },
+        { id: '7', name: '訂製專屬禮物', lv: 80, desc: '打造專屬直播間動畫禮物' },
+        { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光' }
+    ];
 
-        async function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentUser.id = urlParams.get('user_id');
+    async function init() {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentUser.id = urlParams.get('user_id');
+        if (!currentUser.id) return document.getElementById('u-name').innerText = "未提供 User ID";
 
-            if (!currentUser.id) {
-                document.getElementById('u-name').innerText = "未提供 User ID";
-                return;
-            }
-
-            try {
-                const response = await fetch(`${USER_API}?user_id=${currentUser.id}`);
-                const data = await response.json();
-                
-                currentUser.username = data.username || data.display_name || `User_${currentUser.id}`;
-                currentUser.level = data.level || (data.data && data.data.level) || 0;
-                
-                document.getElementById('u-name').innerText = currentUser.username;
-                document.getElementById('u-lv').innerText = `LV.${currentUser.level}`;
-                
-                renderCards();
-            } catch (err) {
-                document.getElementById('u-name').innerText = "API Offline";
-            } finally {
-                document.getElementById('loading-view').classList.add('hidden');
-                document.getElementById('benefit-grid').classList.remove('hidden');
-            }
-        }
-
-        function renderCards() {
-            const grid = document.getElementById('benefit-grid');
-            grid.innerHTML = WELFARES.map(w => {
-                const locked = currentUser.level < w.lv;
-                return `
-                    <div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openBooking('${w.id}')`}">
-                        <div>
-                            <div class="card-tag">LV.${w.lv} Requirement</div>
-                            <h3 class="card-title">${w.name}</h3>
-                            <p class="card-desc">${w.desc}</p>
-                        </div>
-                        <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約 →'}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-async function openBooking(id) {
-    currentWelfare = WELFARES.find(w => w.id === id);
-    document.getElementById('m-name').innerText = currentWelfare.name;
-    document.getElementById('modal').style.display = 'flex';
-    
-    // 初始化 UI
-    document.getElementById('anchor_id').value = '';
-    document.getElementById('reserve_content').value = '';
-
-    if (currentWelfare.name === '大神贊助') {
-        // 先顯示一個正在載入的提示
-        document.getElementById('date-group').innerHTML = `<label>預約日期</label><select id="reserve_date" disabled><option>正在載入名額狀況...</option></select>`;
-        
         try {
-            // 嘗試從 GAS 抓取數據
-            const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
-            if (!res.ok) throw new Error("Network response was not ok");
-            bookedData = await res.json();
-            console.log("已載入預約數據:", bookedData);
-        } catch(e) {
-            console.error("讀取名額失敗，改用預設模式:", e);
-            bookedData = []; // 失敗時設為空陣列，讓用戶仍可填寫
+            const response = await fetch(`${USER_API}?user_id=${currentUser.id}`);
+            const data = await response.json();
+            currentUser.username = data.username || `User_${currentUser.id}`;
+            currentUser.level = data.level || (data.data && data.data.level) || 0;
+            document.getElementById('u-name').innerText = currentUser.username;
+            document.getElementById('u-lv').innerText = `LV.${currentUser.level}`;
+            renderCards();
+        } catch (err) {
+            document.getElementById('u-name').innerText = "API Offline";
+        } finally {
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('benefit-grid').classList.remove('hidden');
         }
-        setupGrandSponsorUI(); // 確保無論成功失敗都會呼叫 UI 設定
-    } else {
-        // 其他福利
-        document.getElementById('date-group').innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
     }
-}
 
-function setupGrandSponsorUI() {
-    const anchorInput = document.getElementById('anchor_id');
-    const dateGroup = document.getElementById('date-group');
-    
-    dateGroup.innerHTML = `
-        <label>預約日期 (自動過濾額滿與衝突)</label>
-        <select id="reserve_date" disabled>
-            <option value="">請先輸入主播 ID...</option>
-        </select>
-    `;
+    function renderCards() {
+        const grid = document.getElementById('benefit-grid');
+        grid.innerHTML = WELFARES.map(w => {
+            const locked = currentUser.level < w.lv;
+            return `<div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openBooking('${w.id}')`}">
+                <div>
+                    <div class="card-tag">LV.${w.lv} Requirement</div>
+                    <h3 class="card-title">${w.name}</h3>
+                    <p class="card-desc">${w.desc}</p>
+                </div>
+                <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約 →'}</div>
+            </div>`;
+        }).join('');
+    }
 
-    // 監聽主播 ID 輸入
-    anchorInput.oninput = () => {
-        const anchorId = anchorInput.value.trim();
-        const select = document.getElementById('reserve_date');
+    async function openBooking(id) {
+        currentWelfare = WELFARES.find(w => w.id === id);
+        document.getElementById('m-name').innerText = currentWelfare.name;
+        document.getElementById('modal').style.display = 'flex';
         
-        if (anchorId.length < 3) {
-            select.disabled = true;
-            select.innerHTML = '<option value="">請先輸入完整主播 ID...</option>';
-            return;
-        }
+        // 重置 UI
+        document.getElementById('anchor_id').value = '';
+        document.getElementById('reserve_content').value = '';
+        
+        const dateGroup = document.getElementById('date-group');
 
-        select.disabled = false;
-        select.innerHTML = '<option value="">請選擇日期...</option>';
-
-        const today = new Date();
-        for (let i = 1; i <= 30; i++) {
-            const d = new Date(today);
-            d.setDate(today.getDate() + i);
-            const dateStr = d.toISOString().split('T')[0];
-
-            // 比對現有數據
-            const dayBookings = bookedData.filter(b => b.date === dateStr);
-            const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
-            const totalCount = dayBookings.length;
-            const userMonthCount = bookedData.filter(b => b.user_id == currentUser.id && b.date.startsWith(dateStr.substring(0,7))).length;
-
-            let status = "";
-            let disabled = false;
-
-            if (currentUser.level >= 90) {
-                if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
-                else if (isAnchorOccupied) { status = " (此主播已被預約)"; disabled = true; }
-                else { status = " (Lv.90 特權)"; }
-            } else {
-                if (userMonthCount >= 1) { status = " (本月1次已滿)"; disabled = true; }
-                else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
-                else if (totalCount >= 3) { status = " (預約額滿)"; disabled = true; }
-            }
-
-            const opt = document.createElement('option');
-            opt.value = dateStr;
-            opt.text = `${dateStr}${status}`;
-            opt.disabled = disabled;
-            select.add(opt);
-        }
-    };
-}
-
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-        async function handleFormSubmit() {
-            const btn = document.getElementById('btn-submit');
-            const dateVal = document.getElementById('reserve_date').value;
-            const anchorId = document.getElementById('anchor_id').value;
-
-            if (!anchorId) return alert("請輸入主播 ID");
-            if (!dateVal) return alert("請選擇預約日期");
-
-            const data = {
-                user_id: String(currentUser.id),
-                username: String(currentUser.username),
-                level: Number(currentUser.level),
-                benefit: String(currentWelfare.name),
-                anchor_id: String(anchorId),
-                date: String(dateVal),
-                content: String(document.getElementById('reserve_content').value)
-            };
-
-            btn.disabled = true;
-            btn.innerText = "正在提交...";
-
+        if (currentWelfare.name === '大神贊助') {
+            // 大神贊助：顯示「下拉選單」並嘗試載入名額
+            dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date"><option value="">正在載入名額狀況...</option></select>`;
+            
             try {
-                await fetch(GAS_API, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(data)
-                });
-                alert("預約成功！資料已同步至試算表。");
-                closeModal();
-                location.reload();
-            } catch (err) {
-                alert("提交失敗，請檢查網路");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "確認提交申請";
+                const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
+                bookedData = await res.json();
+            } catch(e) {
+                console.error("名額讀取失敗", e);
+                bookedData = [];
             }
+            updateGrandSponsorCalendar();
+        } else {
+            // 其他福利：顯示「標準月曆」
+            dateGroup.innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
         }
+    }
 
-        init();
-    </script>
+    // 針對大神贊助更新下拉選單
+    function updateGrandSponsorCalendar() {
+        const select = document.getElementById('reserve_date');
+        const anchorInput = document.getElementById('anchor_id');
+        
+        // 建立更新函式
+        const refreshOptions = () => {
+            const anchorId = anchorInput.value.trim();
+            select.innerHTML = anchorId ? '<option value="">請選擇日期...</option>' : '<option value="">請先輸入主播 ID</option>';
+            if (!anchorId) return;
+
+            const today = new Date();
+            for (let i = 1; i <= 30; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                const dateStr = d.toISOString().split('T')[0];
+
+                const dayBookings = bookedData.filter(b => b.date === dateStr);
+                const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
+                const userMoCount = bookedData.filter(b => b.user_id == currentUser.id && b.date.startsWith(dateStr.substring(0,7))).length;
+
+                let status = "";
+                let disabled = false;
+
+                if (currentUser.level >= 90) {
+                    if (userMoCount >= 2) { status = " (本月已達2次)"; disabled = true; }
+                    else if (isAnchorOccupied) { status = " (主播已被預約)"; disabled = true; }
+                } else {
+                    if (userMoCount >= 1) { status = " (本月已預約過)"; disabled = true; }
+                    else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
+                    else if (dayBookings.length >= 3) { status = " (名額已滿)"; disabled = true; }
+                }
+
+                const opt = document.createElement('option');
+                opt.value = dateStr;
+                opt.text = `${dateStr}${status}`;
+                opt.disabled = disabled;
+                select.add(opt);
+            }
+        };
+
+        anchorInput.oninput = refreshOptions;
+        refreshOptions(); // 初始化一次
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    async function handleFormSubmit() {
+        const btn = document.getElementById('btn-submit');
+        const payload = {
+            user_id: String(currentUser.id),
+            level: Number(currentUser.level),
+            benefit: String(currentWelfare.name),
+            anchor_id: String(document.getElementById('anchor_id').value),
+            date: String(document.getElementById('reserve_date').value),
+            content: String(document.getElementById('reserve_content').value)
+        };
+
+        if (!payload.anchor_id || !payload.date) return alert("請完整填寫主播 ID 與日期");
+
+        btn.disabled = true;
+        btn.innerText = "提交中...";
+
+        try {
+            await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("預約成功！");
+            closeModal();
+            location.reload();
+        } catch (err) {
+            alert("提交失敗");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "確認提交申請";
+        }
+    }
+
+    init();
+</script>
 </body>
 </html>
