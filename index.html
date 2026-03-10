@@ -265,12 +265,12 @@
 async function submitData() {
     const btn = document.getElementById('btn-submit');
     const payload = {
-        user_id: user.id,
-        level: user.level,
-        benefit: activeBenefit.name,
-        anchor_id: document.getElementById('anchor_id').value,
-        date: document.getElementById('reserve_date').value,
-        content: document.getElementById('reserve_content').value
+        user_id: String(user.id),  // 強制轉字串
+        level: Number(user.level), // 強制轉數字
+        benefit: String(activeBenefit.name),
+        anchor_id: String(document.getElementById('anchor_id').value),
+        date: String(document.getElementById('reserve_date').value),
+        content: String(document.getElementById('reserve_content').value)
     };
 
     if (!payload.anchor_id) return alert("請填寫主播 ID");
@@ -280,30 +280,27 @@ async function submitData() {
     btn.innerText = "提交中...";
 
     try {
-        // 使用更穩定的 fetch 方式
+        // 使用 fetch 發送
         await fetch(API_GAS, {
             method: 'POST',
-            mode: 'no-cors', // 必須使用 no-cors 以跳過 GAS 的轉向限制
-            headers: {
-                'Content-Type': 'text/plain', // GAS 接收 JSON 字串的最穩方式
-            },
-            body: JSON.stringify(payload)
+            mode: 'no-cors', 
+            // 這裡不要設定 headers，在 no-cors 下設定 headers 有時會導致出錯
+            body: JSON.stringify(payload) 
         });
 
-        // 由於 no-cors 模式無法讀取回傳值，我們直接提示用戶並重新載入
-        alert("預約資料已成功送出！\n請稍候 3-5 秒後檢查試算表。");
+        // 成功提示
+        alert("【預約成功】\n資料已送出至後台處理！");
         closeModal();
         location.reload();
 
     } catch (e) {
-        console.error("Submit Error:", e);
-        alert("提交發生錯誤，請稍後再試。");
+        alert("提交發生異常，請聯絡管理員");
+        console.error("Submit error:", e);
     } finally {
         btn.disabled = false;
         btn.innerText = "確認提交預約";
     }
 }
-
         function setLang(lang) {
             const t = {
                 zh: { title: "VIP 預約系統", sub: "尊榮會員專屬福利預定服務" },
