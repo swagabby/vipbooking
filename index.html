@@ -191,94 +191,94 @@
             }).join('');
         }
 
-        async function openBooking(id) {
-            currentWelfare = WELFARES.find(w => w.id === id);
-            document.getElementById('m-name').innerText = currentWelfare.name;
-            document.getElementById('modal').style.display = 'flex';
-            
-            // 重置輸入
-            document.getElementById('anchor_id').value = '';
-            document.getElementById('reserve_content').value = '';
+async function openBooking(id) {
+    currentWelfare = WELFARES.find(w => w.id === id);
+    document.getElementById('m-name').innerText = currentWelfare.name;
+    document.getElementById('modal').style.display = 'flex';
+    
+    // 初始化 UI
+    document.getElementById('anchor_id').value = '';
+    document.getElementById('reserve_content').value = '';
 
-            // 大神贊助專屬邏輯
-            if (currentWelfare.name === '大神贊助') {
-                document.getElementById('btn-submit').disabled = true;
-                document.getElementById('btn-submit').innerText = '正在檢查名額...';
-                
-                try {
-                    const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
-                    bookedData = await res.json();
-                    setupGrandSponsorUI();
-                } catch(e) {
-                    alert("名額讀取失敗");
-                } finally {
-                    document.getElementById('btn-submit').disabled = false;
-                    document.getElementById('btn-submit').innerText = '確認提交申請';
-                }
+    if (currentWelfare.name === '大神贊助') {
+        // 先顯示一個正在載入的提示
+        document.getElementById('date-group').innerHTML = `<label>預約日期</label><select id="reserve_date" disabled><option>正在載入名額狀況...</option></select>`;
+        
+        try {
+            // 嘗試從 GAS 抓取數據
+            const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
+            if (!res.ok) throw new Error("Network response was not ok");
+            bookedData = await res.json();
+            console.log("已載入預約數據:", bookedData);
+        } catch(e) {
+            console.error("讀取名額失敗，改用預設模式:", e);
+            bookedData = []; // 失敗時設為空陣列，讓用戶仍可填寫
+        }
+        setupGrandSponsorUI(); // 確保無論成功失敗都會呼叫 UI 設定
+    } else {
+        // 其他福利
+        document.getElementById('date-group').innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
+    }
+}
+
+function setupGrandSponsorUI() {
+    const anchorInput = document.getElementById('anchor_id');
+    const dateGroup = document.getElementById('date-group');
+    
+    dateGroup.innerHTML = `
+        <label>預約日期 (自動過濾額滿與衝突)</label>
+        <select id="reserve_date" disabled>
+            <option value="">請先輸入主播 ID...</option>
+        </select>
+    `;
+
+    // 監聽主播 ID 輸入
+    anchorInput.oninput = () => {
+        const anchorId = anchorInput.value.trim();
+        const select = document.getElementById('reserve_date');
+        
+        if (anchorId.length < 3) {
+            select.disabled = true;
+            select.innerHTML = '<option value="">請先輸入完整主播 ID...</option>';
+            return;
+        }
+
+        select.disabled = false;
+        select.innerHTML = '<option value="">請選擇日期...</option>';
+
+        const today = new Date();
+        for (let i = 1; i <= 30; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+            const dateStr = d.toISOString().split('T')[0];
+
+            // 比對現有數據
+            const dayBookings = bookedData.filter(b => b.date === dateStr);
+            const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
+            const totalCount = dayBookings.length;
+            const userMonthCount = bookedData.filter(b => b.user_id == currentUser.id && b.date.startsWith(dateStr.substring(0,7))).length;
+
+            let status = "";
+            let disabled = false;
+
+            if (currentUser.level >= 90) {
+                if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
+                else if (isAnchorOccupied) { status = " (此主播已被預約)"; disabled = true; }
+                else { status = " (Lv.90 特權)"; }
             } else {
-                // 其他福利使用標準日期選單
-                document.getElementById('date-group').innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
+                if (userMonthCount >= 1) { status = " (本月1次已滿)"; disabled = true; }
+                else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
+                else if (totalCount >= 3) { status = " (預約額滿)"; disabled = true; }
             }
+
+            const opt = document.createElement('option');
+            opt.value = dateStr;
+            opt.text = `${dateStr}${status}`;
+            opt.disabled = disabled;
+            select.add(opt);
         }
-
-        function setupGrandSponsorUI() {
-            const anchorInput = document.getElementById('anchor_id');
-            const dateGroup = document.getElementById('date-group');
-            
-            dateGroup.innerHTML = `
-                <label>預約日期 (自動過濾額滿與衝突)</label>
-                <select id="reserve_date" disabled>
-                    <option value="">請先輸入主播 ID...</option>
-                </select>
-            `;
-
-            anchorInput.oninput = () => {
-                const anchorId = anchorInput.value.trim();
-                const select = document.getElementById('reserve_date');
-                
-                if (anchorId.length < 3) {
-                    select.disabled = true;
-                    select.innerHTML = '<option value="">請輸入完整的主播 ID...</option>';
-                    return;
-                }
-
-                select.disabled = false;
-                select.innerHTML = '<option value="">請選擇日期...</option>';
-
-                // 產生接下來 30 天
-                const today = new Date();
-                for (let i = 1; i <= 30; i++) {
-                    const d = new Date(today);
-                    d.setDate(today.getDate() + i);
-                    const dateStr = d.toISOString().split('T')[0];
-
-                    // 檢查邏輯
-                    const dayBookings = bookedData.filter(b => b.date === dateStr);
-                    const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
-                    const totalCount = dayBookings.length;
-                    const userMonthCount = bookedData.filter(b => b.user_id == currentUser.id && b.date.startsWith(dateStr.substring(0,7))).length;
-
-                    let status = "";
-                    let disabled = false;
-
-                    if (currentUser.level >= 90) {
-                        if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
-                        else if (isAnchorOccupied) { status = " (此主播當天已被預約)"; disabled = true; }
-                        else { status = " (Lv.90 優先名額)"; }
-                    } else {
-                        if (userMonthCount >= 1) { status = " (本月1次已滿)"; disabled = true; }
-                        else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
-                        else if (totalCount >= 3) { status = " (預約額滿)"; disabled = true; }
-                    }
-
-                    const opt = document.createElement('option');
-                    opt.value = dateStr;
-                    opt.text = `${dateStr}${status}`;
-                    opt.disabled = disabled;
-                    select.add(opt);
-                }
-            };
-        }
+    };
+}
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
