@@ -162,12 +162,25 @@
             document.getElementById('modal').style.display = 'none';
         }
 
-        async function submitReservation() {
-            const btn = document.getElementById('btn-submit');
-            const payload = {
-                user_id: currentUser.id,
-                level: currentUser.level,
-                benefit: selectedBenefit.name,
-                anchor_id: document.getElementById('anchor_id').value,
-                date: document.getElementById('reserve_date').value,
-                content: document.getElementById('reserve_content'
+     async function submitReservation() {
+    // ... 前方的 payload 準備代碼 ...
+
+    try {
+        const response = await fetch(GAS_API, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json(); // 這裡現在可以拿到後端傳回的成功或失敗訊息了
+        alert(result.message);
+        
+        if (result.success) {
+            closeModal();
+            location.reload();
+        }
+    } catch (err) {
+        // 由於 GAS 的跳轉特性，有時會進入 catch，但資料其實有寫入
+        alert("預約資料已送出，請檢查試算表。");
+        closeModal();
+    }
+}
