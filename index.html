@@ -262,39 +262,47 @@
             document.getElementById('modal').style.display = 'none';
         }
 
-        async function submitData() {
-            const btn = document.getElementById('btn-submit');
-            const payload = {
-                user_id: user.id,
-                level: user.level,
-                benefit: activeBenefit.name,
-                anchor_id: document.getElementById('anchor_id').value,
-                date: document.getElementById('reserve_date').value,
-                content: document.getElementById('reserve_content').value
-            };
+async function submitData() {
+    const btn = document.getElementById('btn-submit');
+    const payload = {
+        user_id: user.id,
+        level: user.level,
+        benefit: activeBenefit.name,
+        anchor_id: document.getElementById('anchor_id').value,
+        date: document.getElementById('reserve_date').value,
+        content: document.getElementById('reserve_content').value
+    };
 
-            if (!payload.anchor_id) return alert("請填寫主播 ID");
-            if (activeBenefit.hasDate && !payload.date) return alert("請選擇預約日期");
+    if (!payload.anchor_id) return alert("請填寫主播 ID");
+    if (activeBenefit.hasDate && !payload.date) return alert("請選擇預約日期");
 
-            btn.disabled = true;
-            btn.innerText = "提交中...";
+    btn.disabled = true;
+    btn.innerText = "提交中...";
 
-            try {
-                await fetch(API_GAS, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    body: JSON.stringify(payload)
-                });
-                alert("提交成功！");
-                closeModal();
-                location.reload();
-            } catch (e) {
-                alert("提交失敗，請檢查連線");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "確認提交預約";
-            }
-        }
+    try {
+        // 使用更穩定的 fetch 方式
+        await fetch(API_GAS, {
+            method: 'POST',
+            mode: 'no-cors', // 必須使用 no-cors 以跳過 GAS 的轉向限制
+            headers: {
+                'Content-Type': 'text/plain', // GAS 接收 JSON 字串的最穩方式
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // 由於 no-cors 模式無法讀取回傳值，我們直接提示用戶並重新載入
+        alert("預約資料已成功送出！\n請稍候 3-5 秒後檢查試算表。");
+        closeModal();
+        location.reload();
+
+    } catch (e) {
+        console.error("Submit Error:", e);
+        alert("提交發生錯誤，請稍後再試。");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "確認提交預約";
+    }
+}
 
         function setLang(lang) {
             const t = {
