@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare System</title>
     <style>
-        /* --- 2025 Modern Dark Mode CSS --- */
+        /* --- 2025 Modern Dark Style (Zero Dependency) --- */
         :root {
             --bg: #050505;
             --card-bg: rgba(255, 255, 255, 0.04);
             --border: rgba(255, 255, 255, 0.1);
             --primary: #ff5a5f;
-            --primary-hover: #ff4046;
+            --primary-glow: rgba(255, 90, 95, 0.3);
             --text-main: #ffffff;
             --text-dim: #888888;
         }
@@ -25,20 +25,20 @@
 
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
-        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
 
         /* User Info Pill */
         .user-pill {
             display: inline-flex; align-items: center;
             background: var(--card-bg); border: 1px solid var(--border);
             padding: 10px 25px; border-radius: 100px; margin-top: 20px; gap: 12px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         }
         .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
-        #u-name { font-weight: 800; color: #fff; }
+        #u-name { font-weight: 800; color: #fff; font-size: 15px; }
         #u-lv { font-weight: 800; color: var(--primary); background: rgba(255,90,95,0.1); padding: 2px 10px; border-radius: 50px; font-size: 12px; }
 
-        /* Benefit Grid */
+        /* Grid */
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
         
         .card {
@@ -46,7 +46,7 @@
             padding: 30px; transition: all 0.3s ease; cursor: pointer;
             display: flex; flex-direction: column; justify-content: space-between; min-height: 190px;
         }
-        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 12px 30px -10px rgba(255, 90, 95, 0.3); }
+        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 12px 30px -10px var(--primary-glow); }
         .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
 
         .card-tag { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 12px; }
@@ -54,7 +54,7 @@
         .card-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
         .card-btn { margin-top: 20px; font-size: 12px; font-weight: 700; color: var(--primary); }
 
-        /* Loading Skeleton */
+        /* Skeleton Loading */
         .skeleton { background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; height: 190px; border-radius: 28px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
@@ -62,7 +62,7 @@
         #modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: none; align-items: center; justify-content: center;
-            z-index: 1000; padding: 20px; backdrop-filter: blur(12px);
+            z-index: 1000; padding: 20px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
         }
         .modal-content {
             background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px;
@@ -76,7 +76,7 @@
             width: 100%; background: #1a1a1a; border: 1px solid var(--border);
             border-radius: 14px; padding: 15px; color: #fff; outline: none; font-size: 14px;
         }
-        input:focus { border-color: var(--primary); }
+        input:focus, select:focus { border-color: var(--primary); }
         select:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .submit-btn {
@@ -132,7 +132,7 @@
             </div>
             
             <div class="form-group" id="date-group">
-                <!-- Date input or Select will be rendered here -->
+                <!-- Date logic injected here -->
             </div>
             
             <div class="form-group">
@@ -145,13 +145,13 @@
     </div>
 
     <script>
-        // 設定 API 終端點
+        // API 網址設定 (請確保與部署網址一致)
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbyJ4XOkzGnttpknKQSBGHDOuTxGfcj3J_qT62X7Soo1lsXnI-bprJC6l0SUubj4cNWgtw/exec';
 
         let currentUser = { id: '', level: 0, username: '' };
         let currentWelfare = null;
-        let grandSponsorBookings = []; // 存放從 GAS 撈回來的大神贊助數據
+        let grandSponsorBookings = []; // 存放從 GAS 撈回來的大神贊助分頁紀錄
 
         const WELFARES = [
             { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時' },
@@ -164,7 +164,7 @@
             { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光' }
         ];
 
-        // 初始化：讀取用戶資訊
+        // 初始化：讀取用戶身份與等級
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             currentUser.id = urlParams.get('user_id');
@@ -186,6 +186,7 @@
                 
                 renderCards();
             } catch (err) {
+                console.error("Fetch Level Failed:", err);
                 document.getElementById('u-name').innerText = "API Offline";
             } finally {
                 document.getElementById('loading-view').classList.add('hidden');
@@ -193,7 +194,7 @@
             }
         }
 
-        // 渲染卡片
+        // 渲染福利卡片
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
             grid.innerHTML = WELFARES.map(w => {
@@ -211,7 +212,7 @@
             }).join('');
         }
 
-        // 點擊福利開啟預約
+        // 開啟預約彈窗
         async function openBooking(id) {
             currentWelfare = WELFARES.find(w => w.id === id);
             document.getElementById('m-name').innerText = currentWelfare.name;
@@ -223,29 +224,29 @@
             const dateGroup = document.getElementById('date-group');
 
             if (currentWelfare.name === '大神贊助') {
-                // 特殊邏輯：大神贊助需先從 GAS 撈取名額狀況
-                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date"><option value="">正在檢查名額...</option></select>`;
+                // 特殊邏輯：先向 GAS 讀取「大神贊助」分頁的名額數據
+                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date"><option value="">正在載入大神贊助狀況...</option></select>`;
                 try {
                     const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
                     grandSponsorBookings = await res.json();
                     setupGrandSponsorLogic();
                 } catch(e) {
-                    console.error("名額載入失敗", e);
+                    console.error("載入預約狀況失敗", e);
                     grandSponsorBookings = [];
                     setupGrandSponsorLogic();
                 }
             } else {
-                // 一般福利：顯示標準日期選單
+                // 一般福利：顯示標準月曆
                 dateGroup.innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
             }
         }
 
-        // 大神贊助專用：動態日期過濾邏輯
+        // 大神贊助：下拉選單過濾邏輯
         function setupGrandSponsorLogic() {
             const select = document.getElementById('reserve_date');
             const anchorInput = document.getElementById('anchor_id');
             
-            const refreshDropdown = () => {
+            const refresh = () => {
                 const anchorId = anchorInput.value.trim();
                 if (!anchorId) {
                     select.innerHTML = '<option value="">請先輸入主播 ID</option>';
@@ -257,13 +258,13 @@
                 select.innerHTML = '<option value="">請選擇日期...</option>';
                 
                 const today = new Date();
-                // 產生接下來 30 天
+                // 生成未來 30 天
                 for (let i = 1; i <= 30; i++) {
                     const d = new Date(today);
                     d.setDate(today.getDate() + i);
                     const dateStr = d.toISOString().split('T')[0];
 
-                    // 比對「大神贊助」分頁的紀錄
+                    // 比對「大神贊助」分頁紀錄
                     const dayBookings = grandSponsorBookings.filter(b => b.date === dateStr);
                     const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
                     const userMonthCount = grandSponsorBookings.filter(b => b.user_id == currentUser.id && b.date.substring(0,7) === dateStr.substring(0,7)).length;
@@ -271,16 +272,17 @@
                     let status = "";
                     let disabled = false;
 
+                    // 規則判定
                     if (currentUser.level >= 90) {
-                        // Lv.90 特權：每月限 2 次，不受每日 3 人限制，但同主播不能重複
+                        // Lv 90+: 每月限 2 次，不限每日總人數 (三人)，但主播不能在同一天被重複預約
                         if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
                         else if (isAnchorOccupied) { status = " (此主播已被預約)"; disabled = true; }
                         else { status = " (Lv.90 優先名額)"; }
                     } else {
-                        // 一般用戶：每月限 1 次，每日限 3 人，同主播不能重複
+                        // 一般用戶: 每月限 1 次，每日總限 3 人，且主播不能重複
                         if (userMonthCount >= 1) { status = " (本月已預約過)"; disabled = true; }
                         else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
-                        else if (dayBookings.length >= 3) { status = " (日期額滿)"; disabled = true; }
+                        else if (dayBookings.length >= 3) { status = " (名額已滿)"; disabled = true; }
                     }
 
                     const opt = document.createElement('option');
@@ -291,19 +293,19 @@
                 }
             };
 
-            anchorInput.oninput = refreshDropdown;
-            refreshDropdown();
+            anchorInput.oninput = refresh;
+            refresh();
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // 提交預約
+        // 提交預約資料到 GAS
         async function handleFormSubmit() {
             const btn = document.getElementById('btn-submit');
-            const anchorId = document.getElementById('anchor_id').value;
-            const reserveDate = document.getElementById('reserve_date').value;
+            const anchorId = document.getElementById('anchor_id').value.trim();
+            const dateVal = document.getElementById('reserve_date').value;
 
-            if (!anchorId || !reserveDate) return alert("請完整填寫主播 ID 與日期");
+            if (!anchorId || !dateVal) return alert("請完整填寫主播 ID 與日期");
 
             const payload = {
                 user_id: String(currentUser.id),
@@ -311,33 +313,35 @@
                 level: Number(currentUser.level),
                 benefit: String(currentWelfare.name),
                 anchor_id: String(anchorId),
-                date: String(reserveDate),
+                date: String(dateVal),
                 content: String(document.getElementById('reserve_content').value)
             };
 
             btn.disabled = true;
-            btn.innerText = "正在提交...";
+            btn.innerText = "提交中...";
 
             try {
-                // 使用 POST 提交，GAS 會根據 benefit 自動判斷分頁
+                // POST 提交：GAS 將根據 payload.benefit 自動選擇分頁與發送通知
                 await fetch(GAS_API, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
                 
-                alert("提交成功！申請已記錄於「" + currentWelfare.name + "」分頁。");
+                alert("預約成功！資料已同步至試算表 [" + currentWelfare.name + "] 分頁。");
                 closeModal();
                 location.reload();
+
             } catch (err) {
-                alert("提交失敗，請檢查網路連線");
+                console.error("Submit Error:", err);
+                alert("提交失敗，請檢查網路連線或聯繫管理員。");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "確認提交申請";
             }
         }
 
-        // 多語系簡易切換
+        // 多語系文字切換 (選配)
         function setLanguage(lang) {
             const strings = {
                 zh: { title: "VIP 福利預約系統", anchor: "主播 ID", date: "預約日期", content: "需求備註", submit: "確認提交申請" },
@@ -350,6 +354,7 @@
             document.getElementById('btn-submit').innerText = strings[lang].submit;
         }
 
+        // 啟動程序
         init();
     </script>
 </body>
