@@ -5,20 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare System</title>
     <style>
-        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1); --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888; }
+        :root {
+            --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1);
+            --primary: #ff5a5f; --primary-hover: #ff4046; --text-main: #ffffff; --text-dim: #888888;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text-main); font-family: sans-serif; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        body { 
+            background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif;
+            padding: 40px 20px; display: flex; flex-direction: column; align-items: center;
+        }
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
-        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 10px 25px; border-radius: 100px; margin-top: 20px; gap: 12px; }
+        .user-pill {
+            display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border);
+            padding: 10px 25px; border-radius: 100px; margin-top: 20px; gap: 12px; backdrop-filter: blur(10px);
+        }
         .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
-        #u-name { font-weight: 800; color: #fff; }
+        #u-name { font-weight: 800; color: #fff; font-size: 15px; }
         #u-lv { font-weight: 800; color: var(--primary); background: rgba(255,90,95,0.1); padding: 2px 10px; border-radius: 50px; font-size: 12px; }
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px; padding: 30px; transition: 0.3s; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; }
-        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px;
+            padding: 30px; transition: all 0.3s ease; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px;
+        }
+        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 12px 30px -10px rgba(255, 90, 95, 0.3); }
         .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
-        .card-tag { font-size: 10px; color: var(--text-dim); margin-bottom: 12px; font-weight: 700; }
+        .card-tag { font-size: 10px; font-weight: 700; color: var(--text-dim); margin-bottom: 12px; }
         .card-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
         .card-btn { margin-top: 20px; font-size: 12px; font-weight: 700; color: var(--primary); }
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(15px); }
@@ -27,8 +39,9 @@
         .form-group { margin-bottom: 22px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 14px; padding: 15px; color: #fff; outline: none; font-size: 14px; }
+        input:focus, select:focus { border-color: var(--primary); }
         .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; }
-        .submit-btn:disabled { background: #333; }
+        .submit-btn:disabled { background: #333; cursor: not-allowed; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -39,7 +52,7 @@
             <h1>VIP 福利預約系統</h1>
             <div class="user-pill">
                 <span class="status-dot"></span>
-                <span id="u-name">Syncing Profile...</span>
+                <span id="u-name">正在同步用戶資料...</span>
                 <span id="u-lv">--</span>
             </div>
         </header>
@@ -52,19 +65,24 @@
         <div id="benefit-grid" class="benefit-grid hidden"></div>
     </div>
 
+    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <span class="close-x" onclick="closeModal()">&times;</span>
-            <h2 id="m-title" style="margin-bottom: 25px;">福利預約</h2>
+            <h2 id="m-title" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
+            
             <div class="form-group">
-                <label>指定 Swagger ID</label>
+                <label>指定 Swagger ID / SWAGGER ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入欲預約的 Swagger ID">
             </div>
+            
             <div class="form-group" id="date-group"></div>
+            
             <div class="form-group">
-                <label>需求備註</label>
+                <label>需求備註 / REMARK</label>
                 <textarea id="reserve_content" rows="3" placeholder="請填寫內容..."></textarea>
             </div>
+            
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
     </div>
@@ -75,7 +93,7 @@
 
         let currentUser = { id: '', level: 0, username: '' };
         let currentWelfare = null;
-        let grandSponsorBookings = [];
+        let grandSponsorBookings = []; 
 
         const WELFARES = [
             { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時' },
@@ -89,13 +107,13 @@
         ];
 
         async function init() {
-            const params = new URLSearchParams(window.location.search);
-            currentUser.id = params.get('user_id');
-            if (!currentUser.id) return document.getElementById('u-name').innerText = "Miss User ID";
+            const urlParams = new URLSearchParams(window.location.search);
+            currentUser.id = urlParams.get('user_id');
+            if (!currentUser.id) return document.getElementById('u-name').innerText = "Missing User ID";
             try {
                 const res = await fetch(`${USER_API}?user_id=${currentUser.id}`);
                 const data = await res.json();
-                currentUser.username = data.username || data.display_name || `User_${currentUser.id}`;
+                currentUser.username = data.display_name || data.username || `User_${currentUser.id}`;
                 currentUser.level = data.level || (data.data && data.data.level) || 0;
                 document.getElementById('u-name').innerText = currentUser.username;
                 document.getElementById('u-lv').innerText = `LV.${currentUser.level}`;
@@ -125,10 +143,11 @@
             const dateGroup = document.getElementById('date-group');
 
             if (currentWelfare.name === '大神贊助') {
-                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date" disabled><option>正在檢查可用名額...</option></select>`;
+                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date" disabled><option>正在載入數據...</option></select>`;
                 try {
                     const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
                     grandSponsorBookings = await res.json();
+                    console.log("已從後端抓取預約紀錄：", grandSponsorBookings);
                     setupSwaggerLogic();
                 } catch(e) { grandSponsorBookings = []; setupSwaggerLogic(); }
             } else {
@@ -139,9 +158,11 @@
         function setupSwaggerLogic() {
             const select = document.getElementById('reserve_date');
             const sidInput = document.getElementById('swagger_id');
+            
             const refresh = () => {
                 const sid = sidInput.value.trim();
                 if (!sid) { select.innerHTML = '<option value="">請先輸入 Swagger ID</option>'; select.disabled = true; return; }
+                
                 select.disabled = false;
                 select.innerHTML = '<option value="">請選擇日期...</option>';
                 
@@ -149,25 +170,24 @@
                 for (let i = 1; i <= 30; i++) {
                     const d = new Date(today); d.setDate(today.getDate() + i);
                     
-                    // 手動組建 yyyy-mm-dd 字串，避免時區偏移
+                    // 手動組建 yyyy-mm-dd，確保完全對齊
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
                     const dateStr = `${y}-${m}-${day}`;
 
-                    // 【重點比對邏輯】
+                    // --- 核心比對邏輯 ---
                     const dayBookings = grandSponsorBookings.filter(b => b.date === dateStr);
-                    const isOccupiedBySid = dayBookings.some(b => String(b.swagger_id) === sid);
+                    const isOccupiedBySid = dayBookings.some(b => String(b.swagger_id).trim() === sid);
                     const userCount = grandSponsorBookings.filter(b => b.username === currentUser.username && b.date.substring(0,7) === dateStr.substring(0,7)).length;
                     
                     let st = ""; let dis = false;
-                    if (currentUser.level >= 90) {
+                    if (isOccupiedBySid) { st = " (此ID已被預約)"; dis = true; }
+                    else if (currentUser.level >= 90) {
                         if (userCount >= 2) { st = " (本月2次已滿)"; dis = true; }
-                        else if (isOccupiedBySid) { st = " (此ID已被預約)"; dis = true; }
                     } else {
-                        if (userCount >= 1) { st = " (本月已預約過)"; dis = true; }
-                        else if (isOccupiedBySid) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayBookings.length >= 3) { st = " (名員額滿)"; dis = true; }
+                        if (userCount >= 1) { st = " (本月已約)"; dis = true; }
+                        else if (dayBookings.length >= 3) { st = " (名額已滿)"; dis = true; }
                     }
                     const opt = document.createElement('option'); opt.value = dateStr; opt.text = `${dateStr}${st}`; opt.disabled = dis; select.add(opt);
                 }
@@ -185,12 +205,12 @@
             if (!sid || !date) return alert("請完整填寫 ID 與日期");
 
             btn.disabled = true;
-            btn.innerText = "Processing...";
+            btn.innerText = "Submitting...";
             const payload = { username: currentUser.username, level: currentUser.level, benefit: currentWelfare.name, swagger_id: sid, date: date, content: document.getElementById('reserve_content').value };
 
             try {
                 await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("提交完成！預約已成功記錄。");
+                alert("提交成功！預約已記錄並通知 Slack。");
                 location.reload();
             } catch (err) { alert("連線失敗"); btn.disabled = false; btn.innerText = "確認提交申請"; }
         }
