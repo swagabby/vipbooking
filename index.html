@@ -305,46 +305,46 @@
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
         // 提交預約資料
-        async function handleFormSubmit() {
-            const btn = document.getElementById('btn-submit');
-            const sid = document.getElementById('swagger_id').value.trim();
-            const dateVal = document.getElementById('reserve_date').value;
+       async function handleFormSubmit() {
+    const btn = document.getElementById('btn-submit');
+    const sid = document.getElementById('swagger_id').value.trim();
+    const dateVal = document.getElementById('reserve_date').value;
 
-            if (!sid || !dateVal) return alert("請完整填寫 Swagger ID 與日期");
+    if (!sid || !dateVal) return alert("請完整填寫 Swagger ID 與日期");
 
-            // 準備 Payload，欄位必須對應 GAS v10
-            const payload = {
-                username: String(currentUser.username),
-                level: Number(currentUser.level),
-                benefit: String(currentWelfare.name),
-                swagger_id: String(sid),
-                date: String(dateVal),
-                content: String(document.getElementById('reserve_content').value)
-            };
+    const payload = {
+        username: String(currentUser.username),
+        level: Number(currentUser.level),
+        benefit: String(currentWelfare.name), // 這裡會是「大神贊助」
+        swagger_id: String(sid),
+        date: String(dateVal),
+        content: String(document.getElementById('reserve_content').value)
+    };
 
-            btn.disabled = true;
-            btn.innerText = "Processing...";
+    // --- 除錯用：在控制台列印發送內容 ---
+    console.log("準備發送到 GAS:", payload);
 
-            try {
-                // 使用 POST 提交，GAS 會自動分流至 GrandSponsor 英文分頁
-                await fetch(GAS_API, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
-                
-                alert("預約提交成功！申請已記錄於後台。");
-                closeModal();
-                location.reload();
-            } catch (err) {
-                console.error(err);
-                alert("連線失敗，請檢查網路環境");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "確認提交申請";
-            }
-        }
+    btn.disabled = true;
+    btn.innerText = "Submitting...";
 
+    try {
+        await fetch(GAS_API, {
+            method: 'POST',
+            mode: 'no-cors', // 繞過 CORS
+            body: JSON.stringify(payload)
+        });
+        
+        alert("預約成功！資料已同步。");
+        closeModal();
+        location.reload();
+    } catch (err) {
+        console.error("發送失敗:", err);
+        alert("提交失敗");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "確認提交申請";
+    }
+}
         function setLanguage(lang) {
             const strings = {
                 zh: { title: "VIP 福利預約系統", sub: "探索屬於您的尊榮特權" },
