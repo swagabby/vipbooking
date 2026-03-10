@@ -5,102 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare System</title>
     <style>
-        /* --- 2025 Modern Dark Style (Production Ready) --- */
         :root {
-            --bg: #050505;
-            --card-bg: rgba(255, 255, 255, 0.04);
-            --border: rgba(255, 255, 255, 0.1);
-            --primary: #ff5a5f;
-            --primary-hover: #ff4046;
-            --text-main: #ffffff;
-            --text-dim: #888888;
+            --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1);
+            --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            background-color: var(--bg); color: var(--text-main); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg); color: var(--text-main); font-family: sans-serif;
             padding: 40px 20px; display: flex; flex-direction: column; align-items: center;
         }
-
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
-        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
-
-        /* User Pill - 顯示名稱與等級 */
         .user-pill {
-            display: inline-flex; align-items: center;
-            background: var(--card-bg); border: 1px solid var(--border);
+            display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border);
             padding: 10px 25px; border-radius: 100px; margin-top: 20px; gap: 12px;
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         }
         .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
-        #u-name { font-weight: 800; color: #fff; font-size: 15px; }
+        #u-name { font-weight: 800; color: #fff; }
         #u-lv { font-weight: 800; color: var(--primary); background: rgba(255,90,95,0.1); padding: 2px 10px; border-radius: 50px; font-size: 12px; }
-
-        /* Welfare Cards */
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
-        
         .card {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px;
-            padding: 30px; transition: all 0.3s ease; cursor: pointer;
-            display: flex; flex-direction: column; justify-content: space-between; min-height: 190px;
+            padding: 30px; transition: 0.3s; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px;
         }
-        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 12px 30px -10px rgba(255, 90, 95, 0.3); }
+        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); }
         .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
-
-        .card-tag { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 12px; }
+        .card-tag { font-size: 10px; color: var(--text-dim); margin-bottom: 12px; font-weight: 700; }
         .card-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-        .card-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
         .card-btn { margin-top: 20px; font-size: 12px; font-weight: 700; color: var(--primary); }
-
-        /* Skeleton Loading */
-        .skeleton { background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; height: 190px; border-radius: 28px; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        /* Modal */
-        #modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            display: none; align-items: center; justify-content: center;
-            z-index: 1000; padding: 20px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-        }
-        .modal-content {
-            background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px;
-            width: 100%; max-width: 480px; padding: 35px; position: relative;
-        }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(15px); }
+        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px; width: 100%; max-width: 480px; padding: 35px; position: relative; }
         .close-x { position: absolute; top: 20px; right: 25px; font-size: 28px; cursor: pointer; color: #444; }
-
         .form-group { margin-bottom: 22px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
-        input, select, textarea {
-            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
-            border-radius: 14px; padding: 15px; color: #fff; outline: none; font-size: 14px;
-        }
+        input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 14px; padding: 15px; color: #fff; outline: none; font-size: 14px; }
         input:focus, select:focus { border-color: var(--primary); }
-        select:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .submit-btn {
-            width: 100%; padding: 16px; border-radius: 14px; border: none;
-            background: var(--primary); color: #fff; font-weight: 700; font-size: 16px;
-            cursor: pointer; transition: 0.2s;
-        }
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .submit-btn:disabled { background: #333; cursor: not-allowed; }
-
-        .lang-bar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; }
-        .l-btn { background: var(--card-bg); border: 1px solid var(--border); color: #888; padding: 5px 14px; border-radius: 50px; font-size: 11px; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="lang-bar">
-        <button class="l-btn" onclick="setLanguage('zh')">繁中</button>
-        <button class="l-btn" onclick="setLanguage('en')">EN</button>
-    </div>
-
     <div class="container">
         <header>
-            <h1 id="txt-title">VIP 福利預約系統</h1>
+            <h1>VIP 福利預約系統</h1>
             <div class="user-pill">
                 <span class="status-dot"></span>
                 <span id="u-name">Syncing Profile...</span>
@@ -108,50 +57,39 @@
             </div>
         </header>
 
-        <!-- Loading State -->
         <div id="loading-view" class="benefit-grid">
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
+            <div style="height:190px; background:#111; border-radius:28px;"></div>
+            <div style="height:190px; background:#111; border-radius:28px;"></div>
         </div>
 
-        <!-- Welfare Cards Container -->
         <div id="benefit-grid" class="benefit-grid hidden"></div>
     </div>
 
-    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <span class="close-x" onclick="closeModal()">&times;</span>
-            <h2 id="m-title" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
-            
+            <h2 id="m-title" style="margin-bottom: 25px;">福利預約</h2>
             <div class="form-group">
-                <label>指定 Swagger ID / SWAGGER ID</label>
+                <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入欲預約的 Swagger ID">
             </div>
-            
-            <div class="form-group" id="date-group">
-                <!-- Select will be rendered here for GrandSponsor -->
-            </div>
-            
+            <div class="form-group" id="date-group"></div>
             <div class="form-group">
-                <label>需求備註 / REMARK</label>
-                <textarea id="reserve_content" rows="3" placeholder="請填寫必要文字資訊..."></textarea>
+                <label>需求備註</label>
+                <textarea id="reserve_content" rows="3" placeholder="請填寫內容..."></textarea>
             </div>
-            
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
     </div>
 
     <script>
-        // API 路徑 (請更換為您最新的 GAS URL)
+        // --- 請更換下方的 GAS_API 網址 ---
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        const GAS_API = '您的_最新的_GAS_V10_URL'; 
+        const GAS_API = 'https://script.google.com/macros/s/AKfycbxgiQGZ5kYinQFFzUGq9APlKqFshRheWfoYILTMiXScJ7VzC0a5aVbKYP9HLNpinKuEVw/exec'; 
 
         let currentUser = { id: '', level: 0, username: '' };
         let currentWelfare = null;
-        let grandSponsorBookings = []; // 存放從 GAS GrandSponsor 分頁撈回來的數據
+        let grandSponsorBookings = [];
 
         const WELFARES = [
             { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時' },
@@ -164,196 +102,117 @@
             { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光' }
         ];
 
-        // 啟動：獲取用戶資訊
         async function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentUser.id = urlParams.get('user_id');
-
-            if (!currentUser.id) {
-                document.getElementById('u-name').innerText = "Missing User ID";
-                return;
-            }
-
+            const params = new URLSearchParams(window.location.search);
+            currentUser.id = params.get('user_id');
+            if (!currentUser.id) return document.getElementById('u-name').innerText = "Miss User ID";
             try {
-                const response = await fetch(`${USER_API}?user_id=${currentUser.id}`);
-                const data = await response.json();
-                
-                // 優先解析 Username
-                currentUser.username = data.username || data.display_name || `User_${currentUser.id}`;
+                const res = await fetch(`${USER_API}?user_id=${currentUser.id}`);
+                const data = await res.json();
+                currentUser.username = data.display_name || data.username || `User_${currentUser.id}`;
                 currentUser.level = data.level || (data.data && data.data.level) || 0;
-                
                 document.getElementById('u-name').innerText = currentUser.username;
                 document.getElementById('u-lv').innerText = `LV.${currentUser.level}`;
-                
                 renderCards();
-            } catch (err) {
-                console.error("API Error:", err);
-                document.getElementById('u-name').innerText = "API Offline";
-            } finally {
+            } catch (err) { document.getElementById('u-name').innerText = "API Offline"; }
+            finally {
                 document.getElementById('loading-view').classList.add('hidden');
                 document.getElementById('benefit-grid').classList.remove('hidden');
             }
         }
 
-        // 渲染福利卡片
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
             grid.innerHTML = WELFARES.map(w => {
                 const locked = currentUser.level < w.lv;
-                return `
-                    <div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openBooking('${w.id}')`}">
-                        <div>
-                            <div class="card-tag">LV.${w.lv} Requirement</div>
-                            <h3 class="card-title">${w.name}</h3>
-                            <p class="card-desc">${w.desc}</p>
-                        </div>
-                        <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約 →'}</div>
-                    </div>
-                `;
+                return `<div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openBooking('${w.id}')`}">
+                    <div><div class="card-tag">LV.${w.lv} Requirement</div><h3 class="card-title">${w.name}</h3><p class="card-desc">${w.desc}</p></div>
+                    <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約 →'}</div>
+                </div>`;
             }).join('');
         }
 
-        // 開啟預約彈窗並撈取資料
         async function openBooking(id) {
             currentWelfare = WELFARES.find(w => w.id === id);
             document.getElementById('m-title').innerText = currentWelfare.name;
             document.getElementById('modal').style.display = 'flex';
-            
-            // 重置
-            document.getElementById('swagger_id').value = '';
-            document.getElementById('reserve_content').value = '';
             const dateGroup = document.getElementById('date-group');
 
             if (currentWelfare.name === '大神贊助') {
-                dateGroup.innerHTML = `<label>預約日期 (動態檢查)</label><select id="reserve_date" disabled><option value="">正在載入數據...</option></select>`;
+                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date" disabled><option>載入名額中...</option></select>`;
                 try {
-                    // 對接 GAS v10 action=getGrandSponsorData 讀取英文分頁
                     const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
                     grandSponsorBookings = await res.json();
-                    setupSwaggerCheckLogic();
-                } catch(e) {
-                    console.error("名額載入失敗", e);
-                    grandSponsorBookings = [];
-                    setupSwaggerCheckLogic();
-                }
+                    setupSwaggerLogic();
+                } catch(e) { grandSponsorBookings = []; setupSwaggerLogic(); }
             } else {
-                // 一般福利使用 HTML5 原生月曆
                 dateGroup.innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
             }
         }
 
-        /**
-         * 核心：Swagger ID 即時檢查邏輯
-         * 監聽輸入框，一旦用戶打字就重新計算接下來 30 天的可用性
-         */
-        function setupSwaggerCheckLogic() {
+        function setupSwaggerLogic() {
             const select = document.getElementById('reserve_date');
-            const swaggerInput = document.getElementById('swagger_id');
-            
-            const refreshUI = () => {
-                const sid = swaggerInput.value.trim();
-                if (!sid) {
-                    select.innerHTML = '<option value="">請先輸入 Swagger ID</option>';
-                    select.disabled = true;
-                    return;
-                }
-                
+            const sidInput = document.getElementById('swagger_id');
+            const refresh = () => {
+                const sid = sidInput.value.trim();
+                if (!sid) { select.innerHTML = '<option value="">請先輸入 Swagger ID</option>'; select.disabled = true; return; }
                 select.disabled = false;
                 select.innerHTML = '<option value="">請選擇日期...</option>';
-                
                 const today = new Date();
                 for (let i = 1; i <= 30; i++) {
-                    const d = new Date(today);
-                    d.setDate(today.getDate() + i);
+                    const d = new Date(today); d.setDate(today.getDate() + i);
                     const dateStr = d.toISOString().split('T')[0];
-
-                    // 1. 取得當天所有預約
                     const dayBookings = grandSponsorBookings.filter(b => b.date === dateStr);
-                    // 2. 檢查此 Swagger ID 是否已被約走
-                    const isOccupiedBySid = dayBookings.some(b => b.swagger_id === sid);
-                    // 3. 檢查用戶該月累計次數
-                    const userMonthCount = grandSponsorBookings.filter(b => b.username === currentUser.username && b.date.substring(0,7) === dateStr.substring(0,7)).length;
-
-                    let status = "";
-                    let disabled = false;
-
+                    const isOccupied = dayBookings.some(b => b.swagger_id === sid);
+                    const userCount = grandSponsorBookings.filter(b => b.username === currentUser.username && b.date.substring(0,7) === dateStr.substring(0,7)).length;
+                    let st = ""; let dis = false;
                     if (currentUser.level >= 90) {
-                        // LV 90+ 特權：不限 3 人名額
-                        if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
-                        else if (isOccupiedBySid) { status = " (此 Swagger ID 已被預約)"; disabled = true; }
-                        else { status = " (Lv.90 優先名額)"; }
+                        if (userCount >= 2) { st = " (本月2次已滿)"; dis = true; }
+                        else if (isOccupied) { st = " (此ID已被預約)"; dis = true; }
                     } else {
-                        // 一般用戶：每日限 3 人
-                        if (userMonthCount >= 1) { status = " (本月已預約)"; disabled = true; }
-                        else if (isOccupiedBySid) { status = " (此 Swagger ID 已被預約)"; disabled = true; }
-                        else if (dayBookings.length >= 3) { status = " (名額已滿)"; disabled = true; }
+                        if (userCount >= 1) { st = " (本月已約)"; dis = true; }
+                        else if (isOccupied) { st = " (此ID已被預約)"; dis = true; }
+                        else if (dayBookings.length >= 3) { st = " (名額已滿)"; dis = true; }
                     }
-
-                    const opt = document.createElement('option');
-                    opt.value = dateStr;
-                    opt.text = `${dateStr}${status}`;
-                    opt.disabled = disabled;
-                    select.add(opt);
+                    const opt = document.createElement('option'); opt.value = dateStr; opt.text = `${dateStr}${st}`; opt.disabled = dis; select.add(opt);
                 }
             };
-
-            // 監聽輸入事件
-            swaggerInput.oninput = refreshUI;
-            refreshUI();
+            sidInput.oninput = refresh;
+            refresh();
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // 提交預約資料
-       async function handleFormSubmit() {
-    const btn = document.getElementById('btn-submit');
-    const sid = document.getElementById('swagger_id').value.trim();
-    const dateVal = document.getElementById('reserve_date').value;
+        async function handleFormSubmit() {
+            const btn = document.getElementById('btn-submit');
+            const sid = document.getElementById('swagger_id').value.trim();
+            const date = document.getElementById('reserve_date').value;
+            if (!sid || !date) return alert("請完整填寫 ID 與日期");
 
-    if (!sid || !dateVal) return alert("請完整填寫 Swagger ID 與日期");
+            btn.disabled = true;
+            btn.innerText = "Submitting...";
 
-    const payload = {
-        username: String(currentUser.username),
-        level: Number(currentUser.level),
-        benefit: String(currentWelfare.name), // 這裡會是「大神贊助」
-        swagger_id: String(sid),
-        date: String(dateVal),
-        content: String(document.getElementById('reserve_content').value)
-    };
-
-    // --- 除錯用：在控制台列印發送內容 ---
-    console.log("準備發送到 GAS:", payload);
-
-    btn.disabled = true;
-    btn.innerText = "Submitting...";
-
-    try {
-        await fetch(GAS_API, {
-            method: 'POST',
-            mode: 'no-cors', // 繞過 CORS
-            body: JSON.stringify(payload)
-        });
-        
-        alert("預約成功！資料已同步。");
-        closeModal();
-        location.reload();
-    } catch (err) {
-        console.error("發送失敗:", err);
-        alert("提交失敗");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "確認提交申請";
-    }
-}
-        function setLanguage(lang) {
-            const strings = {
-                zh: { title: "VIP 福利預約系統", sub: "探索屬於您的尊榮特權" },
-                en: { title: "VIP Welfare System", sub: "Exclusive Benefits for You" }
+            const payload = {
+                username: currentUser.username,
+                level: currentUser.level,
+                benefit: currentWelfare.name,
+                swagger_id: sid,
+                date: date,
+                content: document.getElementById('reserve_content').value
             };
-            document.getElementById('txt-title').innerText = strings[lang].title;
-        }
 
-        // 初始化
+            try {
+                // 使用 text/plain 避免 CORS 預檢，確保 GAS 接收成功
+                await fetch(GAS_API, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    body: JSON.stringify(payload)
+                });
+                alert("提交完成！預約已成功記錄。");
+                location.reload();
+            } catch (err) { alert("連線失敗"); btn.disabled = false; btn.innerText = "確認提交申請"; }
+        }
         init();
     </script>
 </body>
