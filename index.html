@@ -11,6 +11,7 @@
             --card-bg: rgba(255, 255, 255, 0.04);
             --border: rgba(255, 255, 255, 0.1);
             --primary: #ff5a5f;
+            --primary-hover: #ff4046;
             --text-main: #ffffff;
             --text-dim: #888888;
         }
@@ -25,15 +26,18 @@
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
         h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-        .subtitle { color: var(--text-dim); font-size: 14px; }
 
+        /* User Pill */
         .user-pill {
             display: inline-flex; align-items: center;
             background: var(--card-bg); border: 1px solid var(--border);
-            padding: 8px 24px; border-radius: 100px; margin-top: 20px;
+            padding: 10px 25px; border-radius: 100px; margin-top: 20px; gap: 12px;
         }
-        .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 10px; box-shadow: 0 0 10px #10b981; }
+        .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
+        #u-name { font-weight: 800; color: #fff; }
+        #u-lv { font-weight: 800; color: var(--primary); background: rgba(255,90,95,0.1); padding: 2px 10px; border-radius: 50px; font-size: 12px; }
 
+        /* Grid */
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
         
         .card {
@@ -41,7 +45,7 @@
             padding: 30px; transition: all 0.3s ease; cursor: pointer;
             display: flex; flex-direction: column; justify-content: space-between; min-height: 190px;
         }
-        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 12px 30px -10px rgba(255, 90, 95, 0.3); }
+        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); }
         .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
 
         .card-tag { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 12px; }
@@ -49,49 +53,51 @@
         .card-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
         .card-btn { margin-top: 20px; font-size: 12px; font-weight: 700; color: var(--primary); }
 
-        .skeleton { background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; height: 190px; border-radius: 28px; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(12px); }
-        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px; width: 100%; max-width: 460px; padding: 35px; position: relative; }
+        /* Modal */
+        #modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; padding: 20px; backdrop-filter: blur(12px);
+        }
+        .modal-content {
+            background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px;
+            width: 100%; max-width: 480px; padding: 35px; position: relative;
+        }
         .close-x { position: absolute; top: 20px; right: 25px; font-size: 28px; cursor: pointer; color: #444; }
 
         .form-group { margin-bottom: 22px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
-        input, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 14px; padding: 15px; color: #fff; outline: none; font-size: 14px; }
-        input:focus { border-color: var(--primary); }
+        input, select, textarea {
+            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
+            border-radius: 14px; padding: 15px; color: #fff; outline: none; font-size: 14px;
+        }
+        select:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .submit-btn {
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
+            background: var(--primary); color: #fff; font-weight: 700; font-size: 16px;
+            cursor: pointer; transition: 0.2s;
+        }
         .submit-btn:disabled { background: #333; cursor: not-allowed; }
 
-        .lang-bar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; }
-        .l-btn { background: var(--card-bg); border: 1px solid var(--border); color: #888; padding: 5px 14px; border-radius: 50px; font-size: 11px; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="lang-bar">
-        <button class="l-btn" onclick="setLanguage('zh')">繁中</button>
-        <button class="l-btn" onclick="setLanguage('en')">EN</button>
-    </div>
-
     <div class="container">
         <header>
-            <h1 id="txt-title">VIP 福利預約系統</h1>
-            <p class="subtitle" id="txt-subtitle">探索屬於您的尊榮特權</p>
+            <h1>VIP 福利預約系統</h1>
             <div class="user-pill">
                 <span class="status-dot"></span>
-                <span id="u-id" style="color: #666; margin-right: 15px; font-family: monospace;">Syncing...</span>
-                <span id="u-lv" style="font-weight: 800; color: var(--primary);">--</span>
+                <span id="u-name">Loading...</span>
+                <span id="u-lv">--</span>
             </div>
         </header>
 
         <div id="loading-view" class="benefit-grid">
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
+            <div style="height:190px; background:#111; border-radius:28px;"></div>
+            <div style="height:190px; background:#111; border-radius:28px;"></div>
         </div>
 
         <div id="benefit-grid" class="benefit-grid hidden"></div>
@@ -104,18 +110,17 @@
             <h2 id="m-name" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
             
             <div class="form-group">
-                <label id="lbl-anchor">主播 ID / ANCHOR ID</label>
-                <input type="text" id="anchor_id" placeholder="請輸入欲指定的主播 ID">
+                <label>主播 ID / ANCHOR ID</label>
+                <input type="text" id="anchor_id" placeholder="請輸入主播 ID">
             </div>
             
             <div class="form-group" id="date-group">
-                <label id="lbl-date">預約日期 / RESERVED DATE</label>
-                <input type="date" id="reserve_date">
+                <!-- 日期選擇器會動態生成 -->
             </div>
             
             <div class="form-group">
-                <label id="lbl-content">需求備註 / REMARK</label>
-                <textarea id="reserve_content" rows="3" placeholder="請填寫必要資訊..."></textarea>
+                <label>需求備註 / REMARK</label>
+                <textarea id="reserve_content" rows="3" placeholder="請填寫必要文字資訊..."></textarea>
             </div>
             
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
@@ -124,21 +129,21 @@
 
     <script>
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        const GAS_API = 'https://script.google.com/macros/s/AKfycby5gn_JUnoZsfz4GPrpNK255T6WF9XgMCsim--GiolAj6i5Jtdu5NSzthRwhZ90c5yXFg/exec';
+        const GAS_API = 'https://script.google.com/macros/s/AKfycbyJ4XOkzGnttpknKQSBGHDOuTxGfcj3J_qT62X7Soo1lsXnI-bprJC6l0SUubj4cNWgtw/exec';
 
-        let currentUser = { id: '', level: 0 };
+        let currentUser = { id: '', level: 0, username: '' };
         let currentWelfare = null;
+        let bookedData = []; // 大神贊助的現有預約數據
 
         const WELFARES = [
-            { id: '1', name: '大神贊助', lv: 50, desc: '直播間高度曝光曝光 24h', hasDate: true },
-            { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會交流', hasDate: false },
-            { id: '3', name: '訂製小鈴噹通知', lv: 60, desc: '客製化推播宣傳通知', hasDate: true },
-            { id: '4', name: '蓋板創作者封面', lv: 70, desc: '全站蓋板曝光製作', hasDate: false },
-            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '打造個人專屬熱搜字', hasDate: true },
-            { id: '6', name: '訂製專屬徽章', lv: 80, desc: '永久存於帳號的身份象徵', hasDate: false },
-            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '專屬直播間動畫禮物', hasDate: false },
-            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '探索頁面焦點曝光', hasDate: false },
-            { id: '9', name: 'CEO 午餐', lv: 90, desc: '尊榮專屬：與 CEO 共進午餐', hasDate: true }
+            { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時' },
+            { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會交流互動' },
+            { id: '3', name: '訂製小鈴噹通知', lv: 60, desc: '為心儀主播客製化通知宣傳' },
+            { id: '4', name: '蓋板創作者封面', lv: 70, desc: '專屬全站進入蓋板曝光製作' },
+            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '指定創作者 ID 於搜尋框展示' },
+            { id: '6', name: '訂製專屬徽章', lv: 80, desc: '打造專屬直播間徽章身份象徵' },
+            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '打造專屬直播間動畫禮物' },
+            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光' }
         ];
 
         async function init() {
@@ -146,21 +151,23 @@
             currentUser.id = urlParams.get('user_id');
 
             if (!currentUser.id) {
-                document.getElementById('u-id').innerText = "Missing User ID";
+                document.getElementById('u-name').innerText = "未提供 User ID";
                 return;
             }
 
             try {
                 const response = await fetch(`${USER_API}?user_id=${currentUser.id}`);
                 const data = await response.json();
+                
+                currentUser.username = data.username || data.display_name || `User_${currentUser.id}`;
                 currentUser.level = data.level || (data.data && data.data.level) || 0;
                 
-                document.getElementById('u-id').innerText = `ID: ${currentUser.id}`;
+                document.getElementById('u-name').innerText = currentUser.username;
                 document.getElementById('u-lv').innerText = `LV.${currentUser.level}`;
                 
                 renderCards();
             } catch (err) {
-                document.getElementById('u-id').innerText = "API Offline";
+                document.getElementById('u-name').innerText = "API Offline";
             } finally {
                 document.getElementById('loading-view').classList.add('hidden');
                 document.getElementById('benefit-grid').classList.remove('hidden');
@@ -178,37 +185,123 @@
                             <h3 class="card-title">${w.name}</h3>
                             <p class="card-desc">${w.desc}</p>
                         </div>
-                        <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約申請 →'}</div>
+                        <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約 →'}</div>
                     </div>
                 `;
             }).join('');
         }
 
-        function openBooking(id) {
+        async function openBooking(id) {
             currentWelfare = WELFARES.find(w => w.id === id);
             document.getElementById('m-name').innerText = currentWelfare.name;
-            document.getElementById('date-group').style.display = currentWelfare.hasDate ? 'block' : 'none';
             document.getElementById('modal').style.display = 'flex';
+            
+            // 重置輸入
+            document.getElementById('anchor_id').value = '';
+            document.getElementById('reserve_content').value = '';
+
+            // 大神贊助專屬邏輯
+            if (currentWelfare.name === '大神贊助') {
+                document.getElementById('btn-submit').disabled = true;
+                document.getElementById('btn-submit').innerText = '正在檢查名額...';
+                
+                try {
+                    const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
+                    bookedData = await res.json();
+                    setupGrandSponsorUI();
+                } catch(e) {
+                    alert("名額讀取失敗");
+                } finally {
+                    document.getElementById('btn-submit').disabled = false;
+                    document.getElementById('btn-submit').innerText = '確認提交申請';
+                }
+            } else {
+                // 其他福利使用標準日期選單
+                document.getElementById('date-group').innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
+            }
+        }
+
+        function setupGrandSponsorUI() {
+            const anchorInput = document.getElementById('anchor_id');
+            const dateGroup = document.getElementById('date-group');
+            
+            dateGroup.innerHTML = `
+                <label>預約日期 (自動過濾額滿與衝突)</label>
+                <select id="reserve_date" disabled>
+                    <option value="">請先輸入主播 ID...</option>
+                </select>
+            `;
+
+            anchorInput.oninput = () => {
+                const anchorId = anchorInput.value.trim();
+                const select = document.getElementById('reserve_date');
+                
+                if (anchorId.length < 3) {
+                    select.disabled = true;
+                    select.innerHTML = '<option value="">請輸入完整的主播 ID...</option>';
+                    return;
+                }
+
+                select.disabled = false;
+                select.innerHTML = '<option value="">請選擇日期...</option>';
+
+                // 產生接下來 30 天
+                const today = new Date();
+                for (let i = 1; i <= 30; i++) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() + i);
+                    const dateStr = d.toISOString().split('T')[0];
+
+                    // 檢查邏輯
+                    const dayBookings = bookedData.filter(b => b.date === dateStr);
+                    const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
+                    const totalCount = dayBookings.length;
+                    const userMonthCount = bookedData.filter(b => b.user_id == currentUser.id && b.date.startsWith(dateStr.substring(0,7))).length;
+
+                    let status = "";
+                    let disabled = false;
+
+                    if (currentUser.level >= 90) {
+                        if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
+                        else if (isAnchorOccupied) { status = " (此主播當天已被預約)"; disabled = true; }
+                        else { status = " (Lv.90 優先名額)"; }
+                    } else {
+                        if (userMonthCount >= 1) { status = " (本月1次已滿)"; disabled = true; }
+                        else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
+                        else if (totalCount >= 3) { status = " (預約額滿)"; disabled = true; }
+                    }
+
+                    const opt = document.createElement('option');
+                    opt.value = dateStr;
+                    opt.text = `${dateStr}${status}`;
+                    opt.disabled = disabled;
+                    select.add(opt);
+                }
+            };
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
         async function handleFormSubmit() {
             const btn = document.getElementById('btn-submit');
+            const dateVal = document.getElementById('reserve_date').value;
+            const anchorId = document.getElementById('anchor_id').value;
+
+            if (!anchorId) return alert("請輸入主播 ID");
+            if (!dateVal) return alert("請選擇預約日期");
+
             const data = {
                 user_id: String(currentUser.id),
+                username: String(currentUser.username),
                 level: Number(currentUser.level),
                 benefit: String(currentWelfare.name),
-                anchor_id: String(document.getElementById('anchor_id').value),
-                date: String(document.getElementById('reserve_date').value),
+                anchor_id: String(anchorId),
+                date: String(dateVal),
                 content: String(document.getElementById('reserve_content').value)
             };
 
-            if (!data.anchor_id) return alert("請填入主播 ID");
-            if (currentWelfare.hasDate && !data.date) return alert("請選擇日期");
-
             btn.disabled = true;
-            btn.innerText = "提交中...";
+            btn.innerText = "正在提交...";
 
             try {
                 await fetch(GAS_API, {
@@ -216,24 +309,15 @@
                     mode: 'no-cors',
                     body: JSON.stringify(data)
                 });
-                alert("提交完成！資料已發送至試算表與 Slack。");
+                alert("預約成功！資料已同步至試算表。");
                 closeModal();
                 location.reload();
             } catch (err) {
-                alert("連線失敗");
+                alert("提交失敗，請檢查網路");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "確認提交申請";
             }
-        }
-
-        function setLanguage(lang) {
-            const strings = {
-                zh: { title: "VIP 福利預約系統", sub: "探索屬於您的尊榮特權" },
-                en: { title: "VIP Welfare System", sub: "Exclusive Benefits for You" }
-            };
-            document.getElementById('txt-title').innerText = strings[lang].title;
-            document.getElementById('txt-subtitle').innerText = strings[lang].sub;
         }
 
         init();
