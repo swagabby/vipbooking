@@ -4,312 +4,295 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare System</title>
-    <!-- 完全不使用外部 CSS 框架，所有樣式內嵌於下方 -->
     <style>
-        /* CSS 變數與基礎設定 */
+        /* --- 2025 Modern Dark Style (No External Dependencies) --- */
         :root {
             --bg: #050505;
             --card-bg: rgba(255, 255, 255, 0.04);
             --border: rgba(255, 255, 255, 0.1);
             --primary: #ff5a5f;
-            --primary-glow: rgba(255, 90, 95, 0.3);
-            --text-white: #ffffff;
-            --text-gray: #888888;
+            --primary-hover: #ff4046;
+            --text-main: #ffffff;
+            --text-dim: #888888;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text-white);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        .container { max-width: 800px; width: 100%; }
+        .container { max-width: 850px; width: 100%; }
+        header { text-align: center; margin-bottom: 40px; }
+        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+        .subtitle { color: var(--text-dim); font-size: 14px; }
 
-        /* 標頭樣式 */
-        header { text-align: center; margin-bottom: 50px; }
-        h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
-        .subtitle { color: var(--text-gray); font-size: 14px; }
-
-        /* 用戶資訊卡 */
-        .user-info {
-            display: inline-flex;
-            align-items: center;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 8px 24px;
-            border-radius: 100px;
-            margin-top: 24px;
-            font-size: 13px;
-            backdrop-filter: blur(10px);
+        /* User Pill */
+        .user-pill {
+            display: inline-flex; align-items: center;
+            background: var(--card-bg); border: 1px solid var(--border);
+            padding: 8px 20px; border-radius: 100px; margin-top: 20px;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
-        .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 10px; box-shadow: 0 0 8px #10b981; }
+        .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 10px; box-shadow: 0 0 10px #10b981; }
 
-        /* 網格系統 */
-        .benefit-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-
-        /* 福利卡片樣式 */
+        /* Grid */
+        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
+        
+        /* Card Style */
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 180px;
-            backdrop-filter: blur(10px);
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px;
+            padding: 30px; transition: all 0.3s ease; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: space-between; min-height: 190px;
         }
-        .card:hover:not(.locked) {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px -10px var(--primary-glow);
+        .card:hover:not(.locked) { 
+            transform: translateY(-5px); border-color: var(--primary); 
+            box-shadow: 0 12px 30px -10px rgba(255, 90, 95, 0.3);
         }
-        .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
+        .card.locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; }
 
-        .card-tag { font-size: 10px; font-weight: 700; color: var(--text-gray); letter-spacing: 1px; margin-bottom: 15px; }
-        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .card-desc { font-size: 13px; color: var(--text-gray); line-height: 1.5; }
-        .card-footer { margin-top: 20px; font-size: 12px; font-weight: 700; color: var(--primary); }
+        .card-tag { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 12px; }
+        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .card-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+        .card-btn { margin-top: 20px; font-size: 12px; font-weight: 700; color: var(--primary); }
 
-        /* 骨架屏載入動畫 */
-        .skeleton {
-            background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            height: 180px;
-            border-radius: 24px;
+        /* Skeleton Loading */
+        .skeleton { 
+            background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%); 
+            background-size: 200% 100%; animation: shimmer 1.5s infinite linear; 
+            height: 190px; border-radius: 28px; 
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* 彈窗樣式 */
+        /* Modal */
         #modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: none; align-items: center; justify-content: center;
-            z-index: 1000; padding: 20px; backdrop-filter: blur(10px);
+            z-index: 1000; padding: 20px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         }
-        .modal-body {
-            background: #111;
-            border: 1px solid var(--border);
-            border-radius: 32px;
-            width: 100%;
-            max-width: 450px;
-            padding: 30px;
-            position: relative;
+        .modal-content {
+            background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px;
+            width: 100%; max-width: 460px; padding: 35px; position: relative;
         }
-        .close { position: absolute; top: 20px; right: 25px; font-size: 30px; cursor: pointer; color: #444; }
+        .close-x { position: absolute; top: 20px; right: 25px; font-size: 28px; cursor: pointer; color: #444; }
 
-        .form-group { margin-bottom: 20px; }
-        label { font-size: 11px; font-weight: 700; color: var(--text-gray); display: block; margin-bottom: 8px; }
+        .form-group { margin-bottom: 22px; }
+        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
         input, textarea {
-            width: 100%; background: #000; border: 1px solid var(--border);
-            border-radius: 12px; padding: 14px; color: #fff; outline: none; transition: 0.2s;
+            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
+            border-radius: 14px; padding: 15px; color: #fff; outline: none; transition: 0.2s; font-size: 14px;
         }
-        input:focus { border-color: var(--primary); }
+        input:focus { border-color: var(--primary); background: #222; }
 
         .submit-btn {
-            width: 100%; padding: 16px; border-radius: 12px; border: none;
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
             background: var(--primary); color: #fff; font-weight: 700; font-size: 16px;
-            cursor: pointer; transition: 0.2s;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255, 90, 95, 0.2);
         }
-        .submit-btn:hover { opacity: 0.9; }
-        .submit-btn:disabled { background: #333; cursor: not-allowed; }
+        .submit-btn:hover { background: var(--primary-hover); }
+        .submit-btn:disabled { background: #333; cursor: not-allowed; box-shadow: none; }
 
-        /* 語系切換 */
-        .langs { position: fixed; top: 20px; right: 20px; display: flex; gap: 8px; }
-        .lang-btn { background: var(--card-bg); border: 1px solid var(--border); color: #888; padding: 5px 12px; border-radius: 50px; font-size: 10px; cursor: pointer; }
-        
+        .lang-bar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; }
+        .l-btn { background: var(--card-bg); border: 1px solid var(--border); color: #888; padding: 5px 14px; border-radius: 50px; font-size: 11px; cursor: pointer; }
         .hidden { display: none !important; }
+
+        @media (max-width: 640px) { h1 { font-size: 24px; } .card { padding: 25px; } }
     </style>
 </head>
 <body>
 
-    <div class="langs">
-        <button class="lang-btn" onclick="setLang('zh')">繁中</button>
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
+    <div class="lang-bar">
+        <button class="l-btn" onclick="setLanguage('zh')">繁中</button>
+        <button class="l-btn" onclick="setLanguage('en')">EN</button>
     </div>
 
     <div class="container">
         <header>
-            <h1 id="ui-title">VIP 預約系統</h1>
-            <p class="subtitle" id="ui-subtitle">尊榮會員專屬福利預定服務</p>
-            <div class="user-info">
-                <span class="dot"></span>
-                <span id="u-id" style="margin-right: 15px; color: #666; font-family: monospace;">Syncing...</span>
+            <h1 id="txt-title">VIP 福利預約系統</h1>
+            <p class="subtitle" id="txt-subtitle">探索屬於您的尊榮特權</p>
+            <div class="user-pill">
+                <span class="status-dot"></span>
+                <span id="u-id" style="color: #666; margin-right: 15px; font-family: monospace;">Syncing...</span>
                 <span id="u-lv" style="font-weight: 800; color: var(--primary);">--</span>
             </div>
         </header>
 
-        <!-- Loading View -->
-        <div id="loading" class="benefit-grid">
+        <!-- Loading State -->
+        <div id="loading-view" class="benefit-grid">
             <div class="skeleton"></div>
             <div class="skeleton"></div>
             <div class="skeleton"></div>
             <div class="skeleton"></div>
         </div>
 
-        <!-- Main Content -->
-        <div id="grid" class="benefit-grid hidden"></div>
+        <!-- Cards Container -->
+        <div id="benefit-grid" class="benefit-grid hidden"></div>
     </div>
 
     <!-- Booking Modal -->
     <div id="modal">
-        <div class="modal-body">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="m-title" style="margin-bottom: 25px;">福利預約</h2>
+        <div class="modal-content">
+            <span class="close-x" onclick="closeModal()">&times;</span>
+            <h2 id="m-name" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
             
             <div class="form-group">
-                <label>主播 ID (ANCHOR ID)</label>
-                <input type="text" id="anchor_id" placeholder="請輸入主播 ID">
+                <label id="lbl-anchor">主播 ID / ANCHOR ID</label>
+                <input type="text" id="anchor_id" placeholder="請輸入欲指定的主播 ID">
             </div>
             
             <div class="form-group" id="date-group">
-                <label>預約日期 (DATE)</label>
+                <label id="lbl-date">預約日期 / RESERVED DATE</label>
                 <input type="date" id="reserve_date">
             </div>
             
             <div class="form-group">
-                <label>內容細節 / 備註</label>
-                <textarea id="reserve_content" rows="3" placeholder="請輸入客製內容或需求..."></textarea>
+                <label id="lbl-content">需求備註 / REMARK</label>
+                <textarea id="reserve_content" rows="3" placeholder="請依照福利規格填寫必要文字資訊..."></textarea>
             </div>
             
-            <button id="btn-submit" class="submit-btn" onclick="submitData()">確認提交預約</button>
+            <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
     </div>
 
     <script>
-        const API_LEVEL = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        const API_GAS = 'https://script.google.com/macros/s/AKfycbxlMEEW3k4D8ABAlPK4WdGmNk3CC1s4mMxZP06Sfy8bm2ZcQPXIJ006RkSca9k0W7D-Ug/exec';
+        // API 設定
+        const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
+        const GAS_API = 'https://script.google.com/macros/s/AKfycbyJ4XOkzGnttpknKQSBGHDOuTxGfcj3J_qT62X7Soo1lsXnI-bprJC6l0SUubj4cNWgtw/exec';
 
-        let user = { id: '', level: 0 };
-        let activeBenefit = null;
+        let currentUser = { id: '', level: 0 };
+        let currentWelfare = null;
 
-        const BENEFITS = [
-            { id: '1', name: '大神贊助', lv: 50, desc: '直播間高度曝光曝光 24h', hasDate: true },
-            { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會交流', hasDate: false },
-            { id: '3', name: '訂製小鈴噹', lv: 60, desc: '客製化推播宣傳通知', hasDate: true },
-            { id: '4', name: '蓋板創作者封面', lv: 70, desc: '全站蓋板曝光製作', hasDate: false },
-            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '打造個人專屬熱搜字', hasDate: true },
-            { id: '6', name: '訂製專屬徽章', lv: 80, desc: '永久存於帳號的身份象徵', hasDate: false },
-            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '專屬直播間動畫禮物', hasDate: false },
-            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '探索頁面焦點曝光', hasDate: false }
+        // 福利規格清單
+        const WELFARES = [
+            { id: '1', name: '大神贊助', lv: 50, desc: '心儀創作者直播間高度曝光 24 小時', hasDate: true },
+            { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會，交流互動', hasDate: false },
+            { id: '3', name: '訂製小鈴噹通知', lv: 60, desc: '為心儀主播客製化通知宣傳', hasDate: true },
+            { id: '4', name: '蓋板創作者封面', lv: 70, desc: '專屬全站進入蓋板曝光製作', hasDate: false },
+            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '指定創作者 ID 於搜尋框展示', hasDate: true },
+            { id: '6', name: '訂製專屬徽章', lv: 80, desc: '打造專屬直播間徽章身份象徵', hasDate: false },
+            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '打造專屬直播間動畫禮物', hasDate: false },
+            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光', hasDate: false },
+            { id: '9', name: 'CEO 午餐', lv: 90, desc: '尊榮專屬：與 CEO 共進午餐', hasDate: true }
         ];
 
+        // 初始化：獲取用戶等級
         async function init() {
-            const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id');
+            const urlParams = new URLSearchParams(window.location.search);
+            currentUser.id = urlParams.get('user_id');
 
-            if (!user.id) {
-                document.getElementById('u-id').innerText = "Missing ID";
+            if (!currentUser.id) {
+                document.getElementById('u-id').innerText = "Missing User ID";
                 return;
             }
 
             try {
-                const res = await fetch(`${API_LEVEL}?user_id=${user.id}`);
-                const data = await res.json();
-                user.level = data.level || (data.data && data.data.level) || 0;
+                const response = await fetch(`${USER_API}?user_id=${currentUser.id}`);
+                const data = await response.json();
                 
-                document.getElementById('u-id').innerText = `ID: ${user.id}`;
-                document.getElementById('u-lv').innerText = `LV.${user.level}`;
+                // 解析 API 等級 (相容不同 API 結構)
+                currentUser.level = data.level || (data.data && data.data.level) || 0;
                 
-                render();
-            } catch (e) {
-                document.getElementById('u-id').innerText = "API Error";
+                document.getElementById('u-id').innerText = `ID: ${currentUser.id}`;
+                document.getElementById('u-lv').innerText = `LV.${currentUser.level}`;
+                
+                renderCards();
+            } catch (err) {
+                console.error("Fetch Level Failed:", err);
+                document.getElementById('u-id').innerText = "API Offline";
             } finally {
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('grid').classList.remove('hidden');
+                document.getElementById('loading-view').classList.add('hidden');
+                document.getElementById('benefit-grid').classList.remove('hidden');
             }
         }
 
-        function render() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = BENEFITS.map(b => {
-                const locked = user.level < b.lv;
+        // 渲染福利卡片
+        function renderCards() {
+            const grid = document.getElementById('benefit-grid');
+            grid.innerHTML = WELFARES.map(w => {
+                const locked = currentUser.level < w.lv;
                 return `
-                    <div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openModal('${b.id}')`}">
+                    <div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openBooking('${w.id}')`}">
                         <div>
-                            <div class="card-tag">LV.${b.lv} REQUIREMENT</div>
-                            <h3 class="card-title">${b.name}</h3>
-                            <p class="card-desc">${b.desc}</p>
+                            <div class="card-tag">LV.${w.lv} Requirement</div>
+                            <h3 class="card-title">${w.name}</h3>
+                            <p class="card-desc">${w.desc}</p>
                         </div>
-                        <div class="card-footer">${locked ? '🔒 尚未解鎖' : '立即預約 →'}</div>
+                        <div class="card-btn">${locked ? '🔒 尚未解鎖' : '立即預約申請 →'}</div>
                     </div>
                 `;
             }).join('');
         }
 
-        function openModal(id) {
-            activeBenefit = BENEFITS.find(b => b.id === id);
-            document.getElementById('m-title').innerText = activeBenefit.name;
-            document.getElementById('date-group').style.display = activeBenefit.hasDate ? 'block' : 'none';
+        // 開啟彈窗
+        function openBooking(id) {
+            currentWelfare = WELFARES.find(w => w.id === id);
+            document.getElementById('m-name').innerText = currentWelfare.name;
+            document.getElementById('date-group').style.display = currentWelfare.hasDate ? 'block' : 'none';
             document.getElementById('modal').style.display = 'flex';
         }
 
+        // 關閉彈窗
         function closeModal() {
             document.getElementById('modal').style.display = 'none';
         }
 
-async function submitData() {
-    const btn = document.getElementById('btn-submit');
-    const payload = {
-        user_id: String(user.id),  // 強制轉字串
-        level: Number(user.level), // 強制轉數字
-        benefit: String(activeBenefit.name),
-        anchor_id: String(document.getElementById('anchor_id').value),
-        date: String(document.getElementById('reserve_date').value),
-        content: String(document.getElementById('reserve_content').value)
-    };
-
-    if (!payload.anchor_id) return alert("請填寫主播 ID");
-    if (activeBenefit.hasDate && !payload.date) return alert("請選擇預約日期");
-
-    btn.disabled = true;
-    btn.innerText = "提交中...";
-
-    try {
-        // 使用 fetch 發送
-        await fetch(API_GAS, {
-            method: 'POST',
-            mode: 'no-cors', 
-            // 這裡不要設定 headers，在 no-cors 下設定 headers 有時會導致出錯
-            body: JSON.stringify(payload) 
-        });
-
-        // 成功提示
-        alert("【預約成功】\n資料已送出至後台處理！");
-        closeModal();
-        location.reload();
-
-    } catch (e) {
-        alert("提交發生異常，請聯絡管理員");
-        console.error("Submit error:", e);
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "確認提交預約";
-    }
-}
-        function setLang(lang) {
-            const t = {
-                zh: { title: "VIP 預約系統", sub: "尊榮會員專屬福利預定服務" },
-                en: { title: "VIP Welfare", sub: "Exclusive Booking Service" }
+        // 提交資料到 GAS
+        async function handleFormSubmit() {
+            const btn = document.getElementById('btn-submit');
+            const data = {
+                user_id: String(currentUser.id),
+                level: Number(currentUser.level),
+                benefit: String(currentWelfare.name),
+                anchor_id: String(document.getElementById('anchor_id').value),
+                date: String(document.getElementById('reserve_date').value),
+                content: String(document.getElementById('reserve_content').value)
             };
-            document.getElementById('ui-title').innerText = t[lang].title;
-            document.getElementById('ui-subtitle').innerText = t[lang].sub;
+
+            if (!data.anchor_id) return alert("請填入主播 ID");
+            if (currentWelfare.hasDate && !data.date) return alert("請選擇日期");
+
+            btn.disabled = true;
+            btn.innerText = "提交中 / Submitting...";
+
+            try {
+                // 使用 fetch POST 傳送到 GAS
+                await fetch(GAS_API, {
+                    method: 'POST',
+                    mode: 'no-cors', // 繞過 GAS 的跨網域檢查
+                    body: JSON.stringify(data)
+                });
+
+                alert("【提交完成】\n您的預約申請已成功送出！");
+                closeModal();
+                location.reload();
+
+            } catch (err) {
+                console.error("Submit Error:", err);
+                alert("提交失敗，請檢查網路連線");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "確認提交申請";
+            }
         }
 
+        // 多語系切換
+        function setLanguage(lang) {
+            const strings = {
+                zh: { title: "VIP 福利預約系統", sub: "探索屬於您的尊榮特權", anchor: "主播 ID", date: "預約日期", content: "需求備註", submit: "確認提交申請" },
+                en: { title: "VIP Welfare System", sub: "Exclusive Benefits for You", anchor: "Anchor ID", date: "Reserved Date", content: "Remark", submit: "Confirm Booking" }
+            };
+            document.getElementById('txt-title').innerText = strings[lang].title;
+            document.getElementById('txt-subtitle').innerText = strings[lang].sub;
+            document.getElementById('lbl-anchor').innerText = strings[lang].anchor;
+            document.getElementById('lbl-date').innerText = strings[lang].date;
+            document.getElementById('lbl-content').innerText = strings[lang].content;
+            document.getElementById('btn-submit').innerText = strings[lang].submit;
+        }
+
+        // 初始化啟動
         init();
     </script>
 </body>
