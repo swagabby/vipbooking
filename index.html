@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare System</title>
     <style>
-        /* --- 2025 Modern Dark Style (Zero Dependency) --- */
+        /* --- 2025 Modern Dark Style --- */
         :root {
             --bg: #050505;
             --card-bg: rgba(255, 255, 255, 0.04);
@@ -25,9 +25,9 @@
 
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
-        h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
 
-        /* User Info Pill */
+        /* User Pill (顯示 Username 與 Level) */
         .user-pill {
             display: inline-flex; align-items: center;
             background: var(--card-bg); border: 1px solid var(--border);
@@ -38,7 +38,7 @@
         #u-name { font-weight: 800; color: #fff; font-size: 15px; }
         #u-lv { font-weight: 800; color: var(--primary); background: rgba(255,90,95,0.1); padding: 2px 10px; border-radius: 50px; font-size: 12px; }
 
-        /* Grid */
+        /* Welfare Grid */
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
         
         .card {
@@ -103,7 +103,7 @@
             <h1 id="txt-title">VIP 福利預約系統</h1>
             <div class="user-pill">
                 <span class="status-dot"></span>
-                <span id="u-name">Syncing...</span>
+                <span id="u-name">正在核對身份...</span>
                 <span id="u-lv">--</span>
             </div>
         </header>
@@ -137,7 +137,7 @@
             
             <div class="form-group">
                 <label id="lbl-content">需求備註 / REMARK</label>
-                <textarea id="reserve_content" rows="3" placeholder="請填寫必要文字資訊..."></textarea>
+                <textarea id="reserve_content" rows="3" placeholder="請填寫必要內容..."></textarea>
             </div>
             
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
@@ -145,7 +145,7 @@
     </div>
 
     <script>
-        // API 網址設定 (請確保與部署網址一致)
+        // 設定 API 網址 (請確保 GAS 網址已更新至 v7 版本)
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbyJ4XOkzGnttpknKQSBGHDOuTxGfcj3J_qT62X7Soo1lsXnI-bprJC6l0SUubj4cNWgtw/exec';
 
@@ -164,7 +164,7 @@
             { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '所有直播欄位中黃金廣告位曝光' }
         ];
 
-        // 初始化：讀取用戶身份與等級
+        // 初始化：讀取等級與名稱
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             currentUser.id = urlParams.get('user_id');
@@ -178,7 +178,8 @@
                 const response = await fetch(`${USER_API}?user_id=${currentUser.id}`);
                 const data = await response.json();
                 
-                currentUser.username = data.username || data.display_name || `User_${currentUser.id}`;
+                // 優先使用 display_name 或 username
+                currentUser.username = data.display_name || data.username || `User_${currentUser.id}`;
                 currentUser.level = data.level || (data.data && data.data.level) || 0;
                 
                 document.getElementById('u-name').innerText = currentUser.username;
@@ -186,15 +187,15 @@
                 
                 renderCards();
             } catch (err) {
-                console.error("Fetch Level Failed:", err);
-                document.getElementById('u-name').innerText = "API Offline";
+                console.error("API Offline:", err);
+                document.getElementById('u-name').innerText = "連線失敗";
             } finally {
                 document.getElementById('loading-view').classList.add('hidden');
                 document.getElementById('benefit-grid').classList.remove('hidden');
             }
         }
 
-        // 渲染福利卡片
+        // 渲染卡片
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
             grid.innerHTML = WELFARES.map(w => {
@@ -212,31 +213,29 @@
             }).join('');
         }
 
-        // 開啟預約彈窗
+        // 開啟預約
         async function openBooking(id) {
             currentWelfare = WELFARES.find(w => w.id === id);
             document.getElementById('m-name').innerText = currentWelfare.name;
             document.getElementById('modal').style.display = 'flex';
             
-            // 重置欄位
             document.getElementById('anchor_id').value = '';
             document.getElementById('reserve_content').value = '';
             const dateGroup = document.getElementById('date-group');
 
             if (currentWelfare.name === '大神贊助') {
-                // 特殊邏輯：先向 GAS 讀取「大神贊助」分頁的名額數據
-                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date"><option value="">正在載入大神贊助狀況...</option></select>`;
+                dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date"><option value="">正在檢查「大神贊助」名額...</option></select>`;
                 try {
+                    // 向 GAS 請求「大神贊助」分頁的現有紀錄
                     const res = await fetch(`${GAS_API}?action=getGrandSponsorData`);
                     grandSponsorBookings = await res.json();
                     setupGrandSponsorLogic();
                 } catch(e) {
-                    console.error("載入預約狀況失敗", e);
+                    console.error("名額載入失敗", e);
                     grandSponsorBookings = [];
                     setupGrandSponsorLogic();
                 }
             } else {
-                // 一般福利：顯示標準月曆
                 dateGroup.innerHTML = `<label>預約日期</label><input type="date" id="reserve_date">`;
             }
         }
@@ -258,13 +257,11 @@
                 select.innerHTML = '<option value="">請選擇日期...</option>';
                 
                 const today = new Date();
-                // 生成未來 30 天
                 for (let i = 1; i <= 30; i++) {
                     const d = new Date(today);
                     d.setDate(today.getDate() + i);
                     const dateStr = d.toISOString().split('T')[0];
 
-                    // 比對「大神贊助」分頁紀錄
                     const dayBookings = grandSponsorBookings.filter(b => b.date === dateStr);
                     const isAnchorOccupied = dayBookings.some(b => b.anchor_id === anchorId);
                     const userMonthCount = grandSponsorBookings.filter(b => b.user_id == currentUser.id && b.date.substring(0,7) === dateStr.substring(0,7)).length;
@@ -272,17 +269,14 @@
                     let status = "";
                     let disabled = false;
 
-                    // 規則判定
                     if (currentUser.level >= 90) {
-                        // Lv 90+: 每月限 2 次，不限每日總人數 (三人)，但主播不能在同一天被重複預約
                         if (userMonthCount >= 2) { status = " (本月2次已滿)"; disabled = true; }
                         else if (isAnchorOccupied) { status = " (此主播已被預約)"; disabled = true; }
                         else { status = " (Lv.90 優先名額)"; }
                     } else {
-                        // 一般用戶: 每月限 1 次，每日總限 3 人，且主播不能重複
                         if (userMonthCount >= 1) { status = " (本月已預約過)"; disabled = true; }
                         else if (isAnchorOccupied) { status = " (主播已預約)"; disabled = true; }
-                        else if (dayBookings.length >= 3) { status = " (名額已滿)"; disabled = true; }
+                        else if (dayBookings.length >= 3) { status = " (日期額滿)"; disabled = true; }
                     }
 
                     const opt = document.createElement('option');
@@ -299,21 +293,21 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // 提交預約資料到 GAS
+        // 提交預約
         async function handleFormSubmit() {
             const btn = document.getElementById('btn-submit');
             const anchorId = document.getElementById('anchor_id').value.trim();
-            const dateVal = document.getElementById('reserve_date').value;
+            const reserveDate = document.getElementById('reserve_date').value;
 
-            if (!anchorId || !dateVal) return alert("請完整填寫主播 ID 與日期");
+            if (!anchorId || !reserveDate) return alert("請完整填寫主播 ID 與日期");
 
             const payload = {
                 user_id: String(currentUser.id),
                 username: String(currentUser.username),
                 level: Number(currentUser.level),
-                benefit: String(currentWelfare.name),
+                benefit: String(currentWelfare.name), // 關鍵：這決定了寫入哪個分頁
                 anchor_id: String(anchorId),
-                date: String(dateVal),
+                date: String(reserveDate),
                 content: String(document.getElementById('reserve_content').value)
             };
 
@@ -321,27 +315,26 @@
             btn.innerText = "提交中...";
 
             try {
-                // POST 提交：GAS 將根據 payload.benefit 自動選擇分頁與發送通知
+                // POST 提交：GAS 接收後將根據 benefit 分流分頁並寄信
                 await fetch(GAS_API, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
                 
-                alert("預約成功！資料已同步至試算表 [" + currentWelfare.name + "] 分頁。");
+                alert("預約成功！資料已同步至「" + currentWelfare.name + "」分頁並通知 Slack。");
                 closeModal();
                 location.reload();
 
             } catch (err) {
                 console.error("Submit Error:", err);
-                alert("提交失敗，請檢查網路連線或聯繫管理員。");
+                alert("提交失敗，請重新嘗試。");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "確認提交申請";
             }
         }
 
-        // 多語系文字切換 (選配)
         function setLanguage(lang) {
             const strings = {
                 zh: { title: "VIP 福利預約系統", anchor: "主播 ID", date: "預約日期", content: "需求備註", submit: "確認提交申請" },
@@ -354,7 +347,6 @@
             document.getElementById('btn-submit').innerText = strings[lang].submit;
         }
 
-        // 啟動程序
         init();
     </script>
 </body>
