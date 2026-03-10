@@ -223,7 +223,7 @@
             document.getElementById('reserve_content').value = '';
             const dateGroup = document.getElementById('date-group');
 
-            if (currentWelfare.name === '大神贊助') {
+            if (currentWelfare.name === 'pin') {
                 dateGroup.innerHTML = `<label>預約日期</label><select id="reserve_date"><option value="">正在檢查「大神贊助」名額...</option></select>`;
                 try {
                     // 向 GAS 請求「大神贊助」分頁的現有紀錄
