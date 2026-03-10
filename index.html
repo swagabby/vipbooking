@@ -5,30 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare System</title>
     <style>
-        /* --- 基礎設定 & 變數 --- */
+        /* --- 核心變數設定 --- */
         :root {
-            --bg: #050505;
+            --bg-color: #050505;
             --card-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
-            --primary: #ff5a5f;
-            --primary-dark: #ff2d55;
+            --primary-color: #ff5a5f;
+            --primary-hover: #ff4046;
             --text-main: #ffffff;
             --text-dim: #888888;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        /* --- 基礎樣式重置 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            background-color: var(--bg); 
+            background-color: var(--bg-color); 
             color: var(--text-main); 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.5;
+            font-family: var(--font-family);
+            line-height: 1.6;
             padding: 40px 20px;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- 佈局 --- */
+        /* --- 佈局控制 --- */
         .container { max-width: 800px; margin: 0 auto; width: 100%; }
         header { text-align: center; margin-bottom: 48px; }
-        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
         .hidden { display: none !important; }
 
         /* --- 視覺風格 (Glassmorphism) --- */
@@ -37,13 +39,28 @@
             backdrop-filter: blur(15px); 
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border); 
-            border-radius: 32px;
+            border-radius: 24px;
         }
-        
-        /* --- 福利卡片 --- */
+
+        /* --- 標題與用戶資訊 --- */
+        .title { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+        .subtitle { color: var(--text-dim); font-size: 14px; }
+        .user-pill { 
+            margin-top: 24px; padding: 10px 20px; display: inline-flex; align-items: center; 
+            font-size: 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 10px; box-shadow: 0 0 10px #10b981; }
+
+        /* --- 福利卡片網格 --- */
+        .benefit-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 20px; 
+        }
+
         .benefit-card { 
-            padding: 32px; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            padding: 30px; 
+            transition: all 0.3s ease; 
             cursor: pointer; 
             display: flex; 
             flex-direction: column; 
@@ -51,79 +68,76 @@
             min-height: 200px;
         }
         .benefit-card:hover:not(.locked) { 
-            transform: translateY(-8px); 
-            border-color: var(--primary); 
-            box-shadow: 0 10px 30px -10px rgba(255, 90, 95, 0.3); 
+            transform: translateY(-5px); 
+            border-color: var(--primary-color); 
+            box-shadow: 0 10px 30px -10px rgba(255, 90, 95, 0.2); 
         }
-        .locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
+        .locked { opacity: 0.25; filter: grayscale(1); cursor: not-allowed; }
 
-        /* --- 標籤 & 文字 --- */
-        .badge { 
-            font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; 
-            padding: 4px 12px; background: rgba(255,255,255,0.1); border-radius: 99px; color: #aaa;
-        }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 8px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-        .title { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
-        .subtitle { color: var(--text-dim); font-size: 14px; }
-        .user-pill { margin-top: 24px; padding: 8px 24px; display: inline-flex; align-items: center; font-size: 12px; border-radius: 99px; }
+        .card-tag { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.05em; margin-bottom: 12px; display: block; }
+        .card-name { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .card-desc { font-size: 13px; color: var(--text-dim); }
+        .card-action { margin-top: 24px; font-size: 12px; font-weight: 700; color: var(--primary-color); }
 
         /* --- Skeleton Loading --- */
         .skeleton { 
-            background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%); 
+            background: linear-gradient(90deg, #0a0a0a 25%, #151515 50%, #0a0a0a 75%); 
             background-size: 200% 100%; 
-            animation: loading 1.5s infinite; 
-            height: 160px; border-radius: 32px; 
+            animation: loading-shimmer 1.5s infinite linear; 
+            height: 180px; border-radius: 24px; 
         }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes loading-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* --- 表單 Modal --- */
-        #modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
+        /* --- 表單彈窗 (Modal) --- */
+        #modal-overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
             display: none; align-items: center; justify-content: center; 
-            padding: 20px; z-index: 1000; backdrop-filter: blur(8px);
+            padding: 20px; z-index: 1000; backdrop-filter: blur(10px);
         }
-        .modal-content { width: 100%; max-width: 500px; padding: 32px; position: relative; }
-        .close-btn { position: absolute; top: 20px; right: 24px; font-size: 28px; color: #555; cursor: pointer; border: none; background: none; }
-        
+        .modal-content { width: 100%; max-width: 480px; padding: 32px; position: relative; border-radius: 32px; }
+        .close-btn { position: absolute; top: 20px; right: 24px; font-size: 28px; color: var(--text-dim); cursor: pointer; border: none; background: none; }
+
+        .form-group { margin-bottom: 20px; }
+        label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-left: 4px; display: block; margin-bottom: 8px; }
         input, textarea { 
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
-            border-radius: 16px; padding: 16px; color: white; margin-top: 8px; outline: none; transition: 0.3s;
+            border-radius: 14px; padding: 14px; color: white; outline: none; transition: all 0.2s; font-size: 14px;
         }
-        input:focus, textarea:focus { border-color: var(--primary); }
-        label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-left: 4px; }
-        
+        input:focus, textarea:focus { border-color: var(--primary-color); background: rgba(255,255,255,0.08); }
+
         .submit-btn { 
-            width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 700; font-size: 16px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white; cursor: pointer; margin-top: 24px; transition: 0.3s;
+            width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 700; font-size: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white; cursor: pointer; transition: transform 0.2s;
         }
+        .submit-btn:active { transform: scale(0.98); }
         .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* --- 語系切換 --- */
         .lang-switch { position: fixed; top: 24px; right: 24px; display: flex; gap: 8px; z-index: 100; }
-        .lang-btn { background: var(--card-bg); border: 1px solid var(--glass-border); color: #888; padding: 6px 12px; border-radius: 99px; font-size: 10px; cursor: pointer; }
+        .lang-btn { background: var(--card-bg); border: 1px solid var(--glass-border); color: #888; padding: 6px 14px; border-radius: 99px; font-size: 10px; cursor: pointer; transition: 0.2s; }
+        .lang-btn:hover { border-color: white; color: white; }
     </style>
 </head>
 <body>
 
     <div class="lang-switch">
-        <button class="lang-btn" onclick="setLang('zh')">繁中</button>
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="changeLanguage('zh')">繁中</button>
+        <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
     </div>
 
     <div class="container">
         <header>
             <h1 class="title" id="ui-title">VIP 預約系統</h1>
-            <p class="subtitle" id="ui-subtitle">專屬於您的尊榮福利</p>
+            <p class="subtitle" id="ui-subtitle">尊榮專屬福利預約服務</p>
             <div class="user-pill glass">
                 <span class="status-dot"></span>
-                <span id="display-user-id" style="font-family: monospace; color: #888; margin-right: 12px;">Checking...</span>
-                <span id="display-level" style="font-weight: 700; color: var(--primary);">--</span>
+                <span id="display-user-id" style="color: #666; margin-right: 12px; font-family: monospace;">Syncing...</span>
+                <span id="display-level" style="font-weight: 800; color: var(--primary-color);">--</span>
             </div>
         </header>
 
+        <!-- Loading View -->
         <div id="loading-view" class="benefit-grid">
             <div class="skeleton"></div>
             <div class="skeleton"></div>
@@ -131,30 +145,34 @@
             <div class="skeleton"></div>
         </div>
 
+        <!-- Benefit Grid -->
         <div id="benefit-grid" class="benefit-grid hidden">
-            <!-- JS 動態生成 -->
+            <!-- JS 渲染內容 -->
         </div>
     </div>
 
-    <div id="modal">
+    <!-- Modal Overlay -->
+    <div id="modal-overlay">
         <div class="modal-content glass">
             <button class="close-btn" onclick="closeModal()">&times;</button>
-            <h2 id="modal-title" style="font-size: 24px; margin-bottom: 24px;">福利預約</h2>
+            <h2 id="modal-title" style="margin-bottom: 24px; font-size: 22px;">福利預約</h2>
             
-            <div style="margin-bottom: 16px;">
-                <label id="lbl-anchor">主播 ID</label>
-                <input type="text" id="anchor_id" placeholder="例如: 123456">
+            <div class="form-group">
+                <label id="lbl-anchor">主播 ID (Anchor ID)</label>
+                <input type="text" id="anchor_id" placeholder="請輸入對象主播 ID">
             </div>
-            <div id="date-field" style="margin-bottom: 16px;">
-                <label id="lbl-date">預約日期</label>
+            
+            <div class="form-group" id="date-field">
+                <label id="lbl-date">預約日期 (Reserved Date)</label>
                 <input type="date" id="reserve_date">
             </div>
-            <div style="margin-bottom: 16px;">
-                <label id="lbl-content">備註細節</label>
-                <textarea id="reserve_content" rows="3" placeholder="請輸入相關特殊需求..."></textarea>
+            
+            <div class="form-group">
+                <label id="lbl-content">備註或客製內容</label>
+                <textarea id="reserve_content" rows="3" placeholder="請輸入福利相關備註內容..."></textarea>
             </div>
             
-            <button id="btn-submit" class="submit-btn" onclick="submitReservation()">立即提交預約</button>
+            <button id="btn-submit" class="submit-btn" onclick="submitReservation()">確認提交預約</button>
         </div>
     </div>
 
@@ -166,14 +184,14 @@
         let selectedBenefit = null;
 
         const BENEFITS = [
-            { id: '1', name: '大神贊助', lv: 50, desc: '直播間高度曝光曝光 24h', hasDate: true },
-            { id: '2', name: '女神聚會', lv: 50, desc: '線下高質感聚會交流', hasDate: false },
+            { id: '1', name: '大神贊助', lv: 50, desc: '指定創作者直播間高度曝光曝光 24h', hasDate: true },
+            { id: '2', name: '女神聚會', lv: 50, desc: '參加線下高質感聚會交流', hasDate: false },
             { id: '3', name: '訂製小鈴噹', lv: 60, desc: '客製化推播宣傳通知', hasDate: true },
-            { id: '4', name: '蓋板創作者封面', lv: 70, desc: '全站蓋板曝光製作', hasDate: false },
-            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '打造個人專屬熱搜字', hasDate: true },
+            { id: '4', name: '全站蓋板封面', lv: 70, desc: '為您製作專屬創作者封面曝光', hasDate: false },
+            { id: '5', name: '訂製搜尋框文字', lv: 70, desc: '打造個人專屬搜尋熱搜字', hasDate: true },
             { id: '6', name: '訂製專屬徽章', lv: 80, desc: '永久存於帳號的身份象徵', hasDate: false },
-            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '專屬直播間動畫禮物', hasDate: false },
-            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '探索頁面焦點曝光', hasDate: false }
+            { id: '7', name: '訂製專屬禮物', lv: 80, desc: '直播間專屬動畫禮物', hasDate: false },
+            { id: '8', name: '專屬直播欄位廣告', lv: 90, desc: '探索頁面最顯眼位置曝光', hasDate: false }
         ];
 
         async function init() {
@@ -181,13 +199,15 @@
             currentUser.id = params.get('user_id');
 
             if (!currentUser.id) {
-                document.getElementById('display-user-id').innerText = "Missing User ID";
+                document.getElementById('display-user-id').innerText = "ERROR: Missing ID";
                 return;
             }
 
             try {
                 const res = await fetch(`${USER_API}?user_id=${currentUser.id}`);
                 const data = await res.json();
+                
+                // 讀取等級
                 currentUser.level = data.level || (data.data && data.data.level) || 0;
                 
                 document.getElementById('display-user-id').innerText = `ID: ${currentUser.id}`;
@@ -195,7 +215,8 @@
                 
                 renderBenefits();
             } catch (err) {
-                document.getElementById('display-user-id').innerText = "API Error";
+                console.error("API Error:", err);
+                document.getElementById('display-user-id').innerText = "API CONNECTION FAILED";
             } finally {
                 document.getElementById('loading-view').classList.add('hidden');
                 document.getElementById('benefit-grid').classList.remove('hidden');
@@ -210,15 +231,12 @@
                     <div class="benefit-card glass ${isLocked ? 'locked' : ''}" 
                          onclick="${isLocked ? '' : `openModal('${b.id}')`}">
                         <div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                <span class="badge">LV.${b.lv} REQ</span>
-                                <span>${isLocked ? '🔒' : '✅'}</span>
-                            </div>
-                            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">${b.name}</h3>
-                            <p style="font-size: 13px; color: #888;">${b.desc}</p>
+                            <span class="card-tag">LV.${b.lv} Requirement</span>
+                            <h3 class="card-name">${b.name}</h3>
+                            <p class="card-desc">${b.desc}</p>
                         </div>
-                        <div style="margin-top: 24px; font-size: 13px; font-weight: 700; color: ${isLocked ? '#444' : '#ff5a5f'}">
-                            ${isLocked ? '尚未達成' : '立即預約 →'}
+                        <div class="card-action">
+                            ${isLocked ? '🔒 尚未達標' : '立即預約 →'}
                         </div>
                     </div>
                 `;
@@ -229,11 +247,11 @@
             selectedBenefit = BENEFITS.find(b => b.id === id);
             document.getElementById('modal-title').innerText = selectedBenefit.name;
             document.getElementById('date-field').style.display = selectedBenefit.hasDate ? 'block' : 'none';
-            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('modal-overlay').style.display = 'flex';
         }
 
         function closeModal() {
-            document.getElementById('modal').style.display = 'none';
+            document.getElementById('modal-overlay').style.display = 'none';
         }
 
         async function submitReservation() {
@@ -254,24 +272,34 @@
             btn.innerText = "提交中...";
 
             try {
-                // 使用 Google Apps Script 提交
+                // 使用 POST 發送到 GAS
                 await fetch(GAS_API, {
                     method: 'POST',
                     mode: 'no-cors', 
                     body: JSON.stringify(payload)
                 });
 
-                alert("預約成功！資料已同步至試算表。");
+                alert("提交成功！預約資料已寫入試算表。");
                 closeModal();
                 location.reload();
             } catch (err) {
-                alert("提交失敗，請檢查網路。");
+                alert("網路連線錯誤，請稍後再試。");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "立即提交預約";
+                btn.innerText = "確認提交預約";
             }
         }
 
+        function changeLanguage(lang) {
+            const t = {
+                zh: { title: "VIP 預約系統", sub: "尊榮專屬福利預約服務" },
+                en: { title: "VIP Booking", sub: "Exclusive Welfare Services" }
+            };
+            document.getElementById('ui-title').innerText = t[lang].title;
+            document.getElementById('ui-subtitle').innerText = t[lang].sub;
+        }
+
+        // 初始化
         init();
     </script>
 </body>
