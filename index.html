@@ -156,23 +156,32 @@
             }
         }
 
-        function renderDatePicker(sid) {
+function renderDatePicker(sid) {
             const select = document.getElementById('reserve_date');
             select.disabled = false;
             select.innerHTML = '<option value="">請選擇可用日期...</option>';
+            
             const today = new Date();
-
-            for (let i = 1; i <= 30; i++) {
+            
+            // --- 核心邏輯修正：計算次月 5 號 ---
+            // 取得下個月的第一天，再設定為 5 號
+            const nextMonth5th = new Date(today.getFullYear(), today.getMonth() + 1, 5);
+            
+            // 設定一個安全上限（例如最多產生 60 天），防止無限迴圈
+            for (let i = 1; i <= 60; i++) {
                 const d = new Date(today);
                 d.setDate(today.getDate() + i);
+                
+                // 如果生成的日期超過了「次月 5 號」，就停止產生
+                if (d > nextMonth5th) break;
+
                 const y = d.getFullYear();
                 const m = String(d.getMonth() + 1).padStart(2, '0');
                 const day = String(d.getDate()).padStart(2, '0');
                 const dateStr = `${y}-${m}-${day}`; 
 
-                // --- 核心改進：兩端日期格式化比對 ---
+                // --- 原有的比對邏輯 ---
                 const isOccupiedBySid = grandSponsorBookings.some(b => {
-                    // 嘗試將回傳的 b.date 解析為 yyyy-mm-dd
                     const bDate = new Date(b.date);
                     const bStr = isNaN(bDate.getTime()) ? String(b.date).trim() : 
                                 `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
@@ -197,7 +206,9 @@
                 }
 
                 const opt = document.createElement('option');
-                opt.value = dateStr; opt.text = `${dateStr}${st}`; opt.disabled = dis;
+                opt.value = dateStr;
+                opt.text = `${dateStr}${st}`;
+                opt.disabled = dis;
                 select.add(opt);
             }
         }
