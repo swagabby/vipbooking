@@ -10,12 +10,14 @@
         body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 800px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
-        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 20px; border-radius: 100px; gap: 10px; margin-top: 10px; }
+        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; gap: 10px; }
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-3px); }
         .card.locked { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; }
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
+        .card.used { border-color: #444; cursor: not-allowed; }
+        .card.used::after { content: "本月已預約"; position: absolute; top: 10px; right: 15px; font-size: 10px; background: #333; color: #aaa; padding: 2px 8px; border-radius: 4px; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
         .modal-content { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 450px; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 15px; }
         label { font-size: 11px; font-weight: 700; color: var(--dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
@@ -31,25 +33,24 @@
         <header>
             <h1 style="font-size:24px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span id="u-name">Syncing Profile...</span>
+                <span id="u-name">Syncing...</span>
                 <span id="u-lv" style="color:var(--primary); font-weight:800;">--</span>
             </div>
         </header>
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
+    <!-- Modal 略 (同 v46) -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom:20px; font-size:18px;">福利預約</h2>
-            
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
                 <div class="form-group"><label>示意圖網址</label><input type="url" id="b_url"></div>
                 <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
-
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_brand" style="width:auto;"> 冠名</div>
@@ -57,38 +58,31 @@
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_photo" style="width:auto;"> 需要主播照片</div>
             </div>
-
             <div id="ad-fields" class="hidden">
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="ad_brand" style="width:auto;"> 冠名</div>
                 <div class="form-group"><label>客製化文案 (限8字)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
-
             <div id="lunch-fields" class="hidden">
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
                 <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
             </div>
-
             <div class="form-group" id="sw-group">
                 <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
                 <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
             </div>
-            
             <div class="form-group" id="date-group">
                 <label>選擇日期 / 場次</label>
                 <select id="reserve_date" disabled><option>請先完成核對</option></select>
             </div>
-
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限20字)</label><input type="text" id="bell_msg" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 冠名</div>
             </div>
-
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限20字)</label><input type="text" id="cover_copy" maxlength="20"></div>
             </div>
-            
             <div class="form-group"><label>備註需求</label><textarea id="reserve_content" rows="2"></textarea></div>
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
@@ -100,7 +94,7 @@
 
         let user = { id: '', username: '', level: 0 };
         let bookings = [];
-        let activeWelfare = null;
+        let quotaData = []; // 用於存放該用戶本月預約紀錄
 
         const WELFARES = [
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
@@ -115,8 +109,7 @@
         async function init() {
             const params = new URLSearchParams(window.location.search);
             user.id = params.get('user_id');
-            if(!user.id) { document.getElementById('u-name').innerText="No User ID"; renderCards(); return; }
-
+            if(!user.id) return;
             try {
                 const res = await fetch(USER_API + "?user_id=" + user.id);
                 const data = await res.json();
@@ -124,17 +117,38 @@
                 user.level = data?.level || 0;
                 document.getElementById('u-name').innerText = user.username;
                 document.getElementById('u-lv').innerText = "LV." + user.level;
+                
+                // --- 關鍵：載入用戶本月額度狀況 ---
+                const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username));
+                const hText = await hRes.text();
+                quotaData = JSON.parse(hText);
+                
                 renderCards();
             } catch(e) { renderCards(); }
         }
 
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
+            const thisMonth = new Date().toISOString().substring(0, 7); // yyyy-mm
+
             grid.innerHTML = WELFARES.map(function(w) {
                 const locked = user.level < w.lv;
-                return '<div class="card '+(locked?'locked':'')+'" onclick="'+(locked?'':'openBooking(\''+w.name+'\')')+'">' +
+                
+                // 額度判定邏輯
+                const usedCount = quotaData.filter(q => q.benefit === w.name && q.month === thisMonth).length;
+                let isUsed = false;
+                if (w.name === '大神贊助') {
+                    isUsed = (user.level >= 90) ? (usedCount >= 2) : (usedCount >= 1);
+                } else {
+                    isUsed = (usedCount >= 1);
+                }
+
+                const cardClass = locked ? 'locked' : (isUsed ? 'used' : '');
+                const clickAction = (locked || isUsed) ? '' : 'openBooking(\''+w.name+'\')';
+
+                return '<div class="card '+cardClass+'" onclick="'+clickAction+'">' +
                        '<h3>'+w.name+'</h3><p style="font-size:11px; color:#555;">LV.'+w.lv+'+</p>' +
-                       '<div style="color:var(--primary); font-size:12px; font-weight:700;">'+(locked?'🔒':'立即預約 →')+'</div></div>';
+                       '<div style="color:var(--primary); font-size:12px; font-weight:700;">'+(locked?'🔒':(isUsed?'已完成':'立即預約 →'))+'</div></div>';
             }).join('');
         }
 
@@ -142,15 +156,12 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
-            
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
-            
             ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(function(id) {
                 document.getElementById(id).classList.add('hidden');
             });
-
             if (name === '訂製專屬徽章') {
                 ['sw-group', 'date-group'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
                 document.getElementById('badge-fields').classList.remove('hidden');
@@ -193,9 +204,8 @@
             try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                const text = await res.text(); // 先以 text 接收
-                bookings = JSON.parse(text); // 再手動 parse
-                
+                const text = await res.text();
+                bookings = JSON.parse(text);
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
                 
@@ -215,13 +225,19 @@
                         const d = new Date(today); d.setDate(today.getDate() + i);
                         if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
                         const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+                        
                         const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
-                        const dayFull = bookings.filter(function(b) { return b.date === ds; }).length >= (activeWelfare==='大神贊助'?3:1);
-                        const userFull = bookings.filter(function(b) { return b.username === user.username && b.date.indexOf(ds.substring(0,7))>-1; }).length >= (user.level >= 90 ? 2 : 1);
+                        const dayCount = bookings.filter(function(b) { return b.date === ds; }).length;
+                        
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (activeWelfare === '大神贊助' && userFull) { st = " (本月次數已滿)"; dis = true; }
-                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                        else if (activeWelfare === '大神贊助' && dayCount >= 3) {
+                            if (user.level >= 90) { st = " (預約額滿，Lv.90 以上開放預約)"; } 
+                            else { st = " (預約額滿)"; dis = true; }
+                        } 
+                        else if (activeWelfare !== '大神贊助' && activeWelfare !== '訂製搜尋框文字' && dayCount >= 1) {
+                            st = " (預約額滿)"; dis = true;
+                        }
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
