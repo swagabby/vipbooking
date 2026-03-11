@@ -40,33 +40,44 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal -->
+    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
             
-            <!-- 徽章欄位 -->
+            <!-- 各福利動態欄位 -->
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
-                <div class="form-group"><label>示意圖 (雲端網址)</label><input type="url" id="b_url"></div>
-                <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="3"></textarea></div>
+                <div class="form-group"><label>示意圖網址</label><input type="url" id="b_url"></div>
+                <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
-            <!-- 禮物欄位 -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>禮物圖上文字</label><input type="text" id="g_txt"></div>
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
             </div>
 
-            <!-- Swagger ID (常駐於下方) -->
+            <div id="ad-fields" class="hidden">
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
+            </div>
+
+            <div id="lunch-fields" class="hidden">
+                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個預計時間</p>
+                <div class="form-group"><label>首選時間 (Option 1)</label><input type="datetime-local" id="l_1"></div>
+                <div class="form-group"><label>次選時間 (Option 2)</label><input type="datetime-local" id="l_2"></div>
+                <div class="form-group"><label>備選時間 (Option 3)</label><input type="datetime-local" id="l_3"></div>
+            </div>
+
+            <!-- Swagger ID (Lunch 以外常駐) -->
             <div class="form-group" id="sw-group">
                 <label>指定 Swagger ID</label>
-                <input type="text" id="swagger_id" placeholder="請輸入欲預約的 Swagger ID">
+                <input type="text" id="swagger_id" placeholder="請輸入 ID">
                 <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對此 ID 與名額狀況</button>
             </div>
             
@@ -75,10 +86,9 @@
                 <select id="reserve_date" disabled><option>請先完成上方核對</option></select>
             </div>
 
-            <!-- 小鈴噹 / 封面專屬 -->
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
@@ -94,14 +104,14 @@
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
         let user = { id: '', username: '', level: 0 };
-        let activeWelfare = null;
         let bookings = [];
 
         const WELFARES = [
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
             { name: '訂製小鈴噹通知', lv: 60 }, { name: '蓋板創作者封面', lv: 70 },
             { name: '訂製搜尋框文字', lv: 70 }, { name: '訂製專屬徽章', lv: 80 },
-            { name: '訂製專屬禮物', lv: 80 }
+            { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
+            { name: 'CEO午餐', lv: 90 }
         ];
 
         async function init() {
@@ -123,7 +133,7 @@
             grid.innerHTML = WELFARES.map(w => {
                 const locked = user.level < w.lv;
                 return `<div class="card ${locked ? 'locked' : ''}" onclick="${locked?'':'openBooking(\''+w.name+'\')'}">
-                    <h3>${w.name}</h3><p style="font-size:11px; color:#666;">LV.${w.lv}+專屬</p>
+                    <h3>${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+專屬</p>
                     <div style="color:var(--primary); font-size:12px; font-weight:700;">${locked?'🔒 尚未解鎖':'立即預約 →'}</div>
                 </div>`;
             }).join('');
@@ -134,28 +144,43 @@
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
             
-            // 重置欄位顯示
+            // UI 控制
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
-            document.getElementById('bell-fields').classList.add('hidden');
-            document.getElementById('badge-fields').classList.add('hidden');
-            document.getElementById('gift-fields').classList.add('hidden');
-            document.getElementById('cover-fields').classList.add('hidden');
+            
+            const fields = ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
+            fields.forEach(f => document.getElementById(f).classList.add('hidden'));
 
             if (name === '訂製專屬徽章') {
-                document.getElementById('sw-group').classList.add('hidden');
-                document.getElementById('date-group').classList.add('hidden');
+                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
                 document.getElementById('date-group').classList.add('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
-            } else if (name === '訂製小鈴噹通知') {
-                document.getElementById('bell-fields').classList.remove('hidden');
-            } else if (name === '蓋板創作者封面') {
-                document.getElementById('cover-fields').classList.remove('hidden');
+            } else if (name === 'CEO午餐') {
+                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                document.getElementById('lunch-fields').classList.remove('hidden');
+                setupLunchDates();
+            } else {
+                if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
+                if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
+                if (name === '專屬直播欄位廣告') {
+                    document.getElementById('ad-fields').classList.remove('hidden');
+                    document.getElementById('date-group').classList.add('hidden');
+                    document.getElementById('btn-check').classList.add('hidden');
+                }
             }
+        }
+
+        function setupLunchDates() {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + (7 - nextWeek.getDay() + 1));
+            const minDate = nextWeek.toISOString().slice(0, 16);
+            ['l_1', 'l_2', 'l_3'].forEach(id => {
+                document.getElementById(id).min = minDate;
+            });
         }
 
         async function syncAndCheck() {
@@ -169,56 +194,36 @@
                 bookings = await res.json();
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期/場次</option>';
-
-                // v20 核對邏輯
-                if (activeWelfare === '大神贊助') renderGS(sid, select);
-                else if (activeWelfare === '女神聚會') renderPT(sid, select);
-                else renderStandard(sid, select);
                 
+                // v20 核對邏輯
+                const today = new Date();
+                const limit = new Date(today.getFullYear(), today.getMonth() + (activeWelfare==='女神聚會'?2:1), (activeWelfare==='女神聚會'?0:5));
+                
+                if (activeWelfare === '女神聚會') {
+                    let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
+                    let y = today.getFullYear(); if(m>12){m=2;y+=1;}
+                    const ds = `${y}-${String(m).padStart(2,'0')}`;
+                    const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                    select.add(new Option(`${y}年 ${m}月場次`+(occupied?" (此ID已被預約)":""), ds));
+                    select.options[select.options.length-1].disabled = occupied;
+                } else {
+                    const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
+                    for (let i = startDay; i <= 60; i++) {
+                        const d = new Date(today); d.setDate(today.getDate() + i);
+                        if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
+                        const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
+                        const userFull = bookings.filter(b => b.username === user.username && b.date.includes(ds.substring(0,7))).length >= (user.level >= 90 ? 2 : 1);
+                        let st = ""; let dis = false;
+                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
+                        else if (activeWelfare === '大神贊助' && userFull) { st = " (本月次數已滿)"; dis = true; }
+                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                        select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
+                    }
+                }
                 btn.innerText = "✅ 核對完成";
             } catch (e) { alert("連線失敗"); } finally { btn.disabled = false; }
-        }
-
-        function renderGS(sid, select) {
-            const today = new Date(); const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
-            for (let i = 1; i <= 60; i++) {
-                const d = new Date(today); d.setDate(today.getDate() + i);
-                if (d > limit) break;
-                const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                const dayFull = bookings.filter(b => b.date === ds).length >= 3;
-                const userFull = bookings.filter(b => b.username === user.username && b.date.includes(ds.substring(0,7))).length >= (user.level >= 90 ? 2 : 1);
-                let st = ""; let dis = false;
-                if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                else if (userFull) { st = " (本月次數已滿)"; dis = true; }
-                else if (user.level < 90 && dayFull) { st = " (名額已滿)"; dis = true; }
-                select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
-            }
-        }
-
-        function renderPT(sid, select) {
-            const now = new Date(); let m = ((now.getMonth()+1)%2===0)?now.getMonth()+1:now.getMonth()+2;
-            let y = now.getFullYear(); if(m>12){m=2;y+=1;}
-            const ds = `${y}-${String(m).padStart(2,'0')}`;
-            const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-            select.add(new Option(`${y}年 ${m}月場次`+(occupied?" (此ID已被預約)":""), ds));
-            select.options[select.options.length-1].disabled = occupied;
-        }
-
-        function renderStandard(sid, select) {
-            const today = new Date(); const limit = new Date(today.getFullYear(), today.getMonth()+2, 0);
-            const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
-            for (let i = startDay; i <= 60; i++) {
-                const d = new Date(today); d.setDate(today.getDate() + i);
-                if (d > limit) break;
-                const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                const dayFull = bookings.some(b => b.date === ds);
-                let st = ""; let dis = false;
-                if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                else if (dayFull) { st = " (預約額滿)"; dis = true; }
-                select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
-            }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -232,21 +237,20 @@
                 swagger_id: document.getElementById('swagger_id').value,
                 date: document.getElementById('reserve_date').value,
                 content: document.getElementById('reserve_content').value,
-                badge_name: document.getElementById('b_name').value,
-                badge_elements: document.getElementById('b_elem').value,
-                img_url: document.getElementById('b_url').value,
-                target_ids: document.getElementById('b_targets').value,
-                gift_name: document.getElementById('g_name').value,
-                is_branded: document.getElementById('g_brand').checked ? "是" : "否",
+                badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
+                img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
+                gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value,
                 gift_text: document.getElementById('g_txt').value,
-                diamonds: document.getElementById('g_dia').value,
+                is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked) ? "是" : "否",
                 need_photo: document.getElementById('g_photo').checked ? "是" : "否",
-                copy_text: document.getElementById('cover_copy') ? document.getElementById('cover_copy').value : ""
+                ad_copy: document.getElementById('ad_copy').value,
+                lunch_1: document.getElementById('l_1').value, lunch_2: document.getElementById('l_2').value, lunch_3: document.getElementById('l_3').value,
+                message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value
             };
             try {
                 await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert("提交成功！"); location.reload();
-            } catch (e) { alert("提交失敗"); btn.disabled = false; }
+            } catch (e) { alert("連線失敗"); btn.disabled = false; }
         }
         init();
     </script>
