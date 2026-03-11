@@ -3,43 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAG VIP Welfare</title>
+    <title>SWAG VIP Welfare System</title>
     <style>
-        /* --- 核心色調替換為 SWAG 色 #00D2BE --- */
-        :root { 
-            --bg: #050505; 
-            --card-bg: #111111; 
-            --border: #222222; 
-            --primary: #00D2BE; /* SWAG 品牌色 */
-            --text: #ffffff; 
-            --dim: #888888; 
-        }
+        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1); --primary: #00D2BE; /* 改為 SWAG 色 */ --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 800px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
-        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 20px; border-radius: 100px; gap: 10px; margin-top: 10px; }
-        
-        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
-        
-        /* 卡片懸浮：SWAG色邊框與光暈 */
-        .card:hover:not(.locked) { border-color: var(--primary); box-shadow: 0 5px 25px -10px rgba(0, 210, 190, 0.2); }
-        .card.locked { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; }
-        
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
-        .modal-content { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 450px; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .form-group { margin-bottom: 15px; }
-        label { font-size: 11px; font-weight: 700; color: var(--dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
-        
-        /* 輸入框聚焦：SWAG色邊框 */
-        input, select, textarea { width: 100%; background: #111; border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: #fff; outline: none; font-size: 14px; transition: 0.3s; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-
-        /* 按鈕：SWAG色背景 */
-        .submit-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .submit-btn:hover { background: #00e5cf; }
-        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 5px; width: 100%; }
+        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; }
+        #u-name { font-weight: 800; font-size: 15px; }
+        #u-lv { color: var(--primary); font-weight: 800; } /* 等級顏色已改為 SWAG 色 */
+        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; width: 100%; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-5px); }
+        .card.locked { opacity: 0.25; filter: grayscale(1); cursor: not-allowed; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
+        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 18px; }
+        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -47,43 +31,43 @@
 
     <div class="container">
         <header>
-            <h1 style="font-size:24px;">SWAG VIP 預約系統</h1>
+            <h1 style="font-size:24px; margin-bottom:15px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span id="u-name">正在載入...</span>
-                <!-- 等級顏色改為 SWAG 色 -->
-                <span id="u-lv" style="color:var(--primary); font-weight:900;">--</span>
+                <span id="u-name">Syncing Profile...</span>
+                <span id="u-lv">--</span>
             </div>
         </header>
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal -->
+    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
-            <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
-            <h2 id="m-title" style="margin-bottom:20px; font-size:18px;">福利預約</h2>
+            <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
+            <h2 id="m-title" style="margin-bottom: 25px; font-size: 20px;">福利預約</h2>
             
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
-                <div class="form-group"><label>示意圖網址</label><input type="url" id="b_url"></div>
-                <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
+                <div class="form-group"><label>示意圖 (雲端網址)</label><input type="url" id="b_url"></div>
+                <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_brand" style="width:auto;"> 冠名</div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>禮物圖上文字</label><input type="text" id="g_txt"></div>
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_photo" style="width:auto;"> 需要主播照片</div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
             </div>
 
             <div id="ad-fields" class="hidden">
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="ad_brand" style="width:auto;"> 冠名</div>
-                <div class="form-group"><label>客製化文案 (限8字)</label><input type="text" id="ad_copy" maxlength="8"></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
 
             <div id="lunch-fields" class="hidden">
+                <p style="font-size:12px; color:var(--primary); margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
                 <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
@@ -101,15 +85,14 @@
             </div>
 
             <div id="bell-fields" class="hidden">
-                <div class="form-group"><label>發送文字 (限20字)</label><input type="text" id="bell_msg" maxlength="20"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 冠名</div>
+                <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
-
             <div id="cover-fields" class="hidden">
-                <div class="form-group"><label>客製化文案 (限20字)</label><input type="text" id="cover_copy" maxlength="20"></div>
+                <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
             </div>
             
-            <div class="form-group"><label>備註需求</label><textarea id="reserve_content" rows="2"></textarea></div>
+            <div class="form-group"><label>需求備註</label><textarea id="reserve_content" rows="2"></textarea></div>
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
     </div>
@@ -119,10 +102,10 @@
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
         let user = { id: '', username: '', level: 0 };
-        let bookings =[];
+        let bookings = [];
         let activeWelfare = null;
 
-        const WELFARES =[
+        const WELFARES = [
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
             { name: '訂製小鈴噹通知', lv: 60 }, { name: '蓋板創作者封面', lv: 70 },
             { name: '訂製搜尋框文字', lv: 70 }, { name: '訂製專屬徽章', lv: 80 },
@@ -130,13 +113,9 @@
             { name: 'CEO午餐', lv: 90 }
         ];
 
-        window.onload = function() { init(); };
-
         async function init() {
             const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id');
-            if(!user.id) { document.getElementById('u-name').innerText="Miss ID"; renderCards(); return; }
-
+            user.id = params.get('user_id'); if(!user.id) return;
             try {
                 const res = await fetch(USER_API + "?user_id=" + user.id);
                 const data = await res.json();
@@ -152,10 +131,9 @@
             const grid = document.getElementById('benefit-grid');
             grid.innerHTML = WELFARES.map(function(w) {
                 const locked = user.level < w.lv;
-                // 卡片底部的「立即預約」也套用 SWAG 色
                 return '<div class="card '+(locked?'locked':'')+'" onclick="'+(locked?'':'openBooking(\''+w.name+'\')')+'">' +
                        '<h3>'+w.name+'</h3><p style="font-size:11px; color:#555;">LV.'+w.lv+'+</p>' +
-                       '<div style="color:var(--primary); font-size:12px; font-weight:900;">'+(locked?'🔒 等級未達':'立即預約 →')+'</div></div>';
+                       '<div style="color:var(--primary); font-size:12px; font-weight:700;">'+(locked?'🔒 尚未解鎖':'立即預約 →')+'</div></div>';
             }).join('');
         }
 
@@ -165,17 +143,18 @@
             document.getElementById('modal').style.display = 'flex';
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
-            document.getElementById('btn-check').classList.remove('hidden');['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(function(id) {
-                document.getElementById(id).classList.add('hidden');
-            });
+            document.getElementById('btn-check').classList.remove('hidden');
+            ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
-            if (name === '訂製專屬徽章') {['sw-group', 'date-group'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
+            if (name === '訂製專屬徽章') {
+                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
                 document.getElementById('date-group').classList.add('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
-            } else if (name === 'CEO午餐') {['sw-group', 'date-group'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
+            } else if (name === 'CEO午餐') {
+                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
             } else if (name === '專屬直播欄位廣告') {
@@ -190,7 +169,8 @@
 
         function renderLunchSelects() {
             const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1', 'l_2', 'l_3'].forEach(function(id) {
+            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
+            ['l_1', 'l_2', 'l_3'].forEach(id => {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 0; i < 30; i++) {
                     const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
@@ -204,22 +184,21 @@
             const sid = document.getElementById('swagger_id').value.trim();
             if (!sid) return alert("請輸入 Swagger ID");
             const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 同步中...";
+            btn.innerText = "⏳ 同步中..."; btn.disabled = true;
             try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                const text = await res.text();
-                bookings = JSON.parse(text);
+                bookings = await res.json();
                 const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
+                select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期/場次</option>';
                 
                 const today = new Date();
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
                     let y = today.getFullYear(); if(m>12){m=2;y+=1;}
-                    const ds = y + "-" + String(m).padStart(2,'0');
-                    const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
-                    select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (已被預約)":""), ds));
+                    const ds = `${y}-${String(m).padStart(2,'0')}`;
+                    const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                    select.add(new Option(`${y}年 ${m}月場次`+(occupied?" (此ID已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
                     const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
@@ -228,18 +207,16 @@
                         const d = new Date(today); d.setDate(today.getDate() + i);
                         if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
                         const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                        const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
-                        const dayFull = bookings.filter(function(b) { return b.date === ds; }).length >= (activeWelfare==='大神贊助'?3:1);
-                        const userFull = bookings.filter(function(b) { return b.username === user.username && b.date.indexOf(ds.substring(0,7))>-1; }).length >= (user.level >= 90 ? 2 : 1);
+                        const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
                         let st = ""; let dis = false;
-                        if (occupied) { st = " (已被預約)"; dis = true; }
-                        else if (activeWelfare === '大神贊助' && userFull) { st = " (月次上限)"; dis = true; }
+                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
                         else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
                 btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); }
+            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText = "🔍 核對名額狀況"; }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -248,13 +225,10 @@
             if (!confirm("一經送出不得更改，請再三確認內容。")) return;
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Submitting...";
-            
             const payload = {
-                auth_token: "SWAG_VIP_SECURE_KEY_2025_PRO", // 保留安全金鑰
-                user_id: user.id, // 後端 v49 驗證用
                 username: user.username, level: user.level, benefit: activeWelfare,
                 swagger_id: document.getElementById('swagger_id').value,
-                date: document.getElementById('reserve_date').value,
+                date: document.getElementById('reserve_date') ? document.getElementById('reserve_date').value : "",
                 content: document.getElementById('reserve_content').value,
                 badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
                 img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
