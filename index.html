@@ -3,34 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAG VIP Welfare</title>
+    <title>SWAG VIP Welfare System</title>
     <style>
-        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1); --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888; }
+        :root { --bg: #050505; --card-bg: #111111; --border: #222222; --primary: #ff5a5f; --text: #ffffff; --dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 800px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
-        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; backdrop-filter: blur(10px); }
-        #u-name { font-weight: 800; font-size: 15px; }
-        #u-lv { color: var(--primary); font-weight: 800; }
+        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 20px; border-radius: 100px; gap: 10px; margin-top: 10px; }
         
-        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; width: 100%; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-        .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-5px); }
-        .card.locked { opacity: 0.25; filter: grayscale(1); cursor: not-allowed; }
+        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-3px); }
+        .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
         
-        /* 內嵌預約紀錄 */
-        .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; }
-        .st-badge { padding: 2px 6px; border-radius: 4px; background: #222; color: #888; font-weight: bold; }
-        .st-done { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        /* 歷史紀錄 UI 大升級 */
+        .card-history { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #333; display: flex; justify-content: space-between; align-items: center; }
+        .date-highlight { font-size: 13px; font-weight: 800; color: #fff; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.2); }
+        .st-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; border: 1px solid rgba(255, 90, 95, 0.3); }
+        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .st-default { background: #222; color: #aaa; }
 
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
-        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .form-group { margin-bottom: 18px; }
-        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal-content { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 450px; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 11px; font-weight: 700; color: var(--dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; background: #111; border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
+        .submit-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 5px; width: 100%; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -40,48 +41,44 @@
         <header>
             <h1 style="font-size:24px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span id="u-name">Syncing Profile...</span>
-                <span id="u-lv">--</span>
+                <span id="u-name">正在載入...</span>
+                <span id="u-lv" style="color:var(--primary); font-weight:800;">--</span>
             </div>
         </header>
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
-            <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
-            <h2 id="m-title" style="margin-bottom:20px; font-size:20px;">福利預約</h2>
+            <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
+            <h2 id="m-title" style="margin-bottom:20px; font-size:18px;">福利預約</h2>
             
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
-                <div class="form-group"><label>示意圖 (雲端網址)</label><input type="url" id="b_url"></div>
-                <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="2"></textarea></div>
+                <div class="form-group"><label>示意圖網址</label><input type="url" id="b_url"></div>
+                <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
-            <!-- 禮物專屬：先顯示勾選，再顯示 Swagger ID -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_brand" style="width:auto;"> 冠名</div>
                 <div class="form-group"><label>禮物圖上文字</label><input type="text" id="g_txt"></div>
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_photo" style="width:auto;"> 需要主播照片</div>
             </div>
 
             <div id="ad-fields" class="hidden">
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
-                <div class="form-group"><label>客製化文案 (限 8 字)</label><input type="text" id="ad_copy" maxlength="8"></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="ad_brand" style="width:auto;"> 冠名</div>
+                <div class="form-group"><label>客製化文案 (限8字)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
 
             <div id="lunch-fields" class="hidden">
-                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
                 <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
             </div>
 
-            <!-- Swagger ID (常駐於下方) -->
             <div class="form-group" id="sw-group">
                 <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
@@ -94,15 +91,15 @@
             </div>
 
             <div id="bell-fields" class="hidden">
-                <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div class="form-group"><label>發送文字 (限20字)</label><input type="text" id="bell_msg" maxlength="20"></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 冠名</div>
             </div>
 
             <div id="cover-fields" class="hidden">
-                <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
+                <div class="form-group"><label>客製化文案 (限20字)</label><input type="text" id="cover_copy" maxlength="20"></div>
             </div>
             
-            <div class="form-group"><label>需求備註</label><textarea id="reserve_content" rows="2"></textarea></div>
+            <div class="form-group"><label>備註需求</label><textarea id="reserve_content" rows="2"></textarea></div>
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
     </div>
@@ -112,8 +109,8 @@
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
         let user = { id: '', username: '', level: 0 };
-        let bookings =[];
         let userHistory = [];
+        let bookings =[];
         let activeWelfare = null;
 
         const WELFARES =[
@@ -128,12 +125,8 @@
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id'); 
-            if(!user.id) { 
-                document.getElementById('u-name').innerText="無用戶 ID"; 
-                renderCards(); 
-                return; 
-            }
+            user.id = params.get('user_id');
+            if(!user.id) { document.getElementById('u-name').innerText="Miss ID"; renderCards(); return; }
 
             try {
                 const res = await fetch(USER_API + "?user_id=" + user.id);
@@ -143,23 +136,19 @@
                 document.getElementById('u-name').innerText = user.username;
                 document.getElementById('u-lv').innerText = "LV." + user.level;
                 
-                // 拉取歷史紀錄 (不報錯防護)
                 try {
-                    const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username));
-                    userHistory = await hRes.json();
-                } catch(he) { console.error("歷史紀錄拉取失敗"); }
+                    const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
+                    const hText = await hRes.text();
+                    userHistory = JSON.parse(hText);
+                } catch(e) {}
 
                 renderCards();
-            } catch(e) { 
-                console.error(e);
-                document.getElementById('u-name').innerText = "連線失敗 (" + user.id + ")";
-                renderCards(); 
-            }
+            } catch(e) { renderCards(); }
         }
 
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
-            const thisMonth = new Date().toISOString().substring(0, 7); // yyyy-mm
+            const thisMonth = new Date().toISOString().substring(0, 7);
             const todayStr = new Date().toISOString().substring(0, 10);
 
             grid.innerHTML = WELFARES.map(function(w) {
@@ -173,24 +162,29 @@
 
                 const isLevelLocked = user.level < w.lv;
                 const locked = isLevelLocked || isQuotaLocked;
-                
                 let btnTxt = isLevelLocked ? '🔒 等級不足' : (isQuotaLocked ? '🔒 本月已預約' : '立即預約 →');
-                let historyHtml = '';
                 
+                // 動態狀態顏色渲染
+                let historyHtml = '';
                 if (latest) {
                     let dStatus = latest.status;
                     if (latest.reservedDate && latest.reservedDate !== "審核中" && latest.reservedDate < todayStr) {
                         dStatus = "已完成";
                     }
-                    const badgeClass = (dStatus === '已完成') ? 'st-badge st-done' : 'st-badge';
-                    historyHtml = '<div class="card-history"><span>紀錄: '+latest.reservedDate+'</span><span class="'+badgeClass+'">'+dStatus+'</span></div>';
+                    
+                    let badgeClass = "st-badge";
+                    if (dStatus === "已收到" || dStatus === "處理中") badgeClass += " st-red";
+                    else if (dStatus === "已完成") badgeClass += " st-green";
+                    else badgeClass += " st-default";
+
+                    historyHtml = '<div class="card-history">' +
+                                  '<span class="date-highlight">' + latest.reservedDate + '</span>' +
+                                  '<span class="' + badgeClass + '">' + dStatus + '</span></div>';
                 }
 
                 return '<div class="card '+(locked?'locked':'')+'" onclick="'+(locked?'':'openBooking(\''+w.name+'\')')+'">' +
-                       '<div><div style="font-size:10px; color:#555; margin-bottom:8px;">LV.'+w.lv+'+</div>' +
-                       '<h3 style="font-size:18px; margin:0;">'+w.name+'</h3></div>' +
-                       '<div><div style="color:'+(isQuotaLocked?'#888':'var(--primary)')+'; font-size:12px; font-weight:700;">'+btnTxt+'</div>' +
-                       historyHtml + '</div></div>';
+                       '<div><h3 style="font-size:18px; margin-bottom:5px;">'+w.name+'</h3><p style="font-size:11px; color:#555;">LV.'+w.lv+'+</p></div>' +
+                       '<div><div style="color:'+(isQuotaLocked?'#888':'var(--primary)')+'; font-size:12px; font-weight:700;">'+btnTxt+'</div>' + historyHtml + '</div></div>';
             }).join('');
         }
 
@@ -199,22 +193,16 @@
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
             
-            // 重置輸入
             document.getElementById('swagger_id').value = "";
-            document.getElementById('reserve_content').value = "";
             document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
-            document.getElementById('btn-check').disabled = false;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
-            document.getElementById('reserve_date').disabled = true;
-            
-            const fields =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
-            fields.forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
+            document.getElementById('reserve_date').disabled = true;['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
 
             if (name === '訂製專屬徽章') {
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
                 document.getElementById('gift-fields').classList.remove('hidden');
-                document.getElementById('sw-group').classList.remove('hidden'); // 禮物保留 SwaggerID
+                document.getElementById('sw-group').classList.remove('hidden');
             } else if (name === 'CEO午餐') {
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
@@ -232,7 +220,8 @@
 
         function renderLunchSelects() {
             const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1', 'l_2', 'l_3'].forEach(function(id) {
+            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
+            ['l_1', 'l_2', 'l_3'].forEach(function(id) {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 0; i < 30; i++) {
                     const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
@@ -276,18 +265,12 @@
                         
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (activeWelfare === '大神贊助' && dayFull) {
-                            if (user.level >= 90) { st = " (預約額滿，Lv.90 以上開放預約)"; } 
-                            else { st = " (預約額滿)"; dis = true; }
-                        } 
-                        else if (activeWelfare !== '大神贊助' && activeWelfare !== '訂製搜尋框文字' && dayFull) {
-                            st = " (預約額滿)"; dis = true;
-                        }
+                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
                 btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText = "🔍 核對名額狀況"; }
+            } catch (e) { alert("連線失敗"); btn.innerText = "🔍 重新核對"; } finally { btn.disabled = false; }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
