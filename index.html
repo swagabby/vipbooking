@@ -7,7 +7,7 @@
     <style>
         :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1); --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text-main); font-family: sans-serif; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 10px 25px; border-radius: 100px; gap: 12px; }
@@ -46,7 +46,7 @@
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
             
-            <!-- 各福利動態欄位 -->
+            <!-- 專屬欄位：徽章 -->
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
@@ -54,6 +54,7 @@
                 <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
+            <!-- 專屬欄位：禮物 -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
@@ -62,34 +63,39 @@
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
             </div>
 
+            <!-- 專屬欄位：廣告 -->
             <div id="ad-fields" class="hidden">
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
 
+            <!-- 專屬欄位：CEO午餐 (僅日期) -->
             <div id="lunch-fields" class="hidden">
-                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個預計時間</p>
-                <div class="form-group"><label>首選時間 (Option 1)</label><input type="datetime-local" id="l_1"></div>
-                <div class="form-group"><label>次選時間 (Option 2)</label><input type="datetime-local" id="l_2"></div>
-                <div class="form-group"><label>備選時間 (Option 3)</label><input type="datetime-local" id="l_3"></div>
+                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個預計日期</p>
+                <div class="form-group"><label>優先日期 1</label><input type="date" id="l_1"></div>
+                <div class="form-group"><label>優先日期 2</label><input type="date" id="l_2"></div>
+                <div class="form-group"><label>優先日期 3</label><input type="date" id="l_3"></div>
             </div>
 
-            <!-- Swagger ID (Lunch 以外常駐) -->
+            <!-- Swagger ID (常駐) -->
             <div class="form-group" id="sw-group">
                 <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
-                <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對此 ID 與名額狀況</button>
+                <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
             </div>
             
             <div class="form-group" id="date-group">
                 <label>選擇日期 / 場次</label>
-                <select id="reserve_date" disabled><option>請先完成上方核對</option></select>
+                <select id="reserve_date" disabled><option>請先完成核對</option></select>
             </div>
 
+            <!-- 專屬欄位：小鈴噹 -->
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
+
+            <!-- 專屬欄位：封面 -->
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
             </div>
@@ -144,7 +150,7 @@
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
             
-            // UI 控制
+            // 重置
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
@@ -163,24 +169,21 @@
                 ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 setupLunchDates();
+            } else if (name === '專屬直播欄位廣告') {
+                document.getElementById('ad-fields').classList.remove('hidden');
+                document.getElementById('date-group').classList.add('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
             } else {
                 if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
                 if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
-                if (name === '專屬直播欄位廣告') {
-                    document.getElementById('ad-fields').classList.remove('hidden');
-                    document.getElementById('date-group').classList.add('hidden');
-                    document.getElementById('btn-check').classList.add('hidden');
-                }
             }
         }
 
         function setupLunchDates() {
             const nextWeek = new Date();
             nextWeek.setDate(nextWeek.getDate() + (7 - nextWeek.getDay() + 1));
-            const minDate = nextWeek.toISOString().slice(0, 16);
-            ['l_1', 'l_2', 'l_3'].forEach(id => {
-                document.getElementById(id).min = minDate;
-            });
+            const minStr = nextWeek.toISOString().split('T')[0];
+            ['l_1', 'l_2', 'l_3'].forEach(id => document.getElementById(id).min = minStr);
         }
 
         async function syncAndCheck() {
@@ -239,8 +242,7 @@
                 content: document.getElementById('reserve_content').value,
                 badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
                 img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
-                gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value,
-                gift_text: document.getElementById('g_txt').value,
+                gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
                 is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked) ? "是" : "否",
                 need_photo: document.getElementById('g_photo').checked ? "是" : "否",
                 ad_copy: document.getElementById('ad_copy').value,
@@ -250,7 +252,7 @@
             try {
                 await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert("提交成功！"); location.reload();
-            } catch (e) { alert("連線失敗"); btn.disabled = false; }
+            } catch (e) { alert("失敗"); btn.disabled = false; }
         }
         init();
     </script>
