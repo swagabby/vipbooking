@@ -247,28 +247,40 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        async function handleFormSubmit() {
+    async function handleFormSubmit() {
             if (!confirm("一經送出不得更改，請再三確認內容。")) return;
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Submitting...";
+
             const payload = {
-                username: user.username, level: user.level, benefit: activeWelfare,
+                // --- 新增安全金鑰 ---
+                auth_token: "SWAG_VIP_SECURE_KEY_2025_PRO", 
+                
+                username: user.username, 
+                level: user.level, 
+                benefit: activeWelfare,
                 swagger_id: document.getElementById('swagger_id').value,
                 date: document.getElementById('reserve_date').value,
                 content: document.getElementById('reserve_content').value,
-                badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
-                img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
-                gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
+                badge_name: document.getElementById('b_name').value, 
+                badge_elements: document.getElementById('b_elem').value,
+                img_url: document.getElementById('b_url').value, 
+                target_ids: document.getElementById('b_targets').value,
+                gift_name: document.getElementById('g_name').value, 
+                diamonds: document.getElementById('g_dia').value, 
+                gift_text: document.getElementById('g_txt').value,
                 is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked) ? "是" : "否",
                 need_photo: document.getElementById('g_photo').checked ? "是" : "否",
                 ad_copy: document.getElementById('ad_copy').value,
                 lunch_1: document.getElementById('l_1') ? document.getElementById('l_1').value : "",
                 lunch_2: document.getElementById('l_2') ? document.getElementById('l_2').value : "",
                 lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
-                message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value
+                message: document.getElementById('bell_msg').value, 
+                copy_text: document.getElementById('cover_copy').value
             };
+
             try {
-                await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                const response = await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert("提交成功！"); location.reload();
             } catch (e) { alert("連線失敗"); btn.disabled = false; }
         }
