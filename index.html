@@ -7,23 +7,23 @@
     <style>
         :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1); --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 850px; width: 100%; }
-        header { text-align: center; margin-bottom: 40px; }
-        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 10px 25px; border-radius: 100px; gap: 12px; }
-        #u-name { font-weight: 800; font-size: 15px; }
-        #u-lv { font-weight: 800; color: var(--primary); }
-        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; width: 100%; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px; padding: 30px; transition: 0.3s; cursor: pointer; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; }
+        header { text-align: center; margin-bottom: 30px; }
+        .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; gap: 10px; }
+        #u-name { font-weight: 800; font-size: 14px; }
+        #u-lv { color: var(--primary); font-weight: 800; font-size: 14px; }
+        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; width: 100%; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
         .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-5px); }
         .card.locked { opacity: 0.25; filter: grayscale(1); cursor: not-allowed; }
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(10px); }
-        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px; width: 100%; max-width: 480px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
+        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        .check-btn { background: #333; color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 12px; cursor: pointer; margin-top: 10px; width: 100%; }
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 15px; }
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -31,7 +31,7 @@
 
     <div class="container">
         <header>
-            <h1 style="font-size:26px; margin-bottom:20px;">SWAG VIP 預約系統</h1>
+            <h1 style="font-size:24px; margin-bottom:15px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
                 <span id="u-name">Syncing Profile...</span>
                 <span id="u-lv">--</span>
@@ -40,13 +40,12 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Booking Modal -->
+    <!-- Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
-            <h2 id="m-title" style="margin-bottom: 25px; font-size: 22px;">福利預約</h2>
+            <h2 id="m-title" style="margin-bottom: 20px; font-size: 20px;">福利預約</h2>
             
-            <!-- 專屬欄位：徽章 -->
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
@@ -54,7 +53,6 @@
                 <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
-            <!-- 專屬欄位：禮物 -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
@@ -63,21 +61,18 @@
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
             </div>
 
-            <!-- 專屬欄位：廣告 -->
             <div id="ad-fields" class="hidden">
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
 
-            <!-- 專屬欄位：CEO午餐 (僅日期) -->
             <div id="lunch-fields" class="hidden">
-                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個預計日期</p>
-                <div class="form-group"><label>優先日期 1</label><input type="date" id="l_1"></div>
-                <div class="form-group"><label>優先日期 2</label><input type="date" id="l_2"></div>
-                <div class="form-group"><label>優先日期 3</label><input type="date" id="l_3"></div>
+                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
+                <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
+                <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
+                <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
             </div>
 
-            <!-- Swagger ID (常駐) -->
             <div class="form-group" id="sw-group">
                 <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
@@ -89,13 +84,10 @@
                 <select id="reserve_date" disabled><option>請先完成核對</option></select>
             </div>
 
-            <!-- 專屬欄位：小鈴噹 -->
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
-
-            <!-- 專屬欄位：封面 -->
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
             </div>
@@ -139,7 +131,7 @@
             grid.innerHTML = WELFARES.map(w => {
                 const locked = user.level < w.lv;
                 return `<div class="card ${locked ? 'locked' : ''}" onclick="${locked?'':'openBooking(\''+w.name+'\')'}">
-                    <h3>${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+專屬</p>
+                    <h3>${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+</p>
                     <div style="color:var(--primary); font-size:12px; font-weight:700;">${locked?'🔒 尚未解鎖':'立即預約 →'}</div>
                 </div>`;
             }).join('');
@@ -149,14 +141,10 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
-            
-            // 重置
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
-            
-            const fields = ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
-            fields.forEach(f => document.getElementById(f).classList.add('hidden'));
+            ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
             if (name === '訂製專屬徽章') {
                 ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -168,7 +156,7 @@
             } else if (name === 'CEO午餐') {
                 ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('lunch-fields').classList.remove('hidden');
-                setupLunchDates();
+                renderLunchSelects();
             } else if (name === '專屬直播欄位廣告') {
                 document.getElementById('ad-fields').classList.remove('hidden');
                 document.getElementById('date-group').classList.add('hidden');
@@ -179,11 +167,17 @@
             }
         }
 
-        function setupLunchDates() {
+        function renderLunchSelects() {
             const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + (7 - nextWeek.getDay() + 1));
-            const minStr = nextWeek.toISOString().split('T')[0];
-            ['l_1', 'l_2', 'l_3'].forEach(id => document.getElementById(id).min = minStr);
+            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
+            ['l_1', 'l_2', 'l_3'].forEach(id => {
+                const el = document.getElementById(id); el.innerHTML = '<option value="">請選擇日期</option>';
+                for (let i = 0; i < 30; i++) {
+                    const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
+                    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    el.add(new Option(ds, ds));
+                }
+            });
         }
 
         async function syncAndCheck() {
@@ -198,10 +192,7 @@
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期/場次</option>';
                 
-                // v20 核對邏輯
                 const today = new Date();
-                const limit = new Date(today.getFullYear(), today.getMonth() + (activeWelfare==='女神聚會'?2:1), (activeWelfare==='女神聚會'?0:5));
-                
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
                     let y = today.getFullYear(); if(m>12){m=2;y+=1;}
@@ -210,18 +201,26 @@
                     select.add(new Option(`${y}年 ${m}月場次`+(occupied?" (此ID已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
+                    const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
                     const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
                     for (let i = startDay; i <= 60; i++) {
                         const d = new Date(today); d.setDate(today.getDate() + i);
                         if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
                         const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        
+                        // 【關鍵比對邏輯】
                         const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
+                        const sameDayBookings = bookings.filter(b => b.date === ds);
+                        
+                        // 大神贊助：限 3 人 (Lv.90 除外)；其他：限 1 人
+                        const isDayFull = (activeWelfare === '大神贊助') ? (sameDayBookings.length >= 3) : (sameDayBookings.length >= 1);
                         const userFull = bookings.filter(b => b.username === user.username && b.date.includes(ds.substring(0,7))).length >= (user.level >= 90 ? 2 : 1);
+
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
                         else if (activeWelfare === '大神贊助' && userFull) { st = " (本月次數已滿)"; dis = true; }
-                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                        else if (isDayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                        
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
@@ -242,7 +241,7 @@
                 content: document.getElementById('reserve_content').value,
                 badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
                 img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
-                gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
+                gift_name: document.getElementById('g_name').value, gift_text: document.getElementById('g_txt').value, diamonds: document.getElementById('g_dia').value,
                 is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked) ? "是" : "否",
                 need_photo: document.getElementById('g_photo').checked ? "是" : "否",
                 ad_copy: document.getElementById('ad_copy').value,
