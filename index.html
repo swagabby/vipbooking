@@ -7,12 +7,13 @@
     <style>
         :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.04); --border: rgba(255, 255, 255, 0.1); --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text-main); font-family: sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 800px; width: 100%; }
+        header { text-align: center; margin-bottom: 30px; }
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; }
         .history-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 30px; }
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; font-size: 13px; }
-        .status-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: #222; color: #888; }
+        .status-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: #222; color: #888; font-weight: bold; }
         .status-done { background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
@@ -31,10 +32,10 @@
 <body>
 
     <div class="container">
-        <header style="text-align:center; margin-bottom:30px;">
-            <h1 style="font-size:24px;">SWAG VIP 預約系統</h1>
+        <header>
+            <h1>SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span id="u-name" style="font-weight:800;">載入中...</span>
+                <span id="u-name">Syncing Profile...</span>
                 <span id="u-lv" style="color:var(--primary); font-weight:800;">--</span>
             </div>
         </header>
@@ -50,9 +51,10 @@
     <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
-            <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
+            <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom:20px; font-size:20px;">福利預約</h2>
             
+            <!-- 專屬欄位：徽章 -->
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
@@ -60,14 +62,16 @@
                 <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="3"></textarea></div>
             </div>
 
+            <!-- 專屬欄位：禮物 -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>禮物圖上文字</label><input type="text" id="g_txt"></div>
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
                 <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
             </div>
 
+            <!-- Swagger ID & Check (常駐且順序調整) -->
             <div class="form-group" id="sw-group">
                 <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
@@ -79,15 +83,12 @@
                 <select id="reserve_date" disabled><option>請先完成核對</option></select>
             </div>
 
+            <!-- 小鈴噹專屬 -->
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
             
-            <div id="cover-fields" class="hidden">
-                <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
-            </div>
-
             <div class="form-group"><label>需求備註</label><textarea id="reserve_content" rows="2"></textarea></div>
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
@@ -113,14 +114,12 @@
             try {
                 const res = await fetch(`${USER_API}?user_id=${user.id}`);
                 const data = await res.json();
-                // --- 防崩潰處理 ---
-                user.username = (data?.username || data?.display_name || user.id).toString().trim();
-                user.level = data?.level || (data?.data && data?.data?.level) || 0;
+                user.username = (data?.username || data?.display_name || user.id).trim();
+                user.level = data?.level || 0;
                 document.getElementById('u-name').innerText = user.username;
                 document.getElementById('u-lv').innerText = `LV.${user.level}`;
                 fetchHistory(); renderCards();
             } catch(e) { 
-                console.error(e); 
                 document.getElementById('u-name').innerText = user.id;
                 renderCards(); 
             }
@@ -132,11 +131,21 @@
                 const list = await res.json();
                 const container = document.getElementById('history-list');
                 if (!list || list.length === 0) { container.innerHTML = '<p style="font-size:12px; color:#333;">尚無紀錄</p>'; return; }
+                
                 const todayStr = new Date().toISOString().split('T')[0];
                 container.innerHTML = list.map(h => {
                     let displayStatus = h.status;
-                    if (h.date && h.date.length === 10 && h.date < todayStr) displayStatus = "已完成";
-                    return `<div class="history-item"><span><b>${h.benefit}</b></span><span style="color:#666">${h.date}</span><span class="status-tag ${displayStatus==='已完成'?'status-done':''}">${displayStatus}</span></div>`;
+                    // v31 狀態判斷：過期才顯示已完成，未來日期顯示已收到
+                    if (h.date && h.date !== "審核中" && h.date < todayStr) displayStatus = "已完成";
+                    else displayStatus = h.status || "已收到";
+
+                    return `
+                        <div class="history-item">
+                            <span><b>${h.benefit}</b></span>
+                            <span style="color:#666">${h.date}</span>
+                            <span class="status-tag ${displayStatus === '已完成' ? 'status-done' : ''}">${displayStatus}</span>
+                        </div>
+                    `;
                 }).join('');
             } catch(e) {}
         }
@@ -157,13 +166,13 @@
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
             
+            // 欄位重置
             document.getElementById('sw-group').classList.remove('hidden');
-            document.getElementById('btn-check').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
+            document.getElementById('btn-check').classList.remove('hidden');
             document.getElementById('bell-fields').classList.add('hidden');
             document.getElementById('badge-fields').classList.add('hidden');
             document.getElementById('gift-fields').classList.add('hidden');
-            document.getElementById('cover-fields').classList.add('hidden');
 
             if (name === '訂製專屬徽章') {
                 document.getElementById('sw-group').classList.add('hidden');
@@ -171,12 +180,10 @@
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
                 document.getElementById('date-group').classList.add('hidden');
-                document.getElementById('gift-fields').classList.remove('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('gift-fields').classList.remove('hidden');
             } else if (name === '訂製小鈴噹通知') {
                 document.getElementById('bell-fields').classList.remove('hidden');
-            } else if (name === '蓋板創作者封面') {
-                document.getElementById('cover-fields').classList.remove('hidden');
             }
         }
 
@@ -253,16 +260,12 @@
                 swagger_id: document.getElementById('swagger_id').value,
                 date: document.getElementById('reserve_date').value,
                 content: document.getElementById('reserve_content').value,
-                badge_name: document.getElementById('b_name').value,
-                badge_elements: document.getElementById('b_elem').value,
-                img_url: document.getElementById('b_url').value,
-                target_ids: document.getElementById('b_targets').value,
-                gift_name: document.getElementById('g_name').value,
-                is_branded: document.getElementById('g_brand').checked ? "是" : "否",
-                gift_text: document.getElementById('g_txt').value,
+                badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
+                img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
+                gift_name: document.getElementById('g_name').value, gift_text: document.getElementById('g_txt').value,
                 diamonds: document.getElementById('g_dia').value,
-                need_photo: document.getElementById('g_photo').checked ? "是" : "否",
-                copy_text: document.getElementById('cover_copy') ? document.getElementById('cover_copy').value : ""
+                is_branded: document.getElementById('g_brand').checked ? "是" : "否",
+                need_photo: document.getElementById('g_photo').checked ? "是" : "否"
             };
             try {
                 await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
