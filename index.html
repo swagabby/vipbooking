@@ -16,17 +16,21 @@
         #u-lv { font-weight: 800; color: var(--primary); background: rgba(255,90,95,0.1); padding: 2px 10px; border-radius: 50px; font-size: 12px; }
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px; padding: 30px; transition: 0.3s; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; }
-        .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-5px); }
+        .card:hover:not(.locked) { transform: translateY(-5px); border-color: var(--primary); }
         .card.locked { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(10px); }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(10px); }
         .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 32px; width: 100%; max-width: 480px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: #fff; outline: none; font-size: 14px; }
-        .check-btn { background: #333; color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
+        input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
+        .check-btn { background: #333; color: #fff; border: none; padding: 12px; border-radius: 12px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; transition: 0.2s; }
+        .check-btn:hover { background: #444; }
         .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .submit-btn:disabled { background: #333; }
+        .warning-text { color: #ffcc00; font-size: 11px; font-weight: bold; margin-bottom: 10px; display: block; }
         .hidden { display: none !important; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #ccc; margin: 15px 0; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #ccc; margin: 10px 0; }
+        .checkbox-group input { width: auto; }
     </style>
 </head>
 <body>
@@ -43,7 +47,7 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal -->
+    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
@@ -52,17 +56,24 @@
             <div class="form-group">
                 <label>指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入欲預約的 Swagger ID">
-                <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 點擊核對此 ID 名額</button>
+                <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 檢查此 ID 與名額狀況</button>
             </div>
             
             <div class="form-group" id="date-group">
                 <label>選擇日期 / 場次</label>
                 <select id="reserve_date" disabled><option>請先完成上方核對</option></select>
+                <span id="date-warning" class="warning-text hidden">*日期無法挑選，只能盡量*</span>
             </div>
 
+            <!-- 小鈴噹專屬 -->
             <div id="bell-only" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字內)</label><input type="text" id="bell_message" maxlength="20" placeholder="輸入推播內容"></div>
                 <div class="checkbox-group"><input type="checkbox" id="is_branded" style="width:auto;"><label for="is_branded">是否冠名 (勾選為「是」)</label></div>
+            </div>
+
+            <!-- 蓋板封面專屬 -->
+            <div id="cover-only" class="hidden">
+                <div class="form-group"><label>客製化文案 (限 20 字內)</label><input type="text" id="cover_copy" maxlength="20" placeholder="請輸入封面顯示文字"></div>
             </div>
             
             <div class="form-group"><label>需求備註 / REMARK</label><textarea id="reserve_content" rows="3" placeholder="請輸入需求..."></textarea></div>
@@ -82,7 +93,8 @@
         const WELFARES = [
             { name: '大神贊助', lv: 50 },
             { name: '女神聚會', lv: 50 },
-            { name: '訂製小鈴噹通知', lv: 60 }
+            { name: '訂製小鈴噹通知', lv: 60 },
+            { name: '蓋板創作者封面', lv: 70 }
         ];
 
         async function init() {
@@ -115,9 +127,13 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
-            document.getElementById('bell-only').classList.toggle('hidden', name !== '訂製小鈴噹通知');
             document.getElementById('reserve_date').disabled = true;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成上方核對</option>';
+            
+            // UI 控制
+            document.getElementById('bell-only').classList.toggle('hidden', name !== '訂製小鈴噹通知');
+            document.getElementById('cover-only').classList.toggle('hidden', name !== '蓋板創作者封面');
+            document.getElementById('date-warning').classList.toggle('hidden', name !== '蓋板創作者封面');
         }
 
         async function syncAndCheck() {
@@ -127,7 +143,7 @@
             btn.innerText = "⏳ 正在校對..."; btn.disabled = true;
 
             try {
-                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData' };
+                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData' };
                 const res = await fetch(`${GAS_API}?action=${actionMap[activeWelfare]}&v=${Date.now()}`);
                 bookings = await res.json();
                 
@@ -137,6 +153,7 @@
                 if (activeWelfare === '大神贊助') renderGS(sid, select);
                 else if (activeWelfare === '女神聚會') renderParty(sid, select);
                 else if (activeWelfare === '訂製小鈴噹通知') renderBell(sid, select);
+                else if (activeWelfare === '蓋板創作者封面') renderCover(sid, select);
                 
                 btn.innerText = "✅ 核對完成";
             } catch (e) { alert("同步失敗"); btn.innerText = "❌ 重試"; }
@@ -150,19 +167,15 @@
                 const d = new Date(today); d.setDate(today.getDate() + i);
                 if (d > limit) break;
                 const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                
-                // 比對邏輯 (回歸成功版)
-                const isTakenBySid = bookings.some(b => String(b.swagger_id).trim() === sid && b.date === ds);
+                const isTaken = bookings.some(b => b.swagger_id === sid && b.date === ds);
                 const dayCount = bookings.filter(b => b.date === ds).length;
                 const userCount = bookings.filter(b => b.username === user.username && b.date.includes(ds.substring(0,7))).length;
-
                 let txt = ds; let dis = false;
-                if (isTakenBySid) { txt += " (此ID已被預約)"; dis = true; }
-                else if (user.level >= 90) { if (userCount >= 2) { txt += " (本月2次已滿)"; dis = true; } }
-                else {
-                    if (userCount >= 1) { txt += " (本月已預約)"; dis = true; }
-                    else if (dayCount >= 3) { txt += " (名額已滿)"; dis = true; }
-                }
+                if (isTaken) { txt += " (此ID已被預約)"; dis = true; }
+                else if (user.level < 90) {
+                    if (userCount >= 1) { txt += " (本月已約過)"; dis = true; }
+                    else if (dayCount >= 3) { txt += " (全站額滿)"; dis = true; }
+                } else if (user.level >= 90 && userCount >= 2) { txt += " (本月2次已滿)"; dis = true; }
                 const opt = document.createElement('option'); opt.value = ds; opt.text = txt; opt.disabled = dis; select.add(opt);
             }
         }
@@ -172,10 +185,8 @@
             let m = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
             let y = now.getFullYear(); if (m > 12) { m = 2; y += 1; }
             const ds = `${y}-${String(m).padStart(2,'0')}`;
-            
-            const isTaken = bookings.some(b => String(b.swagger_id).trim() === sid && b.date === ds);
-            const opt = document.createElement('option');
-            opt.value = ds; opt.text = `${y}年 ${m}月場次` + (isTaken ? " (此ID已被預約)" : "");
+            const isTaken = bookings.some(b => b.swagger_id === sid && b.date === ds);
+            const opt = document.createElement('option'); opt.value = ds; opt.text = `${y}年 ${m}月場次` + (isTaken ? " (此ID已被預約)" : "");
             opt.disabled = isTaken; select.add(opt);
         }
 
@@ -186,14 +197,26 @@
                 const d = new Date(today); d.setDate(today.getDate() + i);
                 if (d > limit) break;
                 const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                
-                const isTaken = bookings.some(b => String(b.swagger_id).trim() === sid && b.date === ds);
+                const isTaken = bookings.some(b => b.swagger_id === sid && b.date === ds);
                 const isFull = bookings.some(b => b.date === ds);
-
                 let txt = ds; let dis = false;
                 if (isTaken) { txt += " (此ID已被預約)"; dis = true; }
                 else if (isFull) { txt += " (預約額滿)"; dis = true; }
                 const opt = document.createElement('option'); opt.value = ds; opt.text = txt; opt.disabled = dis; select.add(opt);
+            }
+        }
+
+        function renderCover(sid, select) {
+            const today = new Date();
+            const startLimit = new Date(today.getTime() + (14 * 24 * 60 * 60 * 1000)); // 今日兩週後
+            const endLimit = new Date(today.getFullYear(), today.getMonth() + 2, 0); // 下個月底
+            for (let i = 14; i <= 60; i++) {
+                const d = new Date(today); d.setDate(today.getDate() + i);
+                if (d > endLimit) break;
+                const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                const isTaken = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                const opt = document.createElement('option'); opt.value = ds; opt.text = ds + (isTaken ? " (此ID已被預約)" : "");
+                opt.disabled = isTaken; select.add(opt);
             }
         }
 
@@ -203,18 +226,24 @@
             const sid = document.getElementById('swagger_id').value.trim();
             const date = document.getElementById('reserve_date').value;
             if (!sid || !date) return alert("請完整填寫 ID 與日期");
-            btn = document.getElementById('btn-submit'); btn.disabled = true; btn.innerText = "Submitting...";
+
+            // 最終警告
+            if(!confirm("一經送出不得更改，請再三確認內容，若發現仇恨言論將取消本次福利資格。")) return;
+
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true; btn.innerText = "Submitting...";
 
             const payload = {
                 username: user.username, level: user.level, benefit: activeWelfare,
                 swagger_id: sid, date: date, content: document.getElementById('reserve_content').value,
                 message: document.getElementById('bell_message').value || "",
+                copy_text: document.getElementById('cover_copy').value || "",
                 is_branded: document.getElementById('is_branded').checked ? "是" : "否"
             };
 
             try {
                 await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("提交成功！");
+                alert("提交成功！申請已發送。");
                 location.reload();
             } catch (e) { alert("連線失敗"); btn.disabled = false; }
         }
