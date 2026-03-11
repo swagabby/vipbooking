@@ -13,9 +13,9 @@
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 20px; border-radius: 100px; gap: 10px; margin-top: 10px; }
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
-        .card:hover:not(.locked) { border-color: var(--primary); }
+        .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-3px); }
         .card.locked { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; }
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
         .modal-content { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 450px; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 15px; }
         label { font-size: 11px; font-weight: 700; color: var(--dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
@@ -31,14 +31,13 @@
         <header>
             <h1 style="font-size:24px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span id="u-name">正在載入...</span>
+                <span id="u-name">Syncing Profile...</span>
                 <span id="u-lv" style="color:var(--primary); font-weight:800;">--</span>
             </div>
         </header>
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
@@ -116,7 +115,8 @@
         async function init() {
             const params = new URLSearchParams(window.location.search);
             user.id = params.get('user_id');
-            if(!user.id) { document.getElementById('u-name').innerText="Miss ID"; renderCards(); return; }
+            if(!user.id) { document.getElementById('u-name').innerText="No User ID"; renderCards(); return; }
+
             try {
                 const res = await fetch(USER_API + "?user_id=" + user.id);
                 const data = await res.json();
@@ -130,7 +130,7 @@
 
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
-            grid.innerHTML = WELFARES.map(w => {
+            grid.innerHTML = WELFARES.map(function(w) {
                 const locked = user.level < w.lv;
                 return '<div class="card '+(locked?'locked':'')+'" onclick="'+(locked?'':'openBooking(\''+w.name+'\')')+'">' +
                        '<h3>'+w.name+'</h3><p style="font-size:11px; color:#555;">LV.'+w.lv+'+</p>' +
@@ -142,21 +142,24 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
+            
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('date-group').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
-            const fields = ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
-            fields.forEach(f => document.getElementById(f).classList.add('hidden'));
+            
+            ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(function(id) {
+                document.getElementById(id).classList.add('hidden');
+            });
 
             if (name === '訂製專屬徽章') {
-                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                ['sw-group', 'date-group'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
                 document.getElementById('date-group').classList.add('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
             } else if (name === 'CEO午餐') {
-                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                ['sw-group', 'date-group'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
             } else if (name === '專屬直播欄位廣告') {
@@ -172,7 +175,7 @@
         function renderLunchSelects() {
             const nextWeek = new Date();
             nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
-            ['l_1', 'l_2', 'l_3'].forEach(id => {
+            ['l_1', 'l_2', 'l_3'].forEach(function(id) {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 0; i < 30; i++) {
                     const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
@@ -190,52 +193,40 @@
             try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                bookings = await res.json();
+                const text = await res.text(); // 先以 text 接收
+                bookings = JSON.parse(text); // 再手動 parse
+                
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
                 
+                const today = new Date();
                 if (activeWelfare === '女神聚會') {
                     const now = new Date();
                     let m = ((now.getMonth()+1)%2===0)?now.getMonth()+1:now.getMonth()+2;
                     let y = now.getFullYear(); if(m>12){m=2;y+=1;}
                     const ds = y + "-" + String(m).padStart(2,'0');
-                    const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                    const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
                     select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
-                    renderGS(sid, select);
+                    const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
+                    const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
+                    for (let i = startDay; i <= 60; i++) {
+                        const d = new Date(today); d.setDate(today.getDate() + i);
+                        if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
+                        const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+                        const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
+                        const dayFull = bookings.filter(function(b) { return b.date === ds; }).length >= (activeWelfare==='大神贊助'?3:1);
+                        const userFull = bookings.filter(function(b) { return b.username === user.username && b.date.indexOf(ds.substring(0,7))>-1; }).length >= (user.level >= 90 ? 2 : 1);
+                        let st = ""; let dis = false;
+                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
+                        else if (activeWelfare === '大神贊助' && userFull) { st = " (本月次數已滿)"; dis = true; }
+                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                        select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
+                    }
                 }
                 btn.innerText = "✅ 核對完成";
             } catch (e) { alert("連線失敗"); }
-        }
-
-        function renderGS(sid, select) {
-            const today = new Date(); 
-            const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
-            const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
-            
-            for (let i = startDay; i <= 60; i++) {
-                const d = new Date(today); d.setDate(today.getDate() + i);
-                if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
-                const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                
-                const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                const dayCount = bookings.filter(b => b.date === ds).length;
-                const userFull = bookings.filter(b => b.username === user.username && b.date.indexOf(ds.substring(0,7))>-1).length >= (user.level >= 90 ? 2 : 1);
-
-                let st = ""; let dis = false;
-                if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                else if (activeWelfare === '大神贊助' && userFull) { st = " (本月次數已滿)"; dis = true; }
-                else if (activeWelfare === '大神贊助' && dayCount >= 3) {
-                    if (user.level >= 90) { st = " (Lv.90 優先名額)"; } 
-                    else { st = " (預約額滿)"; dis = true; }
-                } 
-                else if (activeWelfare !== '大神贊助' && activeWelfare !== '訂製搜尋框文字' && dayCount >= 1) {
-                    st = " (預約額滿)"; dis = true;
-                }
-                
-                select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
-            }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
