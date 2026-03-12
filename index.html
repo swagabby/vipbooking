@@ -28,8 +28,8 @@
         
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; position: relative; }
-        
         .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
+        
         .card.locked { cursor: not-allowed; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); border-color: #222; }
         .card.quota-locked { border-color: rgba(255,255,255,0.05); }
@@ -45,7 +45,7 @@
         .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
-        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 500px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
@@ -59,7 +59,7 @@
 </head>
 <body>
 
-    <div id="loader-overlay"><div class="spinner"></div><div style="color:var(--primary); font-size:12px; font-weight:bold; letter-spacing:2px;">SYNCING VIP SYSTEM...</div></div>
+    <div id="loader-overlay"><div class="spinner"></div><div style="color:var(--primary); font-size:12px; font-weight:bold; letter-spacing:2px;">LOADING VIP SYSTEM...</div></div>
 
     <div class="container">
         <header>
@@ -73,19 +73,23 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal -->
+    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom:20px; font-size:20px;">福利預約</h2>
-            <div id="anchor-notice" class="anchor-notice hidden">填寫完畢將由官方向主播拿取素材</div>
             
+            <div id="anchor-notice" class="anchor-notice hidden">填寫完畢將由官方向主播拿取素材</div>
+
+            <!-- 1. 徽章專屬 -->
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
                 <div class="form-group"><label>示意圖 (雲端網址)</label><input type="url" id="b_url"></div>
-                <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
+                <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
+
+            <!-- 2. 禮物專屬 -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> 是否冠名</div>
@@ -93,29 +97,41 @@
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> 需要主播照片作為素材</div>
             </div>
+
+            <!-- 3. 廣告專屬 -->
             <div id="ad-fields" class="hidden">
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> 是否冠名</div>
-                <div class="form-group"><label>客製化文案 (限 8 字)</label><input type="text" id="ad_copy" maxlength="8"></div>
+                <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
+
+            <!-- 4. 午餐專屬 -->
             <div id="lunch-fields" class="hidden">
                 <p style="font-size:12px; color:var(--primary); margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
                 <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
             </div>
+
+            <!-- 5. Swagger ID (常駐) -->
             <div class="form-group" id="sw-group">
-                <label>指定 Swagger ID</label>
+                <label id="label-swagger">指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
                 <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
             </div>
+            
+            <!-- 6. 日期/場次 -->
             <div class="form-group" id="date-group">
                 <label>選擇日期 / 場次</label>
                 <select id="reserve_date" disabled><option>請先完成核對</option></select>
             </div>
+
+            <!-- 7. 小鈴噹專屬 -->
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 是否冠名</div>
+                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 是否冠名</div>
             </div>
+
+            <!-- 8. 封面專屬 -->
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="cover_brand" style="width:auto;"> 是否冠名</div>
@@ -154,7 +170,8 @@
                 document.getElementById('u-lv').innerText = "LV." + user.level;
                 
                 const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                userHistory = await hRes.json();
+                const hText = await hRes.text();
+                userHistory = JSON.parse(hText);
                 
                 renderCards();
                 const loader = document.getElementById('loader-overlay');
@@ -167,21 +184,15 @@
             const grid = document.getElementById('benefit-grid');
             const now = new Date();
             const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-            const todayStr = now.toISOString().split('T')[0];
+            const todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
             const todayTime = now.getTime();
 
             grid.innerHTML = WELFARES.map(function(w) {
                 const myRecords = userHistory.filter(h => h.benefit === w.name);
                 const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
                 
-                // --- 額度判定邏輯 ---
-                let isQuotaLocked = false;
-                if (w.name === '大神贊助' && user.level >= 90) {
-                    isQuotaLocked = (monthCount >= 2);
-                } else {
-                    isQuotaLocked = (monthCount >= 1);
-                }
-
+                // 額度判定邏輯
+                let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
                 const isLevelLocked = user.level < w.lv;
                 const locked = isLevelLocked || isQuotaLocked;
 
@@ -192,10 +203,10 @@
                 let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
                 let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
-                // 核心顯示過濾：未完成 OR (已完成且日期未滿7天) OR 純中文日期
+                // 核心過濾：顯示未完成 OR (已完成且福利日期未滿 7 天) OR 非日期格式文字
                 const activeRecords = myRecords.filter(h => {
                     const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; // 中文文字永遠顯示
+                    if (!isDatePattern) return true; // 中文進度顯示
                     const isPast = h.date < todayStr;
                     const finalStatus = isPast ? "已完成" : h.status;
                     if (finalStatus !== "已完成" && finalStatus !== "已發送") return true;
@@ -217,9 +228,13 @@
                     }).join('') + '</div>';
                 }
 
-                return '<div class="'+cardClass+'" onclick="'+(locked?'':'openBooking(\''+w.name+'\')')+'">' +
-                       '<div><h3 style="font-size:18px; margin-bottom:5px;">'+w.name+'</h3><p style="font-size:11px; color:#555; font-weight:900;">LV.'+w.lv+'+專屬</p></div>' +
-                       '<div style="margin-top: 10px;"><div style="color:'+btnColor+'; font-size:12px; font-weight:900;">'+btnTxt+'</div>'+historyHtml+'</div></div>';
+                return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
+                    <div style="margin-top: 10px;">
+                        <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+                        ${historyHtml}
+                    </div>
+                </div>`;
             }).join('');
         }
 
@@ -227,21 +242,24 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
+            
+            // 重置狀態
             document.getElementById('swagger_id').value = "";
             document.getElementById('reserve_content').value = "";
             document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
             document.getElementById('btn-check').disabled = false;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
             document.getElementById('reserve_date').disabled = true;
+            
             const needsNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
             document.getElementById('anchor-notice').classList.toggle('hidden', !needsNotice);
+
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
             ids.forEach(id => document.getElementById(id).classList.add('hidden'));
+
             if (name === '訂製專屬徽章') {
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
-                document.getElementById('date-group').classList.add('hidden');
-                document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
                 document.getElementById('sw-group').classList.remove('hidden');
             } else if (name === 'CEO午餐') {
@@ -250,8 +268,6 @@
             } else if (name === '專屬直播欄位廣告') {
                 document.getElementById('sw-group').classList.remove('hidden');
                 document.getElementById('ad-fields').classList.remove('hidden');
-                document.getElementById('btn-check').classList.add('hidden');
-                document.getElementById('date-group').classList.add('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
                 document.getElementById('date-group').classList.remove('hidden');
@@ -305,12 +321,10 @@
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
                         else if (dayFull && activeWelfare === '大神贊助') {
-                            if (user.level >= 90) { st = " (預約額滿，Lv.90 特別權限預約)"; } 
+                            if (user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
                             else { st = " (預約額滿)"; dis = true; }
                         } 
-                        else if (dayFull && activeWelfare !== '訂製搜尋框文字') {
-                            st = " (預約額滿)"; dis = true;
-                        }
+                        else if (dayFull && activeWelfare !== '訂製搜尋框文字') { st = " (預約額滿)"; dis = true; }
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
@@ -325,7 +339,7 @@
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Submitting...";
             const payload = {
-                username: user.username, level: user.level, benefit: activeWelfare,
+                user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
                 swagger_id: document.getElementById('swagger_id').value,
                 date: document.getElementById('reserve_date') ? document.getElementById('reserve_date').value : "",
                 content: document.getElementById('reserve_content').value,
