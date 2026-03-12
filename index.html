@@ -13,26 +13,17 @@
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; }
         #u-name { font-weight: 800; font-size: 15px; }
         #u-lv { color: var(--primary); font-weight: 800; }
-        
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; cursor: pointer; min-height: 170px; display: flex; flex-direction: column; justify-content: space-between; }
-        .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.2); }
-        .card.level-locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; border-color: #222; }
-        .card.quota-locked { cursor: not-allowed; border-color: rgba(255,255,255,0.05); }
-        
-        .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); }
-        .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; }
-        .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; border: 1px solid rgba(255, 90, 95, 0.3); }
-        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.2); }
+        .card.locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
         .modal-content { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 450px; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .form-group { margin-bottom: 15px; }
-        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; background: #111; border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        .submit-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
-        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 5px; width: 100%; }
+        .form-group { margin-bottom: 18px; }
+        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; background: #111; border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: #fff; outline: none; font-size: 14px; }
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
+        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -42,35 +33,36 @@
         <header>
             <h1 style="font-size:24px; margin-bottom:15px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span id="u-name">Syncing Profile...</span>
+                <span id="u-name">Loading...</span>
                 <span id="u-lv" style="color:var(--primary); font-weight:800;">--</span>
             </div>
         </header>
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
+    <!-- Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
-            <h2 id="m-title" style="margin-bottom: 25px; font-size: 20px;">福利預約</h2>
+            <h2 id="m-title" style="margin-bottom:20px; font-size:18px;">福利預約</h2>
             
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
-                <div class="form-group"><label>示意圖網址</label><input type="url" id="b_url"></div>
-                <div class="form-group"><label>贈與帳號</label><textarea id="b_targets" rows="2"></textarea></div>
+                <div class="form-group"><label>示意圖 (網址)</label><input type="url" id="b_url"></div>
+                <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>禮物圖上文字</label><input type="text" id="g_txt"></div>
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="g_photo" style="width:auto;"> <label>需要主播照片作為素材</label></div>
             </div>
 
             <div id="ad-fields" class="hidden">
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:10px;"><input type="checkbox" id="ad_brand" style="width:auto;"> <label>是否冠名</label></div>
                 <div class="form-group"><label>客製化文案 (限 8 字)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
 
@@ -108,7 +100,9 @@
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings = [], activeWelfare = null;
+        let user = { id: '', username: '', level: 0 };
+        let bookings = [];
+        let activeWelfare = null;
 
         const WELFARES = [
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
@@ -117,8 +111,6 @@
             { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
             { name: 'CEO午餐', lv: 90 }
         ];
-
-        window.onload = function() { init(); };
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
@@ -130,36 +122,17 @@
                 user.level = data?.level || 0;
                 document.getElementById('u-name').innerText = user.username;
                 document.getElementById('u-lv').innerText = "LV." + user.level;
-                
-                try {
-                    const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                    userHistory = await hRes.json();
-                } catch(he) {}
                 renderCards();
             } catch(e) { renderCards(); }
         }
 
         function renderCards() {
             const grid = document.getElementById('benefit-grid');
-            grid.innerHTML = WELFARES.map(function(w) {
-                const myRecords = userHistory.filter(h => h.benefit === w.name);
-                const latest = myRecords.length > 0 ? myRecords[myRecords.length - 1] : null;
-                const isLevelLocked = user.level < w.lv;
-                const isQuotaLocked = (w.name === '大神贊助') ? (myRecords.length >= (user.level >= 90 ? 2 : 1)) : (myRecords.length >= 1);
-                
-                let cardClass = isLevelLocked ? 'level-locked' : (isQuotaLocked ? 'quota-locked' : '');
-                let btnTxt = isLevelLocked ? '🔒 等級不足' : (isQuotaLocked ? '🔒 本月已預約' : '立即預約 →');
-
-                let historyHtml = '';
-                if (latest) {
-                    let dStatus = latest.status;
-                    let badgeClass = "st-badge " + (dStatus === "已完成" ? "st-green" : "st-red");
-                    historyHtml = `<div class="card-history"><span class="date-highlight">${latest.date}</span><span class="${badgeClass}">${dStatus}</span></div>`;
-                }
-
-                return `<div class="card ${cardClass}" onclick="${(isLevelLocked || isQuotaLocked)?'':'openBooking(\''+w.name+'\')'}">
+            grid.innerHTML = WELFARES.map(w => {
+                const locked = user.level < w.lv;
+                return `<div class="card ${locked ? 'locked' : ''}" onclick="${locked?'':'openBooking(\''+w.name+'\')'}">
                     <h3>${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+</p>
-                    <div style="color:var(--primary); font-size:12px; font-weight:700;">${btnTxt}</div>${historyHtml}
+                    <div style="color:var(--primary); font-size:12px; font-weight:700;">${locked?'🔒 尚未解鎖':'立即預約 →'}</div>
                 </div>`;
             }).join('');
         }
@@ -168,14 +141,10 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
-            document.getElementById('swagger_id').value = "";
-            document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
-            document.getElementById('btn-check').disabled = false;
-            document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
-            document.getElementById('reserve_date').disabled = true;
-            
-            const fields =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
-            fields.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('sw-group').classList.remove('hidden');
+            document.getElementById('date-group').classList.remove('hidden');
+            document.getElementById('btn-check').classList.remove('hidden');
+            ['bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
             if (name === '訂製專屬徽章') {
                 ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -193,9 +162,6 @@
                 document.getElementById('date-group').classList.add('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
             } else {
-                document.getElementById('sw-group').classList.remove('hidden');
-                document.getElementById('date-group').classList.remove('hidden');
-                document.getElementById('btn-check').classList.remove('hidden');
                 if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
                 if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
             }
@@ -218,7 +184,7 @@
             const sid = document.getElementById('swagger_id').value.trim();
             if (!sid) return alert("請輸入 Swagger ID");
             const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 同步中..."; btn.disabled = true;
+            btn.innerText = "⏳ 正在核對..."; btn.disabled = true;
             try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
@@ -227,29 +193,21 @@
                 select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期</option>';
                 
                 const today = new Date();
-                if (activeWelfare === '女神聚會') {
-                    let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
-                    let y = today.getFullYear(); if(m>12){m=2;y+=1;}
-                    const ds = `${y}-${String(m).padStart(2,'0')}`;
+                for (let i = 1; i <= 60; i++) {
+                    const d = new Date(today); d.setDate(today.getDate() + i);
+                    const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
                     const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                    select.add(new Option(`${y}年 ${m}月場次`+(occupied?" (已被預約)":""), ds));
-                    select.options[select.options.length-1].disabled = occupied;
-                } else {
-                    const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
-                    for (let i = (activeWelfare==='蓋板創作者封面'?14:1); i <= 60; i++) {
-                        const d = new Date(today); d.setDate(today.getDate() + i);
-                        if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
-                        const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                        const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
-                        let st = ""; let dis = false;
-                        if (occupied) { st = " (已被預約)"; dis = true; }
-                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (名額已滿)"; dis = true; }
-                        select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
-                    }
+                    const dayCount = bookings.filter(b => b.date === ds).length;
+                    
+                    let st = ""; let dis = false;
+                    if (occupied) { st = " (此ID已被預約)"; dis = true; }
+                    else if (dayCount >= 3 && activeWelfare === '大神贊助') { st = " (名額已滿)"; dis = true; }
+                    else if (dayCount >= 1 && activeWelfare !== '大神贊助') { st = " (預約額滿)"; dis = true; }
+                    
+                    select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                 }
                 btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); btn.innerText="🔍 重新核對"; btn.disabled = false; }
+            } catch (e) { alert("連線失敗"); btn.innerText = "🔍 重試"; btn.disabled = false; }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
