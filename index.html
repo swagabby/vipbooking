@@ -297,9 +297,13 @@
                         const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
                         const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
                         
-                        let st = ""; let dis = false;
-                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                      // --- 重點修正：Lv.90 特權文字 ---
+                            if (user.level >= 90) { st = " (預約額滿，Lv.90 特別權限預約)"; } 
+                            else { st = " (預約額滿)"; dis = true; }
+                        } 
+                        else if (activeWelfare !== '大神贊助' && activeWelfare !== '訂製搜尋框文字' && dayFull) {
+                            st = " (預約額滿)"; dis = true;
+                        }
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
