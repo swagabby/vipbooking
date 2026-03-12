@@ -3,41 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAG VIP Welfare</title>
+    <title>SWAG VIP Welfare System</title>
     <style>
-        /* --- 修改 primary 為 SWAG 色 #00D2BE --- */
-        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --primary: #00D2BE; --text-main: #ffffff; --text-dim: #888888; }
+        :root { 
+            --bg: #050505; 
+            --card-bg: rgba(255, 255, 255, 0.04); 
+            --border: rgba(255, 255, 255, 0.1); 
+            --primary: #00D2BE; /* SWAG 品牌色 */
+            --text-main: #ffffff; 
+            --text-dim: #888888; 
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 800px; width: 100%; }
+        .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
+        
+        /* 載入動畫 */
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050505; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0, 210, 190, 0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; backdrop-filter: blur(10px); }
-        #u-name { font-weight: 800; font-size: 15px; }
-        #u-lv { color: var(--primary); font-weight: 800; } /* 等級顏色已套用 primary */
+        #u-lv { color: var(--primary); font-weight: 900; font-size: 15px; }
         
-        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; width: 100%; }
+        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; position: relative; }
+        .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
         
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 170px; }
-        .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.2); cursor: pointer; }
-        .card.level-locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; border-color: #222; }
-        .card.quota-locked { cursor: not-allowed; border-color: rgba(255,255,255,0.05); }
+        .card.locked { cursor: not-allowed; }
+        .card.level-locked { opacity: 0.35; filter: grayscale(1); border-color: #222; }
+        .card.quota-locked { border-color: rgba(255,255,255,0.05); }
+
+        .card-history-wrapper { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); }
+        .history-item-row { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .history-item-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .history-data-line { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
         
-        .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); }
-        .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
-        
-        .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+        .date-highlight { color: #ffffff !important; font-weight: 900; font-size: 12px; }
+        .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
         .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }
         .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
-        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 500px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
-        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
+        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        /* 送出按鈕也套用 primary 顏色 */
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
         .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
+        .anchor-notice { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px dashed var(--primary); padding: 8px; border-radius: 10px; background: rgba(0, 210, 190, 0.05); }
     </style>
 </head>
 <body>
