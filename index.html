@@ -39,19 +39,22 @@
         #u-lv { color: var(--primary); font-weight: 800; }
         
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 170px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 170px; position: relative; }
         
-        /* 只有可點擊的卡片才有 Hover 效果 */
+        /* 懸浮效果：僅限未鎖定的卡片 */
         .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
         
-        /* 鎖定狀態樣式 */
+        /* 鎖定邏輯：等級鎖 (反灰) vs 額度鎖 (不反灰，僅禁點) */
         .card.locked { cursor: not-allowed; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); border-color: #222; }
         .card.quota-locked { border-color: rgba(255,255,255,0.05); }
 
         .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-dim); }
-        .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; }
         
+        /* 預約日期：純白高亮 */
+        .date-highlight { color: #ffffff !important; font-weight: 900; font-size: 13px; }
+        
+        /* 狀態標籤紅綠燈 */
         .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
         .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }
         .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
@@ -62,6 +65,7 @@
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
         input:focus, select:focus { border-color: var(--primary); }
+        
         .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
         .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
@@ -86,7 +90,7 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal 內容略，維持 v47 結構 -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
@@ -132,7 +136,7 @@
 
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
-                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
@@ -171,7 +175,8 @@
                 document.getElementById('u-lv').innerText = "LV." + user.level;
                 
                 const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                userHistory = await hRes.json();
+                const hText = await hRes.text();
+                userHistory = JSON.parse(hText);
                 
                 renderCards();
                 document.getElementById('loader-overlay').style.opacity = '0';
@@ -189,40 +194,47 @@
                 const latest = myRecords.length > 0 ? myRecords[myRecords.length - 1] : null;
                 const monthCount = myRecords.filter(h => h.submitMonth === thisMonth).length;
                 
-                // 額度判定邏輯
                 let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
                 const isLevelLocked = user.level < w.lv;
                 
-                // 設定卡片類別
                 let cardClass = "card ";
                 if (isLevelLocked) cardClass += "locked level-locked";
                 else if (isQuotaLocked) cardClass += "locked quota-locked";
 
-                // 設定按鈕內容：只有可預約才顯示「立即預約」，且顏色為 SWAG 綠
-                let btnHtml = "";
-                if (isLevelLocked) {
-                    btnHtml = '<div style="color:#555; font-size:12px; font-weight:700;">🔒 等級不足</div>';
-                } else if (isQuotaLocked) {
-                    btnHtml = '<div style="color:#777; font-size:12px; font-weight:700;">🔒 本月已預約</div>';
-                } else {
-                    btnHtml = '<div style="color:var(--primary); font-size:12px; font-weight:700;">立即預約 →</div>';
-                }
+                let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
+                // 只有可預約時顏色才顯示 SWAG 綠，否則顯示灰色
+                let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
                 let historyHtml = '';
                 if (latest) {
                     let dStatus = latest.status;
                     if (latest.date && latest.date !== "審核中" && latest.date < todayStr) dStatus = "已完成";
-                    let badgeClass = "st-badge " + (["已完成", "已發送"].includes(dStatus) ? "st-green" : "st-red");
-                    historyHtml = `<div class="card-history"><span>紀錄: <span class="date-highlight">${latest.date}</span></span><span class="${badgeClass}">${dStatus}</span></div>`;
+                    
+                    let badgeClass = "st-badge ";
+                    if (dStatus === "已完成" || dStatus === "已發送") badgeClass += "st-green";
+                    else badgeClass += "st-red";
+
+                    historyHtml = `
+                        <div class="card-history">
+                            <span>紀錄: <span class="date-highlight">${latest.date}</span></span>
+                            <span class="${badgeClass}">${dStatus}</span>
+                        </div>
+                    `;
                 }
 
-                return `<div class="${cardClass}" onclick="${(isLevelLocked || isQuotaLocked) ? '' : `openBooking('${w.name}')`}">
-                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+專屬</p></div>
-                    <div style="margin-top: 10px;">${btnHtml}${historyHtml}</div>
+                const clickAction = (isLevelLocked || isQuotaLocked) ? '' : `openBooking('${w.name}')`;
+
+                return `<div class="${cardClass}" onclick="${clickAction}">
+                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+</p></div>
+                    <div style="margin-top: 10px;">
+                        <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+                        ${historyHtml}
+                    </div>
                 </div>`;
             }).join('');
         }
 
+        // --- 以下邏輯 (openBooking, syncAndCheck, handleFormSubmit) 完全維持原 v47 版之穩定核心 ---
         function openBooking(name) {
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
@@ -232,10 +244,8 @@
             document.getElementById('btn-check').disabled = false;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
             document.getElementById('reserve_date').disabled = true;
-            
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
             ids.forEach(id => document.getElementById(id).classList.add('hidden'));
-
             if (name === '訂製專屬徽章') {
                 ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('badge-fields').classList.remove('hidden');
@@ -286,8 +296,7 @@
                 const text = await res.text();
                 bookings = JSON.parse(text);
                 const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期/場次</option>';
-                
+                select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期</option>';
                 const today = new Date();
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
