@@ -3,94 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAG VIP Welfare System</title>
+    <title>SWAG VIP Welfare</title>
     <style>
-        :root { 
-            --bg: #050505; 
-            --card-bg: rgba(255, 255, 255, 0.04); 
-            --border: rgba(255, 255, 255, 0.1); 
-            --primary: #00D2BE; /* SWAG 品牌色 */
-            --text-main: #ffffff; 
-            --text-dim: #888888; 
-        }
+        /* --- 修改 primary 為 SWAG 色 #00D2BE --- */
+        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --primary: #00D2BE; --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text-main); font-family: sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 850px; width: 100%; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 800px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
-        
-        /* --- 載入動畫樣式 --- */
-        #loader-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #050505; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid rgba(0, 210, 190, 0.1);
-            border-top: 5px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loader-text { color: var(--primary); font-size: 14px; font-weight: bold; letter-spacing: 2px; animate: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        /* --- 介面樣式 --- */
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; backdrop-filter: blur(10px); }
         #u-name { font-weight: 800; font-size: 15px; }
-        #u-lv { color: var(--primary); font-weight: 800; }
+        #u-lv { color: var(--primary); font-weight: 800; } /* 等級顏色已套用 primary */
         
-        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
+        .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; width: 100%; }
+        
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 170px; }
-        .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
-        
+        .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.2); cursor: pointer; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; border-color: #222; }
         .card.quota-locked { cursor: not-allowed; border-color: rgba(255,255,255,0.05); }
         
         .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); }
-        .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; }
+        .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
         
-        .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; border: 1px solid rgba(255, 90, 95, 0.3); }
-        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }
+        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
         .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
-        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
+        label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        input:focus, select:focus { border-color: var(--primary); }
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
+        /* 送出按鈕也套用 primary 顏色 */
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 700; cursor: pointer; margin-top: 10px; }
         .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- 載入動畫層 -->
-    <div id="loader-overlay">
-        <div class="spinner"></div>
-        <div class="loader-text">LOADING VIP SYSTEM...</div>
-    </div>
-
     <div class="container">
         <header>
             <h1 style="font-size:24px; margin-bottom:15px;">SWAG VIP 預約系統</h1>
             <div class="user-pill">
-                <span class="status-dot" style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
-                <span id="u-name">--</span>
+                <span class="status-dot"></span>
+                <span id="u-name">Syncing Profile...</span>
                 <span id="u-lv">--</span>
             </div>
         </header>
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Modal 彈窗 (內容同前) -->
+    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
-            <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
+            <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom:20px; font-size:20px;">福利預約</h2>
             
             <div id="badge-fields" class="hidden">
@@ -114,7 +81,7 @@
             </div>
 
             <div id="lunch-fields" class="hidden">
-                <p style="font-size:12px; color:var(--primary); margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
+                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
                 <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
@@ -133,7 +100,7 @@
 
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
-                <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
+                <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> <label>是否冠名</label></div>
             </div>
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
@@ -148,7 +115,10 @@
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings = [], activeWelfare = null;
+        let user = { id: '', username: '', level: 0 };
+        let userHistory = [];
+        let bookings =[];
+        let activeWelfare = null;
 
         const WELFARES =[
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
@@ -162,38 +132,23 @@
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id'); if(!user.id) return;
+            user.id = params.get('user_id'); 
+            if(!user.id) { document.getElementById('u-name').innerText="Miss ID"; renderCards(); return; }
+
             try {
-                // 並行執行 API 請求以節省時間
-                const [userRes, historyRes] = await Promise.all([
-                    fetch(USER_API + "?user_id=" + user.id),
-                    fetch(GAS_API + "?action=getUserHistory&username=" + user.id + "&v=" + Date.now()) // 暫用 ID 查詢或等待解析
-                ]);
-
-                const userData = await userRes.json();
-                user.username = (userData?.username || userData?.display_name || user.id).trim();
-                user.level = userData?.level || 0;
-                
-                // 再次用正確的 username 獲取精準紀錄 (如果第一次失敗)
-                const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                userHistory = await hRes.json();
-
+                const res = await fetch(USER_API + "?user_id=" + user.id);
+                const data = await res.json();
+                user.username = (data?.username || data?.display_name || user.id).trim();
+                user.level = data?.level || 0;
                 document.getElementById('u-name').innerText = user.username;
                 document.getElementById('u-lv').innerText = "LV." + user.level;
                 
+                try {
+                    const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
+                    userHistory = await hRes.json();
+                } catch(he) {}
                 renderCards();
-                hideLoader(); // 資料準備好，關閉載入動畫
-            } catch(e) { 
-                console.error(e);
-                renderCards(); 
-                hideLoader();
-            }
-        }
-
-        function hideLoader() {
-            const loader = document.getElementById('loader-overlay');
-            loader.style.opacity = '0';
-            setTimeout(() => { loader.style.display = 'none'; }, 500);
+            } catch(e) { renderCards(); }
         }
 
         function renderCards() {
@@ -206,24 +161,59 @@
                 const latest = myRecords.length > 0 ? myRecords[myRecords.length - 1] : null;
                 const monthCount = myRecords.filter(h => h.submitMonth === thisMonth).length;
                 
-                let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
+                let isQuotaLocked = false;
+                if (w.name === '大神贊助' && user.level >= 90) { isQuotaLocked = (monthCount >= 2); }
+                else { isQuotaLocked = (monthCount >= 1); }
+
                 const isLevelLocked = user.level < w.lv;
-                const locked = isLevelLocked || isQuotaLocked;
                 
-                let btnTxt = isLevelLocked ? '🔒 等級不足' : (isQuotaLocked ? '🔒 本月已預約' : '立即預約 →');
-                let cardClass = isLevelLocked ? 'level-locked' : (isQuotaLocked ? 'quota-locked' : '');
+                let cardClass = "";
+                let btnTxt = "";
+
+                if (isLevelLocked) {
+                    cardClass = "level-locked";
+                    btnTxt = "🔒 等級不足";
+                } else if (isQuotaLocked) {
+                    cardClass = "quota-locked";
+                    btnTxt = "🔒 本月已預約";
+                } else {
+                    btnTxt = "立即預約 →";
+                }
 
                 let historyHtml = '';
                 if (latest) {
                     let dStatus = latest.status;
-                    if (latest.date && latest.date !== "審核中" && latest.date < todayStr) dStatus = "已完成";
-                    let badgeClass = "st-badge " + (dStatus === "已完成" ? "st-green" : "st-red");
-                    historyHtml = `<div class="card-history"><span>紀錄: <span class="date-highlight">${latest.date}</span></span><span class="${badgeClass}">${dStatus}</span></div>`;
+                    
+                    // 自動判定「已完成」: 只要日期不是中文字，且小於今天，就強制顯示為已完成
+                    if (latest.date && !["審核中", "處理中"].includes(latest.date) && latest.date < todayStr) {
+                        dStatus = "已完成";
+                    }
+                    
+                    // 紅綠燈顏色判斷
+                    let badgeClass = "st-badge ";
+                    if (["已完成", "已發送"].includes(dStatus)) badgeClass += "st-green";
+                    else badgeClass += "st-red";
+
+                    historyHtml = `
+                        <div class="card-history">
+                            <span>紀錄: <span class="date-highlight">${latest.date}</span></span>
+                            <span class="${badgeClass}">${dStatus}</span>
+                        </div>
+                    `;
                 }
 
-                return `<div class="card ${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:11px; color:#555;">LV.${w.lv}+</p></div>
-                    <div style="margin-top: 10px;"><div style="color:${isQuotaLocked?'#777':(isLevelLocked?'#555':'var(--primary)')}; font-size:12px; font-weight:700;">${btnTxt}</div>${historyHtml}</div>
+                const clickAction = (isLevelLocked || isQuotaLocked) ? '' : `openBooking('${w.name}')`;
+
+                return `
+                <div class="card ${cardClass}" onclick="${clickAction}">
+                    <div>
+                        <div style="font-size:10px; color:#555; margin-bottom:8px;">LV.${w.lv}+</div>
+                        <h3 style="font-size:18px; margin:0;">${w.name}</h3>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="color:${isQuotaLocked?'#777':(isLevelLocked?'#555':'var(--primary)')}; font-size:12px; font-weight:700;">${btnTxt}</div>
+                        ${historyHtml}
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -232,25 +222,28 @@
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
+            
             document.getElementById('swagger_id').value = "";
             document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
             document.getElementById('btn-check').disabled = false;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
-            document.getElementById('reserve_date').disabled = true;
-
-            const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
-            ids.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('reserve_date').disabled = true;['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
             if (name === '訂製專屬徽章') {
+                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
-                document.getElementById('sw-group').classList.remove('hidden');
+                document.getElementById('date-group').classList.add('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
-            } else if (name === 'CEO午餐') {
+                document.getElementById('sw-group').classList.remove('hidden');
+            } else if (name === 'CEO午餐') {['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
             } else if (name === '專屬直播欄位廣告') {
                 document.getElementById('ad-fields').classList.remove('hidden');
+                document.getElementById('date-group').classList.add('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('sw-group').classList.remove('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
@@ -263,8 +256,7 @@
 
         function renderLunchSelects() {
             const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
-            ['l_1', 'l_2', 'l_3'].forEach(id => {
+            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1', 'l_2', 'l_3'].forEach(id => {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 0; i < 30; i++) {
                     const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
@@ -282,18 +274,17 @@
             try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                const text = await res.text();
-                bookings = JSON.parse(text);
+                bookings = await res.json();
                 const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
+                select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期</option>';
                 
                 const today = new Date();
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
                     let y = today.getFullYear(); if(m>12){m=2;y+=1;}
                     const ds = y + "-" + String(m).padStart(2,'0');
-                    const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                    select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
+                    const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
+                    select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
                     const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
@@ -302,8 +293,10 @@
                         const d = new Date(today); d.setDate(today.getDate() + i);
                         if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
                         const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+                        
                         const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
                         const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
+                        
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
                         else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
