@@ -5,47 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare</title>
     <style>
-        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --primary: #ff5a5f; --text-main: #ffffff; --text-dim: #888888; }
+        /* --- 修改 primary 為 SWAG 色 #00D2BE --- */
+        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --primary: #00D2BE; --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 800px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; backdrop-filter: blur(10px); }
         #u-name { font-weight: 800; font-size: 15px; }
-        #u-lv { color: var(--primary); font-weight: 800; }
+        #u-lv { color: var(--primary); font-weight: 800; } /* 等級顏色已套用 primary */
         
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; width: 100%; }
         
-        /* 卡片基礎樣式 */
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 170px; }
-        
-        /* 懸浮特效：只有未被鎖定的卡片才有浮起與光暈 */
-        .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(255, 90, 95, 0.2); cursor: pointer; }
-        
-        /* 鎖定狀態 1：等級不夠 (變暗、反灰) */
+        .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.2); cursor: pointer; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; border-color: #222; }
-        
-        /* 鎖定狀態 2：額度已滿 (不變灰！保留資訊卡原色，僅禁點擊) */
         .card.quota-locked { cursor: not-allowed; border-color: rgba(255,255,255,0.05); }
         
-        /* 歷史紀錄與狀態標籤 */
         .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); }
-        
-        /* 預約日期：純白色加粗 */
         .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
         
-        /* 狀態紅綠燈 */
         .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
-        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }  /* 已收到/處理中 */
-        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; } /* 已完成 */
-        .st-default { background: #333; color: #aaa; }
+        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }
+        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
         .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        /* 送出按鈕也套用 primary 顏色 */
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 700; cursor: pointer; margin-top: 10px; }
         .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
     </style>
@@ -177,39 +167,32 @@
 
                 const isLevelLocked = user.level < w.lv;
                 
-                // --- 狀態樣式分流 ---
                 let cardClass = "";
                 let btnTxt = "";
-                let btnColor = "";
 
                 if (isLevelLocked) {
-                    cardClass = "level-locked"; // 變暗、變灰
+                    cardClass = "level-locked";
                     btnTxt = "🔒 等級不足";
-                    btnColor = "var(--primary)"; // 紅色字
                 } else if (isQuotaLocked) {
-                    cardClass = "quota-locked"; // 原色，僅禁點擊
+                    cardClass = "quota-locked";
                     btnTxt = "🔒 本月已預約";
-                    btnColor = "#777777"; // 灰色字
                 } else {
-                    cardClass = ""; // 正常
                     btnTxt = "立即預約 →";
-                    btnColor = "var(--primary)";
                 }
 
-                // --- 歷史紀錄渲染 (日期純白、狀態紅綠燈) ---
                 let historyHtml = '';
                 if (latest) {
                     let dStatus = latest.status;
-                    if (latest.date && latest.date !== "審核中" && latest.date < todayStr) dStatus = "已完成";
                     
-                    let badgeClass = "st-badge ";
-                    if (dStatus === "已收到" || dStatus === "處理中" || dStatus.includes("確認中")) {
-                        badgeClass += "st-red";
-                    } else if (dStatus === "已完成") {
-                        badgeClass += "st-green";
-                    } else {
-                        badgeClass += "st-default";
+                    // 自動判定「已完成」: 只要日期不是中文字，且小於今天，就強制顯示為已完成
+                    if (latest.date && !["審核中", "處理中"].includes(latest.date) && latest.date < todayStr) {
+                        dStatus = "已完成";
                     }
+                    
+                    // 紅綠燈顏色判斷
+                    let badgeClass = "st-badge ";
+                    if (["已完成", "已發送"].includes(dStatus)) badgeClass += "st-green";
+                    else badgeClass += "st-red";
 
                     historyHtml = `
                         <div class="card-history">
@@ -228,7 +211,7 @@
                         <h3 style="font-size:18px; margin:0;">${w.name}</h3>
                     </div>
                     <div style="margin-top: 20px;">
-                        <div style="color:${btnColor}; font-size:12px; font-weight:700;">${btnTxt}</div>
+                        <div style="color:${isQuotaLocked?'#777':(isLevelLocked?'#555':'var(--primary)')}; font-size:12px; font-weight:700;">${btnTxt}</div>
                         ${historyHtml}
                     </div>
                 </div>`;
@@ -247,15 +230,20 @@
             document.getElementById('reserve_date').disabled = true;['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
             if (name === '訂製專屬徽章') {
+                ['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
+                document.getElementById('date-group').classList.add('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
                 document.getElementById('sw-group').classList.remove('hidden');
-            } else if (name === 'CEO午餐') {
+            } else if (name === 'CEO午餐') {['sw-group', 'date-group'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
             } else if (name === '專屬直播欄位廣告') {
                 document.getElementById('ad-fields').classList.remove('hidden');
+                document.getElementById('date-group').classList.add('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
                 document.getElementById('sw-group').classList.remove('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
@@ -288,7 +276,7 @@
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
                 bookings = await res.json();
                 const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
+                select.disabled = false; select.innerHTML = '<option value="">請選擇可用日期</option>';
                 
                 const today = new Date();
                 if (activeWelfare === '女神聚會') {
