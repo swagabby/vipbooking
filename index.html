@@ -18,6 +18,7 @@
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
         
+        /* 載入動畫 */
         #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050505; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0, 210, 190, 0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -27,15 +28,16 @@
         
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; position: relative; }
-        .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
         
+        .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
         .card.locked { cursor: not-allowed; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); border-color: #222; }
         .card.quota-locked { border-color: rgba(255,255,255,0.05); }
 
+        /* 卡片內歷史紀錄清單 */
         .card-history-wrapper { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); }
-        .history-item-row { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
-        .history-item-row:last-child { margin-bottom: 0; }
+        .history-item-row { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .history-item-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
         .history-data-line { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
         
         .date-highlight { color: #ffffff !important; font-weight: 900; font-size: 12px; }
@@ -58,7 +60,7 @@
 </head>
 <body>
 
-    <div id="loader-overlay"><div class="spinner"></div><div style="color:var(--primary); font-size:12px; font-weight:bold; letter-spacing:2px;">LOADING...</div></div>
+    <div id="loader-overlay"><div class="spinner"></div><div style="color:var(--primary); font-size:12px; font-weight:bold; letter-spacing:2px;">LOADING VIP SYSTEM...</div></div>
 
     <div class="container">
         <header>
@@ -72,14 +74,12 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom:20px; font-size:20px;">福利預約</h2>
-            
             <div id="anchor-notice" class="anchor-notice hidden">填寫完畢將由官方向主播拿取素材</div>
-
+            
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
@@ -112,7 +112,6 @@
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
                 <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
             </div>
-            
             <div class="form-group" id="date-group">
                 <label>選擇日期 / 場次</label>
                 <select id="reserve_date" disabled><option>請先完成核對</option></select>
@@ -136,7 +135,7 @@
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings = [], activeWelfare = null;
+        let user = { id: '', username: '', level: 0 }, userHistory = [];
 
         const WELFARES = [
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
@@ -163,8 +162,9 @@
                 userHistory = await hRes.json();
                 
                 renderCards();
-                document.getElementById('loader-overlay').style.opacity = '0';
-                setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
+                const loader = document.getElementById('loader-overlay');
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; }, 500);
             } catch(e) { renderCards(); }
         }
 
@@ -172,6 +172,7 @@
             const grid = document.getElementById('benefit-grid');
             const now = new Date();
             const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+            const todayStr = now.toISOString().split('T')[0]; // "2026-03-12"
             const todayTime = now.getTime();
 
             grid.innerHTML = WELFARES.map(function(w) {
@@ -189,33 +190,43 @@
                 let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
                 let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
-                // 核心過濾：顯示未完成 OR 已完成不到 7 天的紀錄
+                // 核心顯示邏輯：未完成 OR (已完成且日期未滿7天)
                 const activeRecords = myRecords.filter(h => {
-                    if (h.status !== "已完成" && h.status !== "已發送") return true;
-                    if (!h.date || h.date === "審核中" || h.date === "處理中") return true;
+                    // 如果日期早於今天，我們在渲染時會強制它變「已完成」，所以這裡要先算好
+                    const isPast = h.date && h.date !== "審核中" && h.date !== "處理中" && h.date < todayStr;
+                    const finalStatus = isPast ? "已完成" : h.status;
+
+                    if (finalStatus !== "已完成" && finalStatus !== "已發送") return true;
+                    if (!h.date || h.date === "審核中") return true;
+                    
                     const resDate = new Date(h.date);
-                    if (isNaN(resDate.getTime())) return true;
                     return (todayTime - resDate.getTime()) / (1000 * 3600 * 24) <= 7;
                 });
 
                 let historyHtml = '';
                 if (activeRecords.length > 0) {
                     historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
-                        const badgeClass = (["已完成", "已發送"].includes(h.status)) ? 'st-badge st-green' : 'st-badge st-red';
+                        // --- 狀態自動判定邏輯 ---
+                        let displayStatus = h.status;
+                        const isPast = h.date && h.date !== "審核中" && h.date !== "處理中" && h.date < todayStr;
+                        if (isPast) displayStatus = "已完成";
+
+                        const badgeClass = (["已完成", "已發送"].includes(displayStatus)) ? 'st-badge st-green' : 'st-badge st-red';
                         return '<div class="history-item-row">' +
                                '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
                                '<div class="history-data-line">' +
                                '<span>福利日期: <span class="date-highlight">' + h.date + '</span></span>' +
-                               '<span class="' + badgeClass + '">' + h.status + '</span></div></div>';
+                               '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
                     }).join('') + '</div>';
                 }
 
                 return '<div class="'+cardClass+'" onclick="'+(locked?'':'openBooking(\''+w.name+'\')')+'">' +
-                       '<div><h3 style="font-size:18px; margin-bottom:5px;">'+w.name+'</h3><p style="font-size:11px; color:#555;">LV.'+w.lv+'+</p></div>' +
+                       '<div><h3 style="font-size:18px; margin-bottom:5px;">'+w.name+'</h3><p style="font-size:11px; color:#555;">LV.'+w.lv+'+專屬</p></div>' +
                        '<div style="margin-top: 10px;"><div style="color:'+btnColor+'; font-size:12px; font-weight:900;">'+btnTxt+'</div>'+historyHtml+'</div></div>';
             }).join('');
         }
 
+        // 其餘邏輯 (openBooking, closeModal, handleFormSubmit) 維持 v54 版...
         function openBooking(name) {
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
@@ -226,18 +237,15 @@
             document.getElementById('btn-check').disabled = false;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
             document.getElementById('reserve_date').disabled = true;
-            
             const needsNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
             document.getElementById('anchor-notice').classList.toggle('hidden', !needsNotice);
-
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
             ids.forEach(id => document.getElementById(id).classList.add('hidden'));
-
             if (name === '訂製專屬徽章') {
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
-                document.getElementById('sw-group').classList.remove('hidden');
                 document.getElementById('gift-fields').classList.remove('hidden');
+                document.getElementById('sw-group').classList.remove('hidden');
             } else if (name === 'CEO午餐') {
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
@@ -254,7 +262,8 @@
         }
 
         function renderLunchSelects() {
-            const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
             ['l_1', 'l_2', 'l_3'].forEach(id => {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 0; i < 30; i++) {
@@ -279,7 +288,8 @@
                 select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
                 const today = new Date();
                 if (activeWelfare === '女神聚會') {
-                    let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
+                    const now = new Date();
+                    let m = ((now.getMonth()+1)%2===0)?now.getMonth()+1:now.getMonth()+2;
                     let y = today.getFullYear(); if(m>12){m=2;y+=1;}
                     const ds = y + "-" + String(m).padStart(2,'0');
                     const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
@@ -304,7 +314,7 @@
                     }
                 }
                 btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重試"; }
+            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
