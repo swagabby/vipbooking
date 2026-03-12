@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWAG VIP Welfare</title>
     <style>
-        /* 這裡已將 --primary 改為 SWAG 色 #00D2BE */
+        /* --- 修改 primary 為 SWAG 色 #00D2BE --- */
         :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --primary: #00D2BE; --text-main: #ffffff; --text-dim: #888888; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, sans-serif; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
@@ -13,40 +13,29 @@
         header { text-align: center; margin-bottom: 30px; }
         .user-pill { display: inline-flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 25px; border-radius: 100px; margin-top: 10px; gap: 10px; backdrop-filter: blur(10px); }
         #u-name { font-weight: 800; font-size: 15px; }
-        #u-lv { color: var(--primary); font-weight: 800; }
+        #u-lv { color: var(--primary); font-weight: 800; } /* 等級顏色已套用 primary */
         
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; width: 100%; }
         
-        /* 卡片基礎樣式 */
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 170px; }
-        
-        /* 懸浮特效：只有未被鎖定的卡片才有浮起與光暈 */
         .card:hover:not(.level-locked):not(.quota-locked) { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.2); cursor: pointer; }
-        
-        /* 鎖定狀態 1：等級不夠 (變暗、反灰) */
         .card.level-locked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; border-color: #222; }
-        
-        /* 鎖定狀態 2：額度已滿 (不變灰！保留資訊卡原色，僅禁點擊) */
         .card.quota-locked { cursor: not-allowed; border-color: rgba(255,255,255,0.05); }
         
-        /* 歷史紀錄與狀態標籤 */
         .card-history { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); }
-        
-        /* 預約日期：純白色加粗 */
         .date-highlight { color: #ffffff; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
         
-        /* 狀態紅綠燈 */
         .st-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
-        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }  /* 已收到/處理中 */
-        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; } /* 已完成 */
-        .st-default { background: #333; color: #aaa; }
+        .st-red { background: rgba(255, 90, 95, 0.15); color: #ff5a5f; }
+        .st-green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; backdrop-filter: blur(10px); }
         .modal-content { background: #0f0f0f; border: 1px solid var(--border); border-radius: 30px; width: 100%; max-width: 450px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 18px; }
         label { font-size: 11px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 8px; text-transform: uppercase; }
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        /* 送出按鈕也套用 primary 顏色 */
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 700; cursor: pointer; margin-top: 10px; }
         .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
     </style>
@@ -65,7 +54,6 @@
         <div id="benefit-grid" class="benefit-grid"></div>
     </div>
 
-    <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:24px; cursor:pointer;">&times;</button>
@@ -92,7 +80,7 @@
             </div>
 
             <div id="lunch-fields" class="hidden">
-                <p style="font-size:12px; color:#ff5a5f; margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
+                <p style="font-size:12px; color:var(--primary); margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
                 <div class="form-group"><label>優先日期 2</label><select id="l_2"></select></div>
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
@@ -126,10 +114,7 @@
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
-        let user = { id: '', username: '', level: 0 };
-        let userHistory = [];
-        let bookings =[];
-        let activeWelfare = null;
+        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings =[], activeWelfare = null;
 
         const WELFARES =[
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
@@ -199,20 +184,23 @@
                 let historyHtml = '';
                 if (latest) {
                     let dStatus = latest.status;
-                    if (latest.date && latest.date !== "審核中" && latest.date < todayStr) dStatus = "已完成";
+                    
+                    // 根據日期自動判斷完成狀態 (如果不是中文字才判斷)
+                    const isDatePattern = /^\d{4}-\d{2}/.test(latest.date);
+                    if (isDatePattern && latest.date < todayStr) {
+                        dStatus = "已完成";
+                    }
+                    if (w.name === '訂製專屬徽章' && dStatus === '已完成') {
+                        dStatus = "已發送";
+                    }
                     
                     let badgeClass = "st-badge ";
-                    if (dStatus === "已收到" || dStatus === "處理中" || dStatus === "審核中") {
-                        badgeClass += "st-red";
-                    } else if (dStatus === "已完成" || dStatus === "已發送") {
-                        badgeClass += "st-green";
-                    } else {
-                        badgeClass += "st-default";
-                    }
+                    if (["已完成", "已發送"].includes(dStatus)) badgeClass += "st-green";
+                    else badgeClass += "st-red";
 
                     historyHtml = `
                         <div class="card-history">
-                            <span>紀錄: <span class="date-highlight">${latest.date}</span></span>
+                            <span>福利日期: <span class="date-highlight">${latest.date}</span></span>
                             <span class="${badgeClass}">${dStatus}</span>
                         </div>
                     `;
@@ -240,7 +228,6 @@
             document.getElementById('modal').style.display = 'flex';
             
             document.getElementById('swagger_id').value = "";
-            document.getElementById('reserve_content').value = "";
             document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
             document.getElementById('btn-check').disabled = false;
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
@@ -259,9 +246,9 @@
                 renderLunchSelects();
             } else if (name === '專屬直播欄位廣告') {
                 document.getElementById('ad-fields').classList.remove('hidden');
-                document.getElementById('sw-group').classList.remove('hidden');
                 document.getElementById('date-group').classList.add('hidden');
                 document.getElementById('btn-check').classList.add('hidden');
+                document.getElementById('sw-group').classList.remove('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
                 document.getElementById('date-group').classList.remove('hidden');
@@ -311,16 +298,22 @@
                         const d = new Date(today); d.setDate(today.getDate() + i);
                         if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
                         const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+                        
                         const occupied = bookings.some(function(b) { return b.swagger_id === sid && b.date === ds; });
                         const dayFull = bookings.filter(function(b) { return b.date === ds; }).length >= (activeWelfare==='大神贊助'?3:1);
+                        
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayFull && (user.level < 90 || activeWelfare !== '大神贊助')) { st = " (預約額滿)"; dis = true; }
+                        else if (dayFull && activeWelfare === '大神贊助') {
+                            if (user.level >= 90) { st = " (預約額滿，Lv.90 特別權限)"; } 
+                            else { st = " (預約額滿)"; dis = true; }
+                        } 
+                        else if (dayFull && activeWelfare !== '訂製搜尋框文字') { st = " (預約額滿)"; dis = true; }
                         select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
                     }
                 }
                 btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); btn.innerText="🔍 重新核對"; btn.disabled = false; }
+            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -329,7 +322,10 @@
             if (!confirm("一經送出不得更改，請再三確認內容。")) return;
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Submitting...";
+            
+            // --- 重大安全升級：傳送 user_id 供後端驗證真偽 ---
             const payload = {
+                user_id: user.id, // 核心金鑰
                 username: user.username, level: user.level, benefit: activeWelfare,
                 swagger_id: document.getElementById('swagger_id').value,
                 date: document.getElementById('reserve_date') ? document.getElementById('reserve_date').value : "",
