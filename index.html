@@ -204,7 +204,7 @@
             } catch(e) { renderCards(); }
         }
 
-        function renderCards() {
+       function renderCards() {
             const grid = document.getElementById('benefit-grid');
             const now = new Date();
             const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
@@ -226,22 +226,35 @@
                 let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
                 let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
+                // 核心邏輯修改處
                 const activeRecords = myRecords.filter(h => {
-                    const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; 
-                    const isPast = h.date < todayStr;
-                    if (!isPast) return true; 
-                    return (todayTime - new Date(h.date).getTime()) / (1000 * 3600 * 24) <= 7;
+                    // 1. 如果是當月登記的福利，永遠顯示 (不論日期是否已過)
+                    if (h.submitMonth === currentMonthStr) return true;
+
+                    // 2. 如果不是當月（即上個月或更早），檢查是否已完成並超過 7 天
+                    const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
+                    if (!isDatePattern) return true; // 若日期非標準格式則顯示
+
+                    const recordDate = new Date(h.date);
+                    const isPast = recordDate.getTime() < todayTime;
+
+                    if (isPast) {
+                        const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
+                        // 超過 7 天則隱藏 (非當月紀錄)
+                        return diffDays <= 7;
+                    }
+
+                    return true; // 未來日期顯示
                 });
 
                 let historyHtml = '';
                 if (activeRecords.length > 0) {
                     historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
                         const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                        let displayStatus = "已收到";
-                        if (isDatePattern && h.date < todayStr) displayStatus = "已完成";
-
-                        let displayDate = h.date || "處理中";
+                        // 狀態判定：只要日期小於今天就是「已完成」
+                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
+                        
+                        let displayDate = h.date || "尚未安排";
                         const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
                         
                         return '<div class="history-item-row">' +
