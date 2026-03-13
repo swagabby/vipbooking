@@ -139,6 +139,7 @@
             <div class="form-group" id="sw-group">
                 <label id="label-swagger">指定 Swagger ID</label>
                 <input type="text" id="swagger_id" placeholder="請輸入 ID">
+                <!-- 修復點 1：補上 onclick="syncAndCheck()" -->
                 <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
             </div>
             
@@ -167,7 +168,6 @@
 
     <script>
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        // 👉 請將下方替換為您 GAS 部署的新網址
         const GAS_API = 'https://script.google.com/macros/s/AKfycbw08hL7pNDOAsGsUrfzFeYW8jlbyluOc18i9We-hbuiGdk2MS7-JkMfmJ4pY0MHADZmLA/exec';
 
         let user = { id: '', username: '', level: 0 }, userHistory =[], bookings = [], activeWelfare = null;
@@ -226,13 +226,11 @@
                 let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
                 let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
-                // 過濾顯示紀錄邏輯
                 const activeRecords = myRecords.filter(h => {
                     const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; // 保留中文與文字
+                    if (!isDatePattern) return true; 
                     const isPast = h.date < todayStr;
-                    if (!isPast) return true; // 保留未來日期
-                    // 過去日期為「已完成」，滿7天後自動隱藏
+                    if (!isPast) return true; 
                     return (todayTime - new Date(h.date).getTime()) / (1000 * 3600 * 24) <= 7;
                 });
 
@@ -241,7 +239,6 @@
                     historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
                         const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
                         let displayStatus = "已收到";
-                        // 只有標準日期格式，且小於今天，才顯示已完成
                         if (isDatePattern && h.date < todayStr) displayStatus = "已完成";
 
                         let displayDate = h.date || "尚未安排";
@@ -327,6 +324,7 @@
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
                 const today = new Date();
+                
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
                     let y = today.getFullYear(); if(m>12){m=2;y+=1;}
@@ -335,26 +333,44 @@
                     select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
-                    const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
-                    const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
-                    for (let i = startDay; i <= 60; i++) {
+                    // 修復點 2：加入蓋板與搜尋框日期邏輯
+                    const isCover = (activeWelfare === '蓋板創作者封面');
+                    const isSearch = (activeWelfare === '訂製搜尋框文字');
+                    
+                    let limit;
+                    if (isSearch) {
+                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); // 預約到次月五號
+                    } else if (isCover) {
+                        limit = new Date(today.getFullYear(), today.getMonth() + 2, 0); // 預約到下個月底 (下下個月的第0天=下個月最後一天)
+                    } else {
+                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); // 其他福利預設
+                    }
+
+                    const startDay = (isCover) ? 14 : 1;
+                    for (let i = startDay; i <= 65; i++) { 
                         const d = new Date(today); d.setDate(today.getDate() + i);
-                        if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
+                        if (d > limit) break; 
+                        
                         const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
                         const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
                         const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
+                        
                         let st = ""; let dis = false;
                         if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayFull && activeWelfare === '大神贊助') {
-                            if (user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
+                        else if (dayFull && (activeWelfare==='大神贊助' || isCover)) {
+                            if (activeWelfare === '大神贊助' && user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
                             else { st = " (預約額滿)"; dis = true; }
-                        } 
-                        else if (dayFull && activeWelfare !== '訂製搜尋框文字') { st = " (預約額滿)"; dis = true; }
-                        select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
+                        } else if (dayFull) { st = " (預約額滿)"; dis = true; }
+                        
+                        select.add(new Option(ds + st, ds)); 
+                        select.options[select.options.length-1].disabled = dis;
                     }
                 }
                 btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; }
+            // 修復點 3：補齊 catch 與 try...catch 的閉合括號
+            } catch (e) { 
+                alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; 
+            }
         }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
