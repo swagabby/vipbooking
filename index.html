@@ -315,7 +315,7 @@
             });
         }
 
-        async function syncAndCheck() {
+  async function syncAndCheck() {
             const sid = document.getElementById('swagger_id').value.trim();
             if (!sid) return alert("請輸入 Swagger ID");
             const btn = document.getElementById('btn-check');
@@ -328,7 +328,6 @@
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
                 const today = new Date();
-                
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
                     let y = today.getFullYear(); if(m>12){m=2;y+=1;}
@@ -358,7 +357,6 @@
                 btn.innerText = "✅ 核對完成";
             } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; }
         }
-
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
         async function handleFormSubmit() {
