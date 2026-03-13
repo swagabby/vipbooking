@@ -241,7 +241,7 @@
                         let displayStatus = "已收到";
                         if (isDatePattern && h.date < todayStr) displayStatus = "已完成";
 
-                        let displayDate = h.date || "尚未安排";
+                        let displayDate = h.date || "處理中";
                         const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
                         
                         return '<div class="history-item-row">' +
@@ -271,7 +271,7 @@
             document.getElementById('reserve_content').value = "";
             document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
             document.getElementById('btn-check').disabled = false;
-            document.getElementById('reserve_date').innerHTML = '<option>審核中</option>';
+            document.getElementById('reserve_date').innerHTML = '<option>處理中</option>';
             document.getElementById('reserve_date').disabled = true;
             
             const needsNotice =['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
