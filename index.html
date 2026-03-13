@@ -315,49 +315,80 @@
             });
         }
 
-        async function syncAndCheck() {
-            const sid = document.getElementById('swagger_id').value.trim();
-            if (!sid) return alert("請輸入 Swagger ID");
-            const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 同步中..."; btn.disabled = true;
-            try {
-                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
-                const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                const text = await res.text();
-                bookings = JSON.parse(text);
-                const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
-                const today = new Date();
+       async function syncAndCheck() {
+    const sid = document.getElementById('swagger_id').value.trim();
+    if (!sid) return alert("請輸入 Swagger ID");
+    const btn = document.getElementById('btn-check');
+    btn.innerText = "⏳ 同步中..."; btn.disabled = true;
+    
+    try {
+        const actionMap = { 
+            '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', 
+            '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', 
+            '訂製搜尋框文字': 'getSearchBoxData' 
+        };
+        
+        const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
+        const text = await res.text();
+        bookings = JSON.parse(text);
+        
+        const select = document.getElementById('reserve_date');
+        select.disabled = false; 
+        select.innerHTML = '<option value="">請選擇日期</option>';
+        
+        const today = new Date();
+        
+        if (activeWelfare === '女神聚會') {
+            let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
+            let y = today.getFullYear(); if(m>12){m=2;y+=1;}
+            const ds = y + "-" + String(m).padStart(2,'0');
+            const occupied = bookings.some(b => String(b.swagger_id).trim() === sid && String(b.date).trim() === ds);
+            select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
+            select.options[select.options.length-1].disabled = occupied;
+        } else {
+            // 設定截止日期為「下個月的最後一天」
+            const limit = new Date(today.getFullYear(), today.getMonth() + 2, 0); 
+            const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
+            
+            for (let i = startDay; i <= 60; i++) {
+                const d = new Date(today); 
+                d.setDate(today.getDate() + i);
                 
-                if (activeWelfare === '女神聚會') {
-                    let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
-                    let y = today.getFullYear(); if(m>12){m=2;y+=1;}
-                    const ds = y + "-" + String(m).padStart(2,'0');
-                    const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                    select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
-                    select.options[select.options.length-1].disabled = occupied;
-                } else {
-                    const limit = new Date(today.getFullYear(), today.getMonth() + 1, 5);
-                    const startDay = (activeWelfare === '蓋板創作者封面') ? 14 : 1;
-                    for (let i = startDay; i <= 60; i++) {
-                        const d = new Date(today); d.setDate(today.getDate() + i);
-                        if (d > limit && activeWelfare !== '訂製搜尋框文字') break;
-                        const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                        const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
-                        let st = ""; let dis = false;
-                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayFull && activeWelfare === '大神贊助') {
-                            if (user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
-                            else { st = " (預約額滿)"; dis = true; }
-                        } 
-                        else if (dayFull && activeWelfare !== '訂製搜尋框文字') { st = " (預約額滿)"; dis = true; }
-                        select.add(new Option(ds + st, ds)); select.options[select.options.length-1].disabled = dis;
+                // 超過下個月底則停止產生選項
+                if (d > limit) break; 
+                
+                const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+                
+                // 使用寬鬆比對防止因空格導致的錯誤
+                const occupied = bookings.some(b => 
+                    String(b.swagger_id).trim() === sid && 
+                    String(b.date).trim() === ds
+                );
+                
+                const dayFull = bookings.filter(b => String(b.date).trim() === ds).length >= (activeWelfare === '大神贊助' ? 3 : 1);
+                
+                let st = ""; let dis = false;
+                if (occupied) { 
+                    st = " (此ID已被預約)"; dis = true; 
+                } else if (dayFull) {
+                    if (activeWelfare === '大神贊助' && user.level >= 90) {
+                        st = " (預約額滿，Lv.90 特別權限)";
+                    } else {
+                        st = " (預約額滿)"; dis = true;
                     }
                 }
-                btn.innerText = "✅ 核對完成";
-            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; }
+                
+                select.add(new Option(ds + st, ds)); 
+                select.options[select.options.length - 1].disabled = dis;
+            }
         }
+        btn.innerText = "✅ 核對完成";
+    } catch (e) { 
+        alert("連線失敗"); 
+        btn.disabled = false; 
+        btn.innerText = "🔍 重新核對"; 
+    }
+}
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
