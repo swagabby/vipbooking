@@ -52,30 +52,7 @@
         input:focus, select:focus { border-color: var(--primary); }
         
         .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
-        
-        /* 升級後的核對名額按鈕 */
-        .check-btn { 
-            background: linear-gradient(135deg, #ff9900, #ff5e00); 
-            color: #fff; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 12px; 
-            font-size: 13px; 
-            font-weight: 900; 
-            cursor: pointer; 
-            margin-top: 10px; 
-            width: 100%; 
-            box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4);
-            transition: 0.3s;
-        }
-        .check-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 153, 0, 0.6);
-        }
-        .check-btn:disabled {
-            background: #555; box-shadow: none; color: #aaa; cursor: not-allowed; transform: none;
-        }
-
+        .check-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-top: 8px; width: 100%; }
         .hidden { display: none !important; }
         .anchor-notice { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px dashed var(--primary); padding: 8px; border-radius: 10px; background: rgba(0, 210, 190, 0.05); }
     </style>
@@ -167,12 +144,11 @@
 
     <script>
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        // ⚠️ 請務必將下方網址替換為您剛剛重新部署後的最新 GAS API 網址！
         const GAS_API = 'https://script.google.com/macros/s/AKfycbzGOjbRowzpQRyP5l7NohKllWF7idzurAJGFE7HiHUG9m5LJFQrMne129L-QbeQ2Uur8g/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings =[], activeWelfare = null;
+        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings = [], activeWelfare = null;
 
-        const WELFARES =[
+        const WELFARES = [
             { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
             { name: '訂製小鈴噹通知', lv: 60 }, { name: '蓋板創作者封面', lv: 70 },
             { name: '訂製搜尋框文字', lv: 70 }, { name: '訂製專屬徽章', lv: 80 },
@@ -215,6 +191,7 @@
                 const myRecords = userHistory.filter(h => h.benefit === w.name);
                 const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
                 
+                // 額度判定邏輯
                 let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
                 const isLevelLocked = user.level < w.lv;
                 const locked = isLevelLocked || isQuotaLocked;
@@ -226,32 +203,27 @@
                 let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
                 let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
-                // 歷史紀錄顯示邏輯
+                // 核心過濾：顯示未完成 OR (已完成且福利日期未滿 7 天) OR 非日期格式文字
                 const activeRecords = myRecords.filter(h => {
                     const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; // 保留文字內容 (確認中、安排中等)
+                    if (!isDatePattern) return true; // 中文進度顯示
                     const isPast = h.date < todayStr;
-                    if (!isPast) return true; // 保留未來日期
-                    // 過去日期視為「已完成」，滿7天後自動隱藏
+                    const finalStatus = isPast ? "已完成" : h.status;
+                    if (finalStatus !== "已完成" && finalStatus !== "已發送") return true;
                     return (todayTime - new Date(h.date).getTime()) / (1000 * 3600 * 24) <= 7;
                 });
 
                 let historyHtml = '';
                 if (activeRecords.length > 0) {
                     historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
+                        let displayStatus = h.status;
                         const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                        let displayStatus = "已收到";
-                        
-                        // 只有符合標準日期格式且小於今天，才顯示已完成
                         if (isDatePattern && h.date < todayStr) displayStatus = "已完成";
-
-                        let displayDate = h.date || "尚未安排";
-                        const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
-                        
+                        const badgeClass = (["已完成", "已發送"].includes(displayStatus)) ? 'st-badge st-green' : 'st-badge st-red';
                         return '<div class="history-item-row">' +
                                '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
                                '<div class="history-data-line">' +
-                               '<span>福利進度: <span class="date-highlight">' + displayDate + '</span></span>' +
+                               '<span>福利日期: <span class="date-highlight">' + h.date + '</span></span>' +
                                '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
                     }).join('') + '</div>';
                 }
@@ -271,6 +243,7 @@
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
             
+            // 重置狀態
             document.getElementById('swagger_id').value = "";
             document.getElementById('reserve_content').value = "";
             document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
@@ -278,7 +251,7 @@
             document.getElementById('reserve_date').innerHTML = '<option>請先完成核對</option>';
             document.getElementById('reserve_date').disabled = true;
             
-            const needsNotice =['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
+            const needsNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
             document.getElementById('anchor-notice').classList.toggle('hidden', !needsNotice);
 
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
@@ -305,7 +278,8 @@
         }
 
         function renderLunchSelects() {
-            const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1', 'l_2', 'l_3'].forEach(id => {
+            const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));
+            ['l_1', 'l_2', 'l_3'].forEach(id => {
                 const el = document.getElementById(id); el.innerHTML = '';
                 for (let i = 0; i < 30; i++) {
                     const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
@@ -315,7 +289,7 @@
             });
         }
 
-  async function syncAndCheck() {
+        async function syncAndCheck() {
             const sid = document.getElementById('swagger_id').value.trim();
             if (!sid) return alert("請輸入 Swagger ID");
             const btn = document.getElementById('btn-check');
@@ -357,13 +331,13 @@
                 btn.innerText = "✅ 核對完成";
             } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; }
         }
+
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
         async function handleFormSubmit() {
             if (!confirm("一經送出不得更改，請再三確認內容。")) return;
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Submitting...";
-            
             const payload = {
                 user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
                 swagger_id: document.getElementById('swagger_id').value,
@@ -380,11 +354,10 @@
                 lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
                 message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value
             };
-            
             try {
                 await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert("提交成功！"); location.reload();
-            } catch (e) { alert("連線失敗"); btn.disabled = false; btn.innerText="確認提交申請"; }
+            } catch (e) { alert("連線失敗"); btn.disabled = false; }
         }
     </script>
 </body>
