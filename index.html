@@ -275,24 +275,27 @@
             }).join('');
         }
 
-        function openBooking(name) {
+function openBooking(name) {
             activeWelfare = name;
             document.getElementById('m-title').innerText = name;
             document.getElementById('modal').style.display = 'flex';
             
             document.getElementById('swagger_id').value = "";
             document.getElementById('reserve_content').value = "";
-            document.getElementById('btn-check').innerText = "🔍 核對名額狀況";
-            document.getElementById('btn-check').disabled = false;
-            document.getElementById('reserve_date').innerHTML = '<option>處理中</option>';
-            document.getElementById('reserve_date').disabled = true;
             
-            const needsNotice =['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
-            document.getElementById('anchor-notice').classList.toggle('hidden', !needsNotice);
+            // 判斷是否為「官方安排」類型的福利
+            const isOfficialArrangement = ['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
+            const needsAnchorNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
+            
+            // 顯示官方安排標語 (如果有的話)
+            const noticeEl = document.getElementById('anchor-notice');
+            noticeEl.innerText = isOfficialArrangement ? "⚠️ 上架時間由官方安排" : "填寫完畢將由官方向主播拿取素材";
+            noticeEl.classList.toggle('hidden', !needsAnchorNotice && !isOfficialArrangement);
 
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
             ids.forEach(id => document.getElementById(id).classList.add('hidden'));
 
+            // 根據類型顯示不同欄位
             if (name === '訂製專屬徽章') {
                 document.getElementById('badge-fields').classList.remove('hidden');
             } else if (name === '訂製專屬禮物') {
@@ -306,8 +309,10 @@
                 document.getElementById('ad-fields').classList.remove('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
-                document.getElementById('date-group').classList.remove('hidden');
-                document.getElementById('btn-check').classList.remove('hidden');
+                if (!isOfficialArrangement) { // 只有非官方安排的才顯示日期欄位
+                    document.getElementById('date-group').classList.remove('hidden');
+                    document.getElementById('btn-check').classList.remove('hidden');
+                }
                 if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
                 if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
             }
@@ -388,14 +393,18 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        async function handleFormSubmit() {
+       async function handleFormSubmit() {
             if (!confirm("一經送出不得更改，請再三確認內容。")) return;
             const btn = document.getElementById('btn-submit');
             btn.disabled = true; btn.innerText = "Submitting...";
+            
+            // 如果日期選擇器隱藏了，直接設為空字串，後端會自動判斷顯示「處理中」
+            const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
+
             const payload = {
                 user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
                 swagger_id: document.getElementById('swagger_id').value,
-                date: document.getElementById('reserve_date') ? document.getElementById('reserve_date').value : "",
+                date: dateVal,
                 content: document.getElementById('reserve_content').value,
                 badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
                 img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
