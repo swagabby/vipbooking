@@ -254,7 +254,7 @@
                         // 狀態判定：只要日期小於今天就是「已完成」
                         let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
                         
-                        let displayDate = h.date || "尚未安排";
+                        let displayDate = h.date || "處理中";
                         const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
                         
                         return '<div class="history-item-row">' +
