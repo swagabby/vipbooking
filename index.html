@@ -283,14 +283,22 @@ function openBooking(name) {
             document.getElementById('swagger_id').value = "";
             document.getElementById('reserve_content').value = "";
             
-            // 判斷是否為「官方安排」類型的福利
+           // 1. 定義哪些分類需要什麼標語
             const isOfficialArrangement = ['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
-            const needsAnchorNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
+            const needsMaterialNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
             
-            // 顯示官方安排標語 (如果有的話)
+            // 2. 組合標語邏輯
             const noticeEl = document.getElementById('anchor-notice');
-            noticeEl.innerText = isOfficialArrangement ? "⚠️ 上架時間由官方安排" : "填寫完畢將由官方向主播拿取素材";
-            noticeEl.classList.toggle('hidden', !needsAnchorNotice && !isOfficialArrangement);
+            let messages = [];
+            
+            if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
+            if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
+            
+            // 將陣列轉為文字 (若有多個標語，用換行隔開)
+            noticeEl.innerText = messages.join('\n');
+            
+            // 3. 控制顯示與隱藏
+            noticeEl.classList.toggle('hidden', messages.length === 0);
 
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
             ids.forEach(id => document.getElementById(id).classList.add('hidden'));
