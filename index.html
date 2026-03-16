@@ -137,11 +137,11 @@
 
             <!-- 5. Swagger ID (常駐) -->
             <div class="form-group" id="sw-group">
-                <label id="label-swagger">指定 Swagger ID</label>
-                <input type="text" id="swagger_id" placeholder="請輸入 ID">
-                <!-- 修復點 1：補上 onclick="syncAndCheck()" -->
-                <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
-            </div>
+    <label id="label-swagger">指定 Swagger ID</label>
+    <!-- 新增 oninput 事件 -->
+    <input type="text" id="swagger_id" placeholder="請輸入 ID" oninput="resetCheckStatus()">
+    <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
+</div>
             
             <!-- 6. 日期/場次 -->
             <div class="form-group" id="date-group">
@@ -336,7 +336,21 @@ function openBooking(name) {
                 }
             });
         }
-
+function resetCheckStatus() {
+    const btn = document.getElementById('btn-check');
+    const select = document.getElementById('reserve_date');
+    
+    // 重置按鈕文字與狀態
+    btn.innerText = "🔍 核對名額狀況";
+    btn.disabled = false;
+    
+    // 清空並鎖定日期選單
+    select.innerHTML = '<option>請先完成核對</option>';
+    select.disabled = true;
+    
+    // 清除已選取的日期值 (如果有)
+    select.value = "";
+}
         async function syncAndCheck() {
             const sid = document.getElementById('swagger_id').value.trim();
             if (!sid) return alert("請輸入 Swagger ID");
