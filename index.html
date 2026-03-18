@@ -418,7 +418,12 @@ function resetCheckStatus() {
        async function handleFormSubmit() {
             if (!confirm("一經送出不得更改，請再三確認內容。")) return;
             const btn = document.getElementById('btn-submit');
-            btn.disabled = true; btn.innerText = "Submitting...";
+            if (btn.disabled) return; 
+
+            if (!confirm("一經送出不得更改，請再三確認內容。")) return;
+            
+            btn.disabled = true; 
+            btn.innerText = "Processing...";
             
             // 如果日期選擇器隱藏了，直接設為空字串，後端會自動判斷顯示「處理中」
             const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
@@ -439,10 +444,29 @@ function resetCheckStatus() {
                 lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
                 message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value
             };
-            try {
-                await fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("提交成功！"); location.reload();
-            } catch (e) { alert("連線失敗"); btn.disabled = false; }
+try {
+                // 增加 security_code 防禦 (如上一則建議)
+                payload.security_code = "SWAG_INTERNAL_2026"; 
+                
+                const response = await fetch(GAS_API, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const result = await response.text();
+                if (result.includes("Success")) {
+                    alert("提交成功！");
+                    location.reload();
+                } else {
+                    alert("申請失敗，原因：" + result);
+                    btn.disabled = false;
+                    btn.innerText = "確認提交申請";
+                }
+            } catch (e) { 
+                alert("連線失敗，請檢查網路。"); 
+                btn.disabled = false; 
+                btn.innerText = "確認提交申請";
+            }
         }
     </script>
 </body>
