@@ -272,7 +272,7 @@ function renderCards() {
     // 呼叫這個函式來獲取當前正確順序與等級的陣列
     const welfareList = getWelfareList(); 
             const now = new Date();
-            const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
             const todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
             const todayTime = now.getTime();
 
@@ -361,7 +361,7 @@ function openBooking(name) {
     if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
 
         if (name === '女神聚會') {
-        messages.push("<span style='color:#ff5a5f;'>📅 舉辦日期多為月底的週末，詳細日期請等候更新<br>✅ 請先取得主播同意出席後，再填寫主播帳號，謝謝</span>");
+        messages.push("📅 舉辦日期：4/25<br>🏠地點：台北市<br>✅ 請先取得主播同意出席後，再填寫主播帳號，謝謝");
     }
     
     noticeEl.innerText = messages.join('\n');
