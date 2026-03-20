@@ -211,7 +211,12 @@ function getWelfareList() {
 
 async function init() {
 const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id');
+    const urlId = params.get('user_id'); // 取得網址上的 ID
+    
+    if(!urlId) {
+        console.error("網址缺少 user_id");
+        return;
+    }
             
             // 檢查預告顯示時機 (4/1 之前顯示)
             const aprilFirst = new Date('2026-04-01T00:00:00');
@@ -220,11 +225,17 @@ const params = new URLSearchParams(window.location.search);
                 document.getElementById('april-notice').style.display = 'block';
             }
 
-            try {
-                const res = await fetch(USER_API + "?user_id=" + user.id);
-                const data = await res.json();
-                user.username = (data?.username || data?.display_name || user.id).trim();
-                user.level = data?.level || 0;
+try {
+        // 向 API 請求「當前登入者」的真實資料
+        const res = await fetch(USER_API + "?user_id=" + urlId);
+        if (!res.ok) throw new Error("API 請求失敗");
+        
+        const data = await res.json();
+        
+        // 重要：將 API 回傳的真實 ID 存入 user.id (這才是不可竄改的來源)
+        user.id = (data?.user_id || urlId).trim(); 
+        user.username = (data?.username || data?.display_name || user.id).trim();
+        user.level = data?.level || 0;
                 document.getElementById('u-name').innerText = user.username;
                 document.getElementById('u-lv').innerText = "LV." + user.level;
                 
@@ -232,12 +243,15 @@ const params = new URLSearchParams(window.location.search);
                 const hText = await hRes.text();
                 userHistory = JSON.parse(hText);
                 
-                renderCards();
-                const loader = document.getElementById('loader-overlay');
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
-            } catch(e) { renderCards(); }
-        }
+renderCards();
+        document.getElementById('loader-overlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
+        
+    } catch(e) { 
+        console.error("Init Error:", e);
+        alert("身分驗證失敗，請重新從 App 進入");
+    }
+}
 
 function renderCards() {
     const grid = document.getElementById('benefit-grid');
@@ -459,7 +473,9 @@ async function handleFormSubmit() {
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
-            
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('user_id');
+    
     btn.disabled = true; 
     btn.innerText = "Processing...";
     
@@ -497,28 +513,22 @@ async function handleFormSubmit() {
     };
 
     try {
-        // --- 修正點：移除 mode: 'no-cors' 才能接收到 GAS 的 Error ---
         const response = await fetch(GAS_API, { 
             method: 'POST', 
             body: JSON.stringify(payload) 
         });
-        
         const result = await response.text();
         
         if (result.includes("Success")) {
             btn.innerText = "提交成功！";
             setTimeout(() => location.reload(), 1500);
         } else {
-            // 如果後端回傳 "Error: Access Denied..." 會進到這裡
-            throw new Error(result);
+            throw new Error(result); // 這裡會抓到 GAS 丟出的 "Access Denied"
         }
-        
     } catch (e) { 
-        console.error("Submission failed:", e);
         btn.disabled = false; 
-        // 顯示具體的錯誤訊息（例如：來源不合法）
-        btn.innerText = e.message.includes("Denied") ? "非法來源請求" : "提交失敗，請重試";
-        setTimeout(() => btn.innerText = "確認提交申請", 3000);
+        // 如果身分不一致，按鈕顯示警告
+        btn.innerText = e.message.includes("Denied") ? "身分驗證不合，已紀錄" : "提交失敗，請重試";
     }
 }
     </script>
