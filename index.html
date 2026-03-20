@@ -492,22 +492,18 @@ btn.innerText = "請輸入 主播帳號（請勿填寫@）";
         security_code: "SWAG_INTERNAL_2026" // 務必加上此安全代碼
     };
 
+try {
+    const response = await fetch(GAS_API, { 
+        method: 'POST', 
+        mode: 'no-cors',
+        body: JSON.stringify(payload) 
+    });
+    
+    btn.innerText = "提交成功！";
+    location.reload();
+    
+} catch (e) { 
     try {
-        const response = await fetch(GAS_API, { 
-            method: 'POST', 
-            mode: 'no-cors', // 如果遇到跨域問題，保持 no-cors
-            body: JSON.stringify(payload) 
-        });
-        
-        // 注意：no-cors 模式下無法直接讀取 response.text()
-        // 但如果您的 GAS 部署為「所有人皆可存取」，建議改為 mode: 'cors' 
-        // 這樣您才能收到 "Success" 的回覆並執行後續動作
-        
-        btn.innerText = "提交成功！";
-        location.reload();
-        
-    } catch (e) { 
- try {
         const response = await fetch(GAS_API, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
@@ -516,7 +512,6 @@ btn.innerText = "請輸入 主播帳號（請勿填寫@）";
         
         const result = await response.text();
         
-        // 避開 alert，直接處理結果
         if (result.includes("Success")) {
             btn.innerText = "提交成功！";
             setTimeout(() => location.reload(), 1000);
@@ -525,6 +520,9 @@ btn.innerText = "請輸入 主播帳號（請勿填寫@）";
             setTimeout(() => btn.innerText = "確認提交申請", 2000);
             btn.disabled = false;
         }
+    } catch (innerError) {
+        console.error(innerError); // 這裡可以處理內部錯誤
+    }
 }
     </script>
 </body>
