@@ -451,60 +451,73 @@ function resetCheckStatus() {
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
 async function handleFormSubmit() {
-const btn = document.getElementById('btn-submit');
-    
-    // 1. 檢查是否已經在處理中
+    const btn = document.getElementById('btn-submit');
     if (btn.disabled) return; 
 
-    // 2. [修正] 移除 confirm()，改為直接檢查是否填寫 Swagger ID
-    // 讓用戶在送出前先自己確認，或用自定義的 UI 確認 (這裡我們先簡化邏輯)
     if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && !document.getElementById('swagger_id').value.trim()) {
-btn.innerText = "請輸入主播帳號（請勿填寫@）";
+        btn.innerText = "請輸入主播帳號（請勿填寫@）";
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
             
- btn.disabled = true; 
+    btn.disabled = true; 
     btn.innerText = "Processing...";
     
     const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
 
     const payload = {
-        user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
+        user_id: user.id, 
+        username: user.username, 
+        level: user.level, 
+        benefit: activeWelfare,
         swagger_id: document.getElementById('swagger_id').value,
         date: dateVal,
         content: document.getElementById('reserve_content').value,
-        badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
-        img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
-        gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
+        badge_name: document.getElementById('b_name').value, 
+        badge_elements: document.getElementById('b_elem').value,
+        img_url: document.getElementById('b_url').value, 
+        target_ids: document.getElementById('b_targets').value,
+        gift_name: document.getElementById('g_name').value, 
+        diamonds: document.getElementById('g_dia').value, 
+        gift_text: document.getElementById('g_txt').value,
         is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked || document.getElementById('cover_brand').checked) ? "是" : "否",
         need_photo: document.getElementById('g_photo').checked ? "是" : "否",
         ad_copy: document.getElementById('ad_copy').value,
         lunch_1: document.getElementById('l_1') ? document.getElementById('l_1').value : "",
         lunch_2: document.getElementById('l_2') ? document.getElementById('l_2').value : "",
         lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
-        message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value,
-        security_code: "SWAG_INTERNAL_2026" // 務必加上此安全代碼
+        message: document.getElementById('bell_msg').value, 
+        copy_text: document.getElementById('cover_copy').value,
+        
+        // --- 修正點：加入來源驗證 ---
+        referrer: window.location.href,
+        current_origin: window.location.origin,
+        security_code: "SWAG_INTERNAL_2026" 
     };
 
     try {
+        // --- 修正點：移除 mode: 'no-cors' 才能接收到 GAS 的 Error ---
         const response = await fetch(GAS_API, { 
             method: 'POST', 
-            mode: 'no-cors', // 如果遇到跨域問題，保持 no-cors
             body: JSON.stringify(payload) 
         });
         
-        // 注意：no-cors 模式下無法直接讀取 response.text()
-        // 但如果您的 GAS 部署為「所有人皆可存取」，建議改為 mode: 'cors' 
-        // 這樣您才能收到 "Success" 的回覆並執行後續動作
+        const result = await response.text();
         
-        btn.innerText = "提交成功！";
-        location.reload();
+        if (result.includes("Success")) {
+            btn.innerText = "提交成功！";
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            // 如果後端回傳 "Error: Access Denied..." 會進到這裡
+            throw new Error(result);
+        }
         
     } catch (e) { 
-
+        console.error("Submission failed:", e);
         btn.disabled = false; 
-        btn.innerText = "提交失敗，請重試";
+        // 顯示具體的錯誤訊息（例如：來源不合法）
+        btn.innerText = e.message.includes("Denied") ? "非法來源請求" : "提交失敗，請重試";
+        setTimeout(() => btn.innerText = "確認提交申請", 3000);
     }
 }
     </script>
