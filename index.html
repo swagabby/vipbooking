@@ -247,9 +247,14 @@ renderCards();
         document.getElementById('loader-overlay').style.opacity = '0';
         setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
         
-    } catch(e) { 
+} catch(e) { 
         console.error("Init Error:", e);
-        alert("身分驗證失敗，請重新從 App 進入");
+        // 這裡不要用 alert，改用文字顯示在螢幕上
+        document.body.innerHTML = `
+            <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif;">
+                <h2 style="color:#ff5a5f;">身分驗證失敗</h2>
+                <p style="color:#888; margin-top:10px;">請嘗試重新從 App 進入系統</p>
+            </div>`;
     }
 }
 
