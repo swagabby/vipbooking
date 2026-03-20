@@ -474,16 +474,18 @@ async function handleFormSubmit() {
         return;
     }
 const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id'); // 網址上的 ID
+    const urlId = params.get('user_id');
     
     btn.disabled = true; 
-    btn.innerText = "Processing...";
+    btn.innerText = "預約中，請稍後";
     
     const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
 
 const payload = {
-        user_id: String(user.id).trim(),        // API 拿到的真實 ID
-        url_user_id: String(urlId).trim(),      // 網址上的 ID
+        // 這是 init() 階段透過 API 換回來的「真實身分」
+        user_id: user.id, 
+        // 這是網址上的 ID，如果有人改了網址，這裡會跟 user.id 不一樣
+        url_user_id: urlId,
         username: user.username,
         level: user.level,
         benefit: activeWelfare,
