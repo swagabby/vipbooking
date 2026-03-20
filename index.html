@@ -234,7 +234,7 @@ window.addEventListener('message', async (event) => {
 
 
 async function startApp(authorizedId) {
-    if (user.id) return; // 防止重複初始化
+    if (user.id !== '') return; // 已經初始化過就直接跳出
     user.id = authorizedId;
     // 預告顯示邏輯
     if (new Date() < aprilFirst) {
