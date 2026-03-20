@@ -293,24 +293,26 @@ const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).pad
 
                 // 核心邏輯修改處
                 const activeRecords = myRecords.filter(h => {
-                    // 1. 如果是當月登記的福利，永遠顯示 (不論日期是否已過)
-                    if (h.submitMonth === currentMonthStr) return true;
+ // 1. 本月紀錄一律顯示
+    if (h.submitMonth === currentMonthStr) return true;
 
-                    // 2. 如果不是當月（即上個月或更早），檢查是否已完成並超過 7 天
-                    const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; // 若日期非標準格式則顯示
+    // 2. 如果是「處理中」，一律顯示
+    if (h.date === "處理中") return true;
 
-                    const recordDate = new Date(h.date);
-                    const isPast = recordDate.getTime() < todayTime;
+    // 3. 嘗試解析日期，如果解析失敗，則視為處理中並保留
+    const recordDate = new Date(h.date);
+    if (isNaN(recordDate.getTime())) return true; 
 
-                    if (isPast) {
-                        const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
-                        // 超過 7 天則隱藏 (非當月紀錄)
-                        return diffDays <= 7;
-                    }
+    // 4. 只有「已過期」且「超過 7 天」的才隱藏
+    const isPast = recordDate.getTime() < todayTime;
+    if (isPast) {
+        const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
+        return diffDays <= 7;
+    }
+    return true;
+});
 
-                    return true; // 未來日期顯示
-                });
+        
 
                 let historyHtml = '';
                 if (activeRecords.length > 0) {
