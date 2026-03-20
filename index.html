@@ -141,9 +141,9 @@
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
             </div>
 
-            <!-- 5. Swagger ID (常駐) -->
+            <!-- 5. 主播帳號（請勿填寫@） (常駐) -->
             <div class="form-group" id="sw-group">
-    <label id="label-swagger">指定 Swagger ID</label>
+    <label id="label-swagger">指定 主播帳號（請勿填寫@）</label>
     <!-- 新增 oninput 事件 -->
     <input type="text" id="swagger_id" placeholder="請輸入 ID" oninput="resetCheckStatus()">
     <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
@@ -388,7 +388,7 @@ function resetCheckStatus() {
 }
         async function syncAndCheck() {
             const sid = document.getElementById('swagger_id').value.trim();
-            if (!sid) return alert("請輸入 Swagger ID");
+            if (!sid) return alert("請輸入 主播帳號（請勿填寫@）");
             const btn = document.getElementById('btn-check');
             btn.innerText = "⏳ 同步中..."; btn.disabled = true;
             try {
@@ -456,10 +456,10 @@ const btn = document.getElementById('btn-submit');
     // 1. 檢查是否已經在處理中
     if (btn.disabled) return; 
 
-    // 2. [修正] 移除 confirm()，改為直接檢查是否填寫 Swagger ID
+    // 2. [修正] 移除 confirm()，改為直接檢查是否填寫 主播帳號（請勿填寫@）
     // 讓用戶在送出前先自己確認，或用自定義的 UI 確認 (這裡我們先簡化邏輯)
     if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && !document.getElementById('swagger_id').value.trim()) {
-btn.innerText = "請輸入 Swagger ID";
+btn.innerText = "請輸入 主播帳號（請勿填寫@）";
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
@@ -502,10 +502,24 @@ btn.innerText = "請輸入 Swagger ID";
         location.reload();
         
     } catch (e) { 
-
-        btn.disabled = false; 
-        btn.innerText = "提交失敗，請重試";
-    }
+ try {
+        const response = await fetch(GAS_API, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        });
+        
+        const result = await response.text();
+        
+        // 避開 alert，直接處理結果
+        if (result.includes("Success")) {
+            btn.innerText = "提交成功！";
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            btn.innerText = "提交失敗，請重試";
+            setTimeout(() => btn.innerText = "確認提交申請", 2000);
+            btn.disabled = false;
+        }
 }
     </script>
 </body>
