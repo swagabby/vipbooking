@@ -210,13 +210,7 @@ function getWelfareList() {
         window.onload = function() { init(); };
 
 async function init() {
-     // 檢查是否在 Iframe 內 (如果是直接在瀏覽器打開，window.self === window.top)
-    if (window.self === window.top) {
-        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>此頁面僅限於 SWAG App 內開啟</h2>";
-        return; // 直接停止，不執行後續的 fetch
-    }
-
-    const params = new URLSearchParams(window.location.search);
+            const params = new URLSearchParams(window.location.search);
             user.id = params.get('user_id'); if(!user.id) return;
             
             // 檢查預告顯示時機 (4/1 之前顯示)
