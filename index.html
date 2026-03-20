@@ -210,13 +210,14 @@ function getWelfareList() {
         window.onload = function() { init(); };
 
 async function init() {
-const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id'); // 取得網址上的 ID
-    
-    if(!urlId) {
-        console.error("網址缺少 user_id");
+    if (window.self === window.top) {
+        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
         return;
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('user_id'); 
+    if (!urlId) return;
             
             // 檢查預告顯示時機 (4/1 之前顯示)
             const aprilFirst = new Date('2026-04-01T00:00:00');
@@ -225,35 +226,47 @@ const params = new URLSearchParams(window.location.search);
                 document.getElementById('april-notice').style.display = 'block';
             }
 
-try {
-        // 向 API 請求「當前登入者」的真實資料
-        const res = await fetch(USER_API + "?user_id=" + urlId);
+ try {
+        // --- 核心修改：驗證真實身分與網址 ID ---
+        const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
         if (!res.ok) throw new Error("API 請求失敗");
         
         const data = await res.json();
+        const apiUserId = (data.user_id || data.id || "").toString().trim();
         
-        // 重要：將 API 回傳的真實 ID 存入 user.id (這才是不可竄改的來源)
-        user.id = (data?.user_id || urlId).trim(); 
+        // 【核心防禦】：如果 API 回傳的 ID 與網址上的 ID 不符，直接鎖定頁面！
+        if (apiUserId !== urlId.trim()) {
+            document.body.innerHTML = `
+                <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif;">
+                    <h2 style="color:#ff5a5f;">身分驗證失敗</h2>
+                    <p style="color:#888; margin-top:10px;">偵測到帳號異常，禁止冒用他人身分</p>
+                </div>`;
+            return; // 強制中斷執行
+        }
+
+        // 身分確認無誤，進行初始化
+        user.id = apiUserId;
         user.username = (data?.username || data?.display_name || user.id).trim();
         user.level = data?.level || 0;
-                document.getElementById('u-name').innerText = user.username;
-                document.getElementById('u-lv').innerText = "LV." + user.level;
-                
-                const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                const hText = await hRes.text();
-                userHistory = JSON.parse(hText);
-                
-renderCards();
+        
+        document.getElementById('u-name').innerText = user.username;
+        document.getElementById('u-lv').innerText = "LV." + user.level;
+        
+        // 請求預約歷史
+        const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
+        const hText = await hRes.text();
+        userHistory = JSON.parse(hText);
+        
+        renderCards();
         document.getElementById('loader-overlay').style.opacity = '0';
         setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
-        
-} catch(e) { 
-        console.error("Init Error:", e);
-        // 這裡不要用 ，改用文字顯示在螢幕上
+
+    } catch(e) { 
+        console.error("初始化失敗:", e);
         document.body.innerHTML = `
-            <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif;">
-                <h2 style="color:#ff5a5f;">身分驗證失敗</h2>
-                <p style="color:#888; margin-top:10px;">請嘗試重新從 App 進入系統</p>
+            <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <h2 style="color:#ff5a5f;">系統連線異常</h2>
+                <p style="color:#888;">請重新整理頁面</p>
             </div>`;
     }
 }
