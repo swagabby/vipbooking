@@ -456,90 +456,75 @@ function resetCheckStatus() {
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
 async function handleFormSubmit() {
-    const btn = document.getElementById('btn-submit');
+const btn = document.getElementById('btn-submit');
     
-    // 1. 防止重複點擊
+    // 1. 檢查是否已經在處理中
     if (btn.disabled) return; 
 
-    // 2. 欄位檢查 (swagger_id)
-    const swaggerIdEl = document.getElementById('swagger_id');
-    const swaggerId = swaggerIdEl ? swaggerIdEl.value.trim() : "";
-
-    if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && !swaggerId) {
-        const originalText = btn.innerText;
-        btn.innerText = "請輸入 主播帳號（請勿填寫@）";
-        setTimeout(() => btn.innerText = originalText, 2000);
+    // 2. [修正] 移除 confirm()，改為直接檢查是否填寫 主播帳號（請勿填寫@）
+    // 讓用戶在送出前先自己確認，或用自定義的 UI 確認 (這裡我們先簡化邏輯)
+    if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && !document.getElementById('swagger_id').value.trim()) {
+btn.innerText = "請輸入 主播帳號（請勿填寫@）";
+        setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
             
-    // 3. 進入處理狀態
-    btn.disabled = true; 
-    btn.innerText = "預約中，請稍後";
+ btn.disabled = true; 
+    btn.innerText = "Processing...";
     
-    // 取得日期值 (增加 null 檢查避免噴錯)
-    const dateEl = document.getElementById('reserve_date');
-    const dateVal = (dateEl && !dateEl.disabled) ? dateEl.value : "";
+    const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
 
-    // 封裝資料
     const payload = {
-        user_id: user.id, 
-        username: user.username, 
-        level: user.level, 
-        benefit: activeWelfare,
-        swagger_id: swaggerId,
+        user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
+        swagger_id: document.getElementById('swagger_id').value,
         date: dateVal,
-        content: document.getElementById('reserve_content')?.value || "",
-        badge_name: document.getElementById('b_name')?.value || "", 
-        badge_elements: document.getElementById('b_elem')?.value || "",
-        img_url: document.getElementById('b_url')?.value || "", 
-        target_ids: document.getElementById('b_targets')?.value || "",
-        gift_name: document.getElementById('g_name')?.value || "", 
-        diamonds: document.getElementById('g_dia')?.value || "", 
-        gift_text: document.getElementById('g_txt')?.value || "",
-        is_branded: (
-            document.getElementById('g_brand')?.checked || 
-            document.getElementById('ad_brand')?.checked || 
-            document.getElementById('bell_brand')?.checked || 
-            document.getElementById('cover_brand')?.checked
-        ) ? "是" : "否",
-        need_photo: document.getElementById('g_photo')?.checked ? "是" : "否",
-        ad_copy: document.getElementById('ad_copy')?.value || "",
-        lunch_1: document.getElementById('l_1')?.value || "",
-        lunch_2: document.getElementById('l_2')?.value || "",
-        lunch_3: document.getElementById('l_3')?.value || "",
-        message: document.getElementById('bell_msg')?.value || "", 
-        copy_text: document.getElementById('cover_copy')?.value || "",
-        security_code: "SWAG_INTERNAL_2026"
+        content: document.getElementById('reserve_content').value,
+        badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
+        img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
+        gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
+        is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked || document.getElementById('cover_brand').checked) ? "是" : "否",
+        need_photo: document.getElementById('g_photo').checked ? "是" : "否",
+        ad_copy: document.getElementById('ad_copy').value,
+        lunch_1: document.getElementById('l_1') ? document.getElementById('l_1').value : "",
+        lunch_2: document.getElementById('l_2') ? document.getElementById('l_2').value : "",
+        lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
+        message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value,
+        security_code: "SWAG_INTERNAL_2026" // 務必加上此安全代碼
     };
 
     try {
-        // 使用 Google Apps Script 時，通常建議直接用預設模式 (會處理 CORS 轉向)
-        // 注意：GAS 成功接收後通常會回傳 302 重導向，fetch 會自動處理
         const response = await fetch(GAS_API, { 
             method: 'POST', 
-            // 如果 GAS 沒有設定 CORS，才改用 'no-cors'，但這樣無法判斷是否成功
-            // 這裡建議先嘗試正常模式
+            mode: 'no-cors', // 如果遇到跨域問題，保持 no-cors
             body: JSON.stringify(payload) 
         });
-
-        // 如果是 no-cors，response.ok 會是 false，這裡要做特殊處理
+        
+        // 注意：no-cors 模式下無法直接讀取 response.text()
+        // 但如果您的 GAS 部署為「所有人皆可存取」，建議改為 mode: 'cors' 
+        // 這樣您才能收到 "Success" 的回覆並執行後續動作
+        
         btn.innerText = "提交成功！";
+        location.reload();
         
-        // 延遲跳轉，讓用戶看到成功訊息
-        setTimeout(() => {
-            location.reload();
-        }, 1500);
-
-    } catch (error) {
-        console.error("Submission error:", error);
-        btn.innerText = "提交失敗，請檢查網路";
+    } catch (e) { 
+ try {
+        const response = await fetch(GAS_API, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        });
         
-        // 恢復按鈕狀態供重試
-        setTimeout(() => {
+        const result = await response.text();
+        
+        // 避開 alert，直接處理結果
+        if (result.includes("Success")) {
+            btn.innerText = "提交成功！";
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            btn.innerText = "提交失敗，請重試";
+            setTimeout(() => btn.innerText = "確認提交申請", 2000);
             btn.disabled = false;
-            btn.innerText = "確認提交申請";
-        }, 3000);
-    }
+        }
 }
     </script>
 </body>
