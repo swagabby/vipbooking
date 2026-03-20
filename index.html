@@ -181,6 +181,8 @@
 const aprilFirst = new Date('2026-04-01T00:00:00');
 const isAfterApril = new Date() >= aprilFirst;
 
+
+        
 // 自動變更等級與提示文案
 function getWelfareList() {
     const aprilFirst = new Date('2026-04-01T00:00:00');
@@ -233,39 +235,52 @@ window.addEventListener('message', async (event) => {
 };
 
 
-async function startApp(authorizedId) {
-    if (user.id !== '') return; // 已經初始化過就直接跳出
-    user.id = authorizedId;
-    // 預告顯示邏輯
-    if (new Date() < aprilFirst) {
-        document.getElementById('april-notice').style.display = 'block';
-    }
+    // 頁面載入時執行 init
+    window.onload = function() { init(); };
 
-    try {
-        const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(user.id));
-        if (!res.ok) throw new Error("API 請求失敗");
         
-        const data = await res.json();
-        user.username = (data?.username || data?.display_name || user.id).trim();
-        user.level = data?.level || 0;
-        
-        document.getElementById('u-name').innerText = user.username;
-        document.getElementById('u-lv').innerText = "LV." + user.level;
-        
-        // 請求預約歷史 (記得您的 GAS 網址要確認已部署最新版)
-        const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-        const hText = await hRes.text();
-        userHistory = JSON.parse(hText);
-        
-        renderCards();
-        document.getElementById('loader-overlay').style.opacity = '0';
-        setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
+    // init 函式：放在最外面，不要包在任何 function 裡面
+    async function init() {
+        if (window.self === window.top) {
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
+            return;
+        }
 
-    } catch(e) { 
-        console.error("Initialization error:", e);
-        document.body.innerHTML = `<div style="color:white; text-align:center; margin-top:50px;">系統連線異常，請重新整理頁面。</div>`;
+        const params = new URLSearchParams(window.location.search);
+        const urlId = params.get('user_id'); 
+        if (!urlId) return;
+        
+        if (new Date() < aprilFirst) {
+            document.getElementById('april-notice').style.display = 'block';
+        }
+
+        try {
+            const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
+            if (!res.ok) throw new Error("API 請求失敗");
+            const data = await res.json();
+            
+            const apiUserId = (data.user_id || data.id || "").toString().trim();
+            if (apiUserId !== urlId.trim()) {
+                document.body.innerHTML = "<h2 style='color:red; text-align:center;'>身分驗證失敗</h2>";
+                return;
+            }
+
+            user.id = apiUserId;
+            user.username = (data?.username || data?.display_name || user.id).trim();
+            user.level = data?.level || 0;
+            document.getElementById('u-name').innerText = user.username;
+            document.getElementById('u-lv').innerText = "LV." + user.level;
+            
+            const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
+            userHistory = JSON.parse(await hRes.text());
+            
+            renderCards();
+            document.getElementById('loader-overlay').style.opacity = '0';
+            setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
+        } catch(e) { 
+            console.error(e);
+        }
     }
-}
 function renderCards() {
     const grid = document.getElementById('benefit-grid');
     // 呼叫這個函式來獲取當前正確順序與等級的陣列
@@ -498,8 +513,13 @@ async function handleFormSubmit() {
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
-const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id');
+    
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('user_id'); 
+    if (!urlId) {
+        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入</h2>";
+        return;
+    }
     
     btn.disabled = true; 
     btn.innerText = "預約中，請稍後";
@@ -540,10 +560,11 @@ referrer: window.location.href || "https://swag.live",
     };
 
 try {
-        const response = await fetch(GAS_API, { 
-            method: 'POST', 
-            body: JSON.stringify(payload) 
-        });
+const response = await fetch(GAS_API, { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, // 這一行對應 GAS 的 JSON 解析
+    body: JSON.stringify(payload) 
+});
         
         const result = await response.text();
         
