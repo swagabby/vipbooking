@@ -406,10 +406,17 @@ function resetCheckStatus() {
     select.value = "";
 }
         async function syncAndCheck() {
-            const sid = document.getElementById('swagger_id').value.trim();
-            if (!sid) return alert("請輸入主播帳號（請勿填寫@）");
-            const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 同步中..."; btn.disabled = true;
+if (!sid) {
+        const btn = document.getElementById('btn-check');
+        const originalText = btn.innerText;
+        btn.innerText = "⚠️ 請先輸入主播帳號";
+        setTimeout(() => btn.innerText = originalText, 2000);
+        return;
+    }
+
+    const btn = document.getElementById('btn-check');
+    btn.innerText = "⏳ 檢查中..."; 
+    btn.disabled = true;
             try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
@@ -462,10 +469,14 @@ function resetCheckStatus() {
                 }
                 btn.innerText = "✅ 核對完成";
             // 修復點 3：補齊 catch 與 try...catch 的閉合括號
-            } catch (e) { 
-                alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; 
-            }
-        }
+   } catch (e) { 
+        // 原本：alert("連線失敗");
+        // 修正：顯示在按鈕上
+        btn.innerText = "❌ 連線失敗，請重試";
+        btn.disabled = false;
+        setTimeout(() => btn.innerText = "🔍 重新核對", 2000);
+    }
+}
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
