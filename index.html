@@ -406,6 +406,8 @@ function resetCheckStatus() {
     select.value = "";
 }
         async function syncAndCheck() {
+            const sid = document.getElementById('swagger_id').value.trim();
+
 if (!sid) {
         const btn = document.getElementById('btn-check');
         const originalText = btn.innerText;
