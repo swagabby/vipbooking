@@ -210,8 +210,8 @@ function getWelfareList() {
         window.onload = function() { init(); };
 
 async function init() {
-            const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id'); if(!user.id) return;
+const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('user_id');
             
             // 檢查預告顯示時機 (4/1 之前顯示)
             const aprilFirst = new Date('2026-04-01T00:00:00');
@@ -467,6 +467,7 @@ async function handleFormSubmit() {
 
     const payload = {
         user_id: user.id, 
+        url_user_id: urlId,
         username: user.username, 
         level: user.level, 
         benefit: activeWelfare,
