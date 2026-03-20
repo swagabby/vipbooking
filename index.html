@@ -249,7 +249,7 @@ renderCards();
         
 } catch(e) { 
         console.error("Init Error:", e);
-        // 這裡不要用 alert，改用文字顯示在螢幕上
+        // 這裡不要用 ，改用文字顯示在螢幕上
         document.body.innerHTML = `
             <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif;">
                 <h2 style="color:#ff5a5f;">身分驗證失敗</h2>
@@ -545,7 +545,7 @@ try {
             // 成功後延遲重新整理
             setTimeout(() => location.reload(), 1500);
         } else {
-            // 這裡原本是 alert(result)，現在改為顯示在按鈕上
+            // 這裡原本是 (result)，現在改為顯示在按鈕上
             console.error("GAS Error:", result);
             btn.innerText = result.includes("Denied") ? "身分驗證失敗" : "資料錯誤，請檢查";
             btn.style.background = "#ff5a5f"; // 變色提示錯誤
