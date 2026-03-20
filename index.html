@@ -502,25 +502,10 @@ btn.innerText = "請輸入 主播帳號（請勿填寫@）";
         location.reload();
         
     } catch (e) { 
- try {
-        const response = await fetch(GAS_API, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload) 
-        });
-        
-        const result = await response.text();
-        
-        // 避開 alert，直接處理結果
-        if (result.includes("Success")) {
-            btn.innerText = "提交成功！";
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            btn.innerText = "提交失敗，請重試";
-            setTimeout(() => btn.innerText = "確認提交申請", 2000);
-            btn.disabled = false;
-        }
-}
+
+        btn.disabled = false; 
+        btn.innerText = "提交失敗，請重試";
+    }
     </script>
 </body>
 </html>
