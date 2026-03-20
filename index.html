@@ -471,14 +471,13 @@ if (!sid) {
                 }
                 btn.innerText = "✅ 核對完成";
             // 修復點 3：補齊 catch 與 try...catch 的閉合括號
-   } catch (e) { 
-        // 原本：alert("連線失敗");
-        // 修正：顯示在按鈕上
+ } catch (e) { // <--- 檢查這裡的括號是否正確閉合
+        console.error("Sync Error:", e);
         btn.innerText = "❌ 連線失敗，請重試";
         btn.disabled = false;
-        setTimeout(() => btn.innerText = "🔍 重新核對", 2000);
+        setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); // 這裡要補上大括號 {}
     }
-}
+} // 這是 syncAndCheck 的結尾括號
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
