@@ -210,8 +210,13 @@ function getWelfareList() {
         window.onload = function() { init(); };
 
 async function init() {
-            const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id'); if(!user.id) return;
+    if (window.self === window.top) {
+                document.body.innerHTML = "<h1>請由 SWAG 官方站內進入</h1>";
+        return;
+    
+
+    window.parent.postMessage({ type: 'SWAG_VIP_GET_USER_ID' }, 'swag.live');
+}
             
             // 檢查預告顯示時機 (4/1 之前顯示)
             const aprilFirst = new Date('2026-04-01T00:00:00');
