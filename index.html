@@ -275,13 +275,13 @@ function renderCards() {
     const todayTime = now.getTime();
 
     grid.innerHTML = welfareList.map(function(w) {
-        const myRecords = userHistory.filter(h => h.benefit === w.name);
-        // 計算本月已預約次數
+        // 【關鍵除錯】確保名稱匹配時去除前後空白
+        const myRecords = userHistory.filter(h => h.benefit.trim() === w.name.trim());
         const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
         
-        // 核心：判定卡片鎖定狀態 (包含活躍紀錄與本月額度)
+        // 判斷是否有活躍紀錄 (包含本月、處理中、或7天內完成的)
         const hasActiveRecord = myRecords.some(h => {
-            if (h.submitMonth === currentMonthStr) return true; // 本月預約過
+            if (h.submitMonth === currentMonthStr) return true;
             if (h.date === "處理中") return true;
             const recordDate = new Date(h.date);
             return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
@@ -290,23 +290,33 @@ function renderCards() {
         const isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
         const locked = (user.level < w.lv) || isQuotaLocked || hasActiveRecord;
 
-        let btnTxt = (user.level < w.lv) ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →"));
+        let cardClass = "card " + (locked ? "locked" : "");
+        let btnTxt = (user.level < w.lv) ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中/已預約" : (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →"));
         let btnColor = locked ? "#777777" : "var(--primary)";
 
-        let historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
-            let displayStatus = (h.date !== "處理中" && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
-            const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
-            return `<div class="history-item-row">
-                <div class="history-data-line">
-                    <span>${h.date}</span>
-                    <span class="${badgeClass}">${displayStatus}</span>
-                </div>
-            </div>`;
-        }).join('') + '</div>';
+        // 【關鍵修正】強制渲染所有 myRecords，不要過濾掉
+        let historyHtml = '';
+        if (myRecords.length > 0) {
+            historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+                const recordDate = new Date(h.date);
+                let displayStatus = (!isNaN(recordDate.getTime()) && recordDate.getTime() < todayTime) ? "已完成" : "已收到";
+                const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
+                
+                return `<div class="history-item-row">
+                            <div class="history-data-line">
+                                <span>${h.date}</span>
+                                <span class="${badgeClass}">${displayStatus}</span>
+                            </div>
+                        </div>`;
+            }).join('') + '</div>';
+        }
 
-        return `<div class="card ${locked ? 'locked' : ''}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+        return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
             <div><h3 style="font-size:18px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
-            <div><div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>${historyHtml}</div>
+            <div>
+                <div style="color:${btnColor}; font-size:12px; font-weight:900; margin-top:10px;">${btnTxt}</div>
+                ${historyHtml}
+            </div>
         </div>`;
     }).join('');
 }
