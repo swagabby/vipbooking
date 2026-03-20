@@ -473,19 +473,19 @@ async function handleFormSubmit() {
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
-    const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id');
+const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('user_id'); // 網址上的 ID
     
     btn.disabled = true; 
     btn.innerText = "Processing...";
     
     const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
 
-    const payload = {
-        user_id: user.id, 
-        url_user_id: urlId,
-        username: user.username, 
-        level: user.level, 
+const payload = {
+        user_id: String(user.id).trim(),        // API 拿到的真實 ID
+        url_user_id: String(urlId).trim(),      // 網址上的 ID
+        username: user.username,
+        level: user.level,
         benefit: activeWelfare,
         swagger_id: document.getElementById('swagger_id').value,
         date: dateVal,
@@ -507,14 +507,15 @@ async function handleFormSubmit() {
         copy_text: document.getElementById('cover_copy').value,
         
         // --- 修正點：加入來源驗證 ---
-        referrer: window.location.href,
-        current_origin: window.location.origin,
-        security_code: "SWAG_INTERNAL_2026" 
+referrer: window.location.href || "https://swag.live/vip", 
+        current_origin: window.location.origin || "https://swag.live",
+        security_code: "SWAG_INTERNAL_2026"
     };
 
     try {
         const response = await fetch(GAS_API, { 
             method: 'POST', 
+            // 這裡不要加 mode: 'no-cors'，否則你拿不到 GAS 的 Error 訊息
             body: JSON.stringify(payload) 
         });
         const result = await response.text();
@@ -523,12 +524,15 @@ async function handleFormSubmit() {
             btn.innerText = "提交成功！";
             setTimeout(() => location.reload(), 1500);
         } else {
-            throw new Error(result); // 這裡會抓到 GAS 丟出的 "Access Denied"
+            // 如果 GAS 拋出 Error，這裡會顯示給用戶看
+            alert(result); 
+            btn.innerText = "驗證失敗";
+            btn.disabled = false;
         }
-    } catch (e) { 
-        btn.disabled = false; 
-        // 如果身分不一致，按鈕顯示警告
-        btn.innerText = e.message.includes("Denied") ? "身分驗證不合，已紀錄" : "提交失敗，請重試";
+    } catch (e) {
+        console.error(e);
+        btn.innerText = "網路錯誤";
+        btn.disabled = false;
     }
 }
     </script>
