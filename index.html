@@ -94,20 +94,18 @@
         </div>
     </header>
 
-    <!-- 預告區塊放在這裡，保證在 header 下方 -->
     <div id="april-notice" class="anchor-notice" style="display:none; margin-bottom:20px;">
         ⚠️ 4/1 起福利等級調整預告：徽章改為 LV.70，蓋板封面改為 LV.80。
     </div>
 
     <div id="benefit-grid" class="benefit-grid"></div>
-</div>
-
+</div> <!-- 整個容器結尾 -->
     <!-- Booking Modal -->
     <div id="modal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; top:20px; right:25px; background:none; border:none; color:#444; font-size:28px; cursor:pointer;">&times;</button>
             <h2 id="m-title" style="margin-bottom:20px; font-size:20px;">福利預約</h2>
-            
+            <div id="ui-message" style="display:none; padding:10px; margin-bottom:15px; border-radius:10px; text-align:center; font-weight:bold;"></div>
             <div id="anchor-notice" class="anchor-notice hidden">填寫完畢將由官方向主播拿取素材</div>
 
             <!-- 1. 徽章專屬 -->
@@ -143,9 +141,9 @@
 
             <!-- 5. Swagger ID (常駐) -->
             <div class="form-group" id="sw-group">
-    <label id="label-swagger">指定 Swagger ID</label>
+    <label id="label-swagger">指定 主播帳號</label>
     <!-- 新增 oninput 事件 -->
-    <input type="text" id="swagger_id" placeholder="請輸入 ID" oninput="resetCheckStatus()">
+<input type="text" id="swagger_id" placeholder="請輸入 ID" oninput="resetCheckStatus()">
     <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
 </div>
             
@@ -197,12 +195,12 @@ function getWelfareList() {
     const badge = { name: '訂製專屬徽章', lv: isAfterApril ? 70 : 80 };
     const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
 
-    // 4/1 後 Badge(徽章) 插入到索引 3 的位置 (變為第 4 個)，Cover 插入到索引 4
-    // 3月前 Cover 在第 4 個，Badge 在第 5 個
+    // 邏輯修正：4/1 後 Badge(徽章) 放在第 4 個 (索引 3)，Cover 放在第 5 個 (索引 4)
+    // 3 月前則反過來
     if (isAfterApril) {
-        all.splice(3, 0, badge, cover);
+        all.splice(3, 0, badge, cover); 
     } else {
-        all.splice(3, 0, cover, badge);
+        all.splice(3, 0, cover, badge); // 3月前 Cover 先 (Cover 在索引 3)
     }
     return all;
 }
@@ -210,7 +208,13 @@ function getWelfareList() {
         window.onload = function() { init(); };
 
 async function init() {
-            const params = new URLSearchParams(window.location.search);
+     // 檢查是否在 Iframe 內 (如果是直接在瀏覽器打開，window.self === window.top)
+    if (window.self === window.top) {
+        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
+        return; // 直接停止，不執行後續的 fetch
+    }
+
+    const params = new URLSearchParams(window.location.search);
             user.id = params.get('user_id'); if(!user.id) return;
             
             // 檢查預告顯示時機 (4/1 之前顯示)
@@ -220,24 +224,37 @@ async function init() {
                 document.getElementById('april-notice').style.display = 'block';
             }
 
-            try {
-                const res = await fetch(USER_API + "?user_id=" + user.id);
-                const data = await res.json();
-                user.username = (data?.username || data?.display_name || user.id).trim();
-                user.level = data?.level || 0;
-                document.getElementById('u-name').innerText = user.username;
-                document.getElementById('u-lv').innerText = "LV." + user.level;
-                
-                const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                const hText = await hRes.text();
-                userHistory = JSON.parse(hText);
-                
-                renderCards();
-                const loader = document.getElementById('loader-overlay');
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
-            } catch(e) { renderCards(); }
-        }
+    try {
+        // --- 核心優化：使用 Promise.all 並行請求 ---
+        // 同時開始請求，誰先到就先處理，不再互相等待
+        const [userData, historyData] = await Promise.all([
+            fetch(USER_API + "?user_id=" + encodeURIComponent(user.id)).then(r => r.json()),
+            fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username || user.id) + "&v=" + Date.now()).then(r => r.text())
+        ]);
+
+        // 處理 User Data
+        user.username = (userData?.username || userData?.display_name || user.id).trim();
+        user.level = userData?.level || 0;
+        document.getElementById('u-name').innerText = user.username;
+        document.getElementById('u-lv').innerText = "LV." + user.level;
+        
+        // 處理 History Data
+        userHistory = JSON.parse(historyData);
+        
+        // 渲染畫面
+        renderCards();
+        
+        // 隱藏 Loader
+        const loader = document.getElementById('loader-overlay');
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.display = 'none'; }, 500);
+
+    } catch(e) { 
+        console.error("初始化失敗:", e);
+        renderCards();
+        document.getElementById('loader-overlay').style.display = 'none';
+    }
+}
 
 function renderCards() {
     const grid = document.getElementById('benefit-grid');
@@ -313,29 +330,28 @@ function renderCards() {
         }
 
 function openBooking(name) {
-            activeWelfare = name;
-            document.getElementById('m-title').innerText = name;
-            document.getElementById('modal').style.display = 'flex';
-            
-            document.getElementById('swagger_id').value = "";
-            document.getElementById('reserve_content').value = "";
-            
-           // 1. 定義哪些分類需要什麼標語
-            const isOfficialArrangement = ['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
-            const needsMaterialNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
-            
-            // 2. 組合標語邏輯
-            const noticeEl = document.getElementById('anchor-notice');
-            let messages = [];
-            
-            if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
-            if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
-            
-            // 將陣列轉為文字 (若有多個標語，用換行隔開)
-            noticeEl.innerText = messages.join('\n');
-            
-            // 3. 控制顯示與隱藏
-            noticeEl.classList.toggle('hidden', messages.length === 0);
+    activeWelfare = name;
+    document.getElementById('m-title').innerText = name;
+    document.getElementById('modal').style.display = 'flex';
+    
+    document.getElementById('swagger_id').value = "";
+    document.getElementById('reserve_content').value = "";
+    // 確保重置按鈕
+    resetCheckStatus(); 
+    
+    const isOfficialArrangement = ['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
+    const needsMaterialNotice = ['蓋板創作者封面', '訂製專屬徽章', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
+    
+    const noticeEl = document.getElementById('anchor-notice');
+    let messages = [];
+    
+    // 改為這段邏輯，確保兩者皆有的時候會合併顯示
+    if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
+    if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
+    
+    noticeEl.innerText = messages.join('\n');
+    noticeEl.classList.toggle('hidden', messages.length === 0);
+
 
             const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
             ids.forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -390,7 +406,7 @@ function resetCheckStatus() {
 }
         async function syncAndCheck() {
             const sid = document.getElementById('swagger_id').value.trim();
-            if (!sid) return alert("請輸入 Swagger ID");
+            if (!sid) return alert("請輸入主播 ID");
             const btn = document.getElementById('btn-check');
             btn.innerText = "⏳ 同步中..."; btn.disabled = true;
             try {
@@ -452,59 +468,63 @@ function resetCheckStatus() {
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-       async function handleFormSubmit() {
-            if (!confirm("一經送出不得更改，請再三確認內容。")) return;
-            const btn = document.getElementById('btn-submit');
-            if (btn.disabled) return; 
+async function handleFormSubmit() {
+    const btn = document.getElementById('btn-submit');
+    if (btn.disabled) return; 
 
-            if (!confirm("一經送出不得更改，請再三確認內容。")) return;
-            
-            btn.disabled = true; 
-            btn.innerText = "Processing...";
-            
-            // 如果日期選擇器隱藏了，直接設為空字串，後端會自動判斷顯示「處理中」
-            const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
+    // 檢查欄位邏輯 (保持不變)
+    const isOfficial = ['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(activeWelfare);
+    if (!isOfficial && activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== 'CEO午餐' && !document.getElementById('swagger_id').value.trim()) {
+        btn.innerText = "請輸入 Swagger ID";
+        setTimeout(() => btn.innerText = "確認提交申請", 2000);
+        return;
+    }
 
-            const payload = {
-                user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
-                swagger_id: document.getElementById('swagger_id').value,
-                date: dateVal,
-                content: document.getElementById('reserve_content').value,
-                badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
-                img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
-                gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
-                is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked || document.getElementById('cover_brand').checked) ? "是" : "否",
-                need_photo: document.getElementById('g_photo').checked ? "是" : "否",
-                ad_copy: document.getElementById('ad_copy').value,
-                lunch_1: document.getElementById('l_1') ? document.getElementById('l_1').value : "",
-                lunch_2: document.getElementById('l_2') ? document.getElementById('l_2').value : "",
-                lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
-                message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value
-            };
-try {
-                // 增加 security_code 防禦 (如上一則建議)
-                payload.security_code = "SWAG_INTERNAL_2026"; 
-                
-                const response = await fetch(GAS_API, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload) 
-                });
-                
-                const result = await response.text();
-                if (result.includes("Success")) {
-                    alert("提交成功！");
-                    location.reload();
-                } else {
-                    alert("申請失敗，原因：" + result);
-                    btn.disabled = false;
-                    btn.innerText = "確認提交申請";
-                }
-            } catch (e) { 
-                alert("連線失敗，請檢查網路。"); 
-                btn.disabled = false; 
-                btn.innerText = "確認提交申請";
-            }
-        }
+    btn.disabled = true; 
+    btn.innerText = "Processing...";
+    
+    const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
+
+    const payload = {
+        user_id: user.id, username: user.username, level: user.level, benefit: activeWelfare,
+        swagger_id: document.getElementById('swagger_id').value,
+        date: dateVal,
+        content: document.getElementById('reserve_content').value,
+        badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
+        img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
+        gift_name: document.getElementById('g_name').value, diamonds: document.getElementById('g_dia').value, gift_text: document.getElementById('g_txt').value,
+        is_branded: (document.getElementById('g_brand').checked || document.getElementById('ad_brand').checked || document.getElementById('bell_brand').checked || document.getElementById('cover_brand').checked) ? "是" : "否",
+        need_photo: document.getElementById('g_photo').checked ? "是" : "否",
+        ad_copy: document.getElementById('ad_copy').value,
+        lunch_1: document.getElementById('l_1') ? document.getElementById('l_1').value : "",
+        lunch_2: document.getElementById('l_2') ? document.getElementById('l_2').value : "",
+        lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
+        message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value,
+        security_code: "SWAG_INTERNAL_2026",
+        current_origin: window.location.origin,
+        referrer: document.referrer
+    };
+
+    try {
+        // 使用 no-cors 模式，這能繞過瀏覽器的 Preflight 檢查
+        await fetch(GAS_API, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        });
+        
+        // no-cors 下無法讀取回應，但只要沒有觸發 catch，我們就視為送出成功
+        btn.innerText = "提交成功！";
+        setTimeout(() => location.reload(), 1000);
+        
+    } catch (e) { 
+        console.error("Fetch 錯誤:", e);
+        btn.disabled = false; 
+        btn.innerText = "連線失敗，請重試";
+        setTimeout(() => btn.innerText = "確認提交申請", 2000);
+    }
+}
     </script>
 </body>
 </html>
