@@ -207,52 +207,52 @@ function getWelfareList() {
     return all;
 }
 
-        window.onload = function() { init(); };
+window.addEventListener('message', async (event) => {
+    // 安全性：只接受來自 SWAG 官方網域的訊息
+    if (!event.origin.includes("swag.live")) return;
 
-async function init() {
+    if (event.data && event.data.type === 'SWAG_VIP_USER_ID') {
+        const authorizedId = String(event.data.userId).trim();
+        await startApp(authorizedId); // 拿到 ID 後才初始化
+    }
+});
+        window.onload = function() {
     if (window.self === window.top) {
         document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
         return;
     }
+                // 發送指令向父視窗索取 ID
+    window.parent.postMessage({ type: 'SWAG_VIP_GET_USER_ID' }, '*');
+    
+    // 超時機制：如果 3 秒內沒收到 ID
+    setTimeout(() => {
+        if (!user.id) {
+             document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>驗證超時，請重新整理</h2>";
+        }
+    }, 3000);
+};
 
-    const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id'); 
-    if (!urlId) return;
-            
-            // 檢查預告顯示時機 (4/1 之前顯示)
-            const aprilFirst = new Date('2026-04-01T00:00:00');
-            const now = new Date();
-            if (now < aprilFirst) {
-                document.getElementById('april-notice').style.display = 'block';
-            }
 
- try {
-        // --- 核心修改：驗證真實身分與網址 ID ---
-        const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
+async function startApp(authorizedId) {
+    if (user.id) return; // 防止重複初始化
+    user.id = authorizedId;
+    // 預告顯示邏輯
+    if (new Date() < aprilFirst) {
+        document.getElementById('april-notice').style.display = 'block';
+    }
+
+    try {
+        const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(user.id));
         if (!res.ok) throw new Error("API 請求失敗");
         
         const data = await res.json();
-        const apiUserId = (data.user_id || data.id || "").toString().trim();
-        
-        // 【核心防禦】：如果 API 回傳的 ID 與網址上的 ID 不符，直接鎖定頁面！
-        if (apiUserId !== urlId.trim()) {
-            document.body.innerHTML = `
-                <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif;">
-                    <h2 style="color:#ff5a5f;">身分驗證失敗</h2>
-                    <p style="color:#888; margin-top:10px;">偵測到帳號異常，禁止冒用他人身分</p>
-                </div>`;
-            return; // 強制中斷執行
-        }
-
-        // 身分確認無誤，進行初始化
-        user.id = apiUserId;
         user.username = (data?.username || data?.display_name || user.id).trim();
         user.level = data?.level || 0;
         
         document.getElementById('u-name').innerText = user.username;
         document.getElementById('u-lv').innerText = "LV." + user.level;
         
-        // 請求預約歷史
+        // 請求預約歷史 (記得您的 GAS 網址要確認已部署最新版)
         const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
         const hText = await hRes.text();
         userHistory = JSON.parse(hText);
@@ -262,15 +262,10 @@ async function init() {
         setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
 
     } catch(e) { 
-        console.error("初始化失敗:", e);
-        document.body.innerHTML = `
-            <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <h2 style="color:#ff5a5f;">系統連線異常</h2>
-                <p style="color:#888;">請重新整理頁面</p>
-            </div>`;
+        console.error("Initialization error:", e);
+        document.body.innerHTML = `<div style="color:white; text-align:center; margin-top:50px;">系統連線異常，請重新整理頁面。</div>`;
     }
 }
-
 function renderCards() {
     const grid = document.getElementById('benefit-grid');
     // 呼叫這個函式來獲取當前正確順序與等級的陣列
