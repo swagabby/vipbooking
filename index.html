@@ -562,7 +562,8 @@ referrer: window.location.href || "https://swag.live",
 try {
 const response = await fetch(GAS_API, { 
     method: 'POST', 
-    headers: { 'Content-Type': 'application/json' }, // 這一行對應 GAS 的 JSON 解析
+    // 改為 text/plain，這可以避免觸發 OPTIONS 預檢請求
+    headers: { 'Content-Type': 'text/plain' }, 
     body: JSON.stringify(payload) 
 });
         
