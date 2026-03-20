@@ -514,27 +514,35 @@ referrer: window.location.href || "https://swag.live",
         security_code: "SWAG_INTERNAL_2026"
     };
 
-    try {
+try {
         const response = await fetch(GAS_API, { 
             method: 'POST', 
-            // 這裡不要加 mode: 'no-cors'，否則你拿不到 GAS 的 Error 訊息
             body: JSON.stringify(payload) 
         });
+        
         const result = await response.text();
         
         if (result.includes("Success")) {
             btn.innerText = "提交成功！";
+            // 成功後延遲重新整理
             setTimeout(() => location.reload(), 1500);
         } else {
-            // 如果 GAS 拋出 Error，這裡會顯示給用戶看
-            alert(result); 
-            btn.innerText = "驗證失敗";
-            btn.disabled = false;
+            // 這裡原本是 alert(result)，現在改為顯示在按鈕上
+            console.error("GAS Error:", result);
+            btn.innerText = result.includes("Denied") ? "身分驗證失敗" : "資料錯誤，請檢查";
+            btn.style.background = "#ff5a5f"; // 變色提示錯誤
+            
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerText = "確認提交申請";
+                btn.style.background = "var(--primary)";
+            }, 3000);
         }
-    } catch (e) {
-        console.error(e);
-        btn.innerText = "網路錯誤";
+    } catch (e) { 
+        console.error("Network Error:", e);
+        btn.innerText = "網路連線失敗";
         btn.disabled = false;
+        setTimeout(() => btn.innerText = "確認提交申請", 3000);
     }
 }
     </script>
