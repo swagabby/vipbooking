@@ -84,17 +84,23 @@
 
     <div id="loader-overlay"><div class="spinner"></div><div style="color:var(--primary); font-size:12px; font-weight:bold; letter-spacing:2px;">LOADING VIP SYSTEM...</div></div>
 
-    <div class="container">
-        <header>
-            <h1 style="font-size:24px; margin-bottom:15px;">SWAG VIP 預約系統</h1>
-            <div class="user-pill">
-                <span style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
-                <span id="u-name" style="font-weight:800;">Syncing Profile...</span>
-                <span id="u-lv">--</span>
-            </div>
-        </header>
-        <div id="benefit-grid" class="benefit-grid"></div>
+<div class="container">
+    <header>
+        <h1 style="font-size:24px; margin-bottom:15px;">SWAG VIP 預約系統</h1>
+        <div class="user-pill">
+            <span style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
+            <span id="u-name" style="font-weight:800;">Syncing Profile...</span>
+            <span id="u-lv">--</span>
+        </div>
+    </header>
+
+    <!-- 預告區塊放在這裡，保證在 header 下方 -->
+    <div id="april-notice" class="anchor-notice" style="display:none; margin-bottom:20px;">
+        ⚠️ 4/1 起福利等級調整預告：徽章改為 LV.70，蓋板封面改為 LV.80。
     </div>
+
+    <div id="benefit-grid" class="benefit-grid"></div>
+</div>
 
     <!-- Booking Modal -->
     <div id="modal">
@@ -172,19 +178,48 @@
 
         let user = { id: '', username: '', level: 0 }, userHistory =[], bookings = [], activeWelfare = null;
 
-        const WELFARES =[
-            { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
-            { name: '訂製小鈴噹通知', lv: 60 }, { name: '蓋板創作者封面', lv: 70 },
-            { name: '訂製搜尋框文字', lv: 70 }, { name: '訂製專屬徽章', lv: 80 },
-            { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
-            { name: 'CEO午餐', lv: 90 }
-        ];
+const aprilFirst = new Date('2026-04-01T00:00:00');
+const isAfterApril = new Date() >= aprilFirst;
+
+// 自動變更等級與提示文案
+function getWelfareList() {
+    const aprilFirst = new Date('2026-04-01T00:00:00');
+    const isAfterApril = new Date() >= aprilFirst;
+
+    const all = [
+        { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
+        { name: '訂製小鈴噹通知', lv: 60 },
+        { name: '訂製搜尋框文字', lv: 70 },
+        { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
+        { name: 'CEO午餐', lv: 90 }
+    ];
+
+    const badge = { name: '訂製專屬徽章', lv: isAfterApril ? 70 : 80 };
+    const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
+
+    // 4/1 後 Badge(徽章) 插入到索引 3 的位置 (變為第 4 個)，Cover 插入到索引 4
+    // 3月前 Cover 在第 4 個，Badge 在第 5 個
+    if (isAfterApril) {
+        all.splice(3, 0, badge, cover);
+    } else {
+        all.splice(3, 0, cover, badge);
+    }
+    return all;
+}
 
         window.onload = function() { init(); };
 
-        async function init() {
+async function init() {
             const params = new URLSearchParams(window.location.search);
             user.id = params.get('user_id'); if(!user.id) return;
+            
+            // 檢查預告顯示時機 (4/1 之前顯示)
+            const aprilFirst = new Date('2026-04-01T00:00:00');
+            const now = new Date();
+            if (now < aprilFirst) {
+                document.getElementById('april-notice').style.display = 'block';
+            }
+
             try {
                 const res = await fetch(USER_API + "?user_id=" + user.id);
                 const data = await res.json();
@@ -204,14 +239,16 @@
             } catch(e) { renderCards(); }
         }
 
-       function renderCards() {
-            const grid = document.getElementById('benefit-grid');
+function renderCards() {
+    const grid = document.getElementById('benefit-grid');
+    // 呼叫這個函式來獲取當前正確順序與等級的陣列
+    const welfareList = getWelfareList(); 
             const now = new Date();
             const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
             const todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
             const todayTime = now.getTime();
 
-            grid.innerHTML = WELFARES.map(function(w) {
+grid.innerHTML = WELFARES.map(function(w) {
                 const myRecords = userHistory.filter(h => h.benefit === w.name);
                 const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
                 
