@@ -77,7 +77,18 @@
         }
 
         .hidden { display: none !important; }
-        .anchor-notice { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px dashed var(--primary); padding: 8px; border-radius: 10px; background: rgba(0, 210, 190, 0.05); }
+   .anchor-notice { 
+    color: var(--primary); 
+    font-size: 13px; 
+    font-weight: bold; 
+    margin-bottom: 15px; 
+    text-align: center; 
+    border: 1px dashed var(--primary); 
+    padding: 10px; 
+    border-radius: 10px; 
+    background: rgba(0, 210, 190, 0.05);
+    white-space: pre-wrap; /* 確保自動換行 */
+}
     </style>
 </head>
 <body>
@@ -348,6 +359,10 @@ function openBooking(name) {
     // 改為這段邏輯，確保兩者皆有的時候會合併顯示
     if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
     if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
+
+        if (name === '女神聚會') {
+        messages.push("<span style='color:#ff5a5f;'>📅 舉辦日期多為月底的週末，詳細日期請等候更新<br>✅ 請先取得主播同意出席後，再填寫主播帳號，謝謝</span>");
+    }
     
     noticeEl.innerText = messages.join('\n');
     noticeEl.classList.toggle('hidden', messages.length === 0);
