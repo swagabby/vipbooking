@@ -77,18 +77,7 @@
         }
 
         .hidden { display: none !important; }
-   .anchor-notice { 
-    color: var(--primary); 
-    font-size: 13px; 
-    font-weight: bold; 
-    margin-bottom: 15px; 
-    text-align: center; 
-    border: 1px dashed var(--primary); 
-    padding: 10px; 
-    border-radius: 10px; 
-    background: rgba(0, 210, 190, 0.05);
-    white-space: pre-wrap; /* 確保自動換行 */
-}
+        .anchor-notice { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px dashed var(--primary); padding: 8px; border-radius: 10px; background: rgba(0, 210, 190, 0.05); }
     </style>
 </head>
 <body>
@@ -269,57 +258,76 @@ async function init() {
 
 function renderCards() {
     const grid = document.getElementById('benefit-grid');
-    const welfareList = getWelfareList();
-    const now = new Date();
-    const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-    const todayTime = now.getTime();
+    // 呼叫這個函式來獲取當前正確順序與等級的陣列
+    const welfareList = getWelfareList(); 
+            const now = new Date();
+            const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+            const todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+            const todayTime = now.getTime();
 
     grid.innerHTML = welfareList.map(function(w) {
-        // 【關鍵除錯】確保名稱匹配時去除前後空白
-        const myRecords = userHistory.filter(h => h.benefit.trim() === w.name.trim());
-        const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
-        
-        // 判斷是否有活躍紀錄 (包含本月、處理中、或7天內完成的)
-        const hasActiveRecord = myRecords.some(h => {
-            if (h.submitMonth === currentMonthStr) return true;
-            if (h.date === "處理中") return true;
-            const recordDate = new Date(h.date);
-            return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
-        });
-
-        const isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
-        const locked = (user.level < w.lv) || isQuotaLocked || hasActiveRecord;
-
-        let cardClass = "card " + (locked ? "locked" : "");
-        let btnTxt = (user.level < w.lv) ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中/已預約" : (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →"));
-        let btnColor = locked ? "#777777" : "var(--primary)";
-
-        // 【關鍵修正】強制渲染所有 myRecords，不要過濾掉
-        let historyHtml = '';
-        if (myRecords.length > 0) {
-            historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
-                const recordDate = new Date(h.date);
-                let displayStatus = (!isNaN(recordDate.getTime()) && recordDate.getTime() < todayTime) ? "已完成" : "已收到";
-                const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
+                const myRecords = userHistory.filter(h => h.benefit === w.name);
+                const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
                 
-                return `<div class="history-item-row">
-                            <div class="history-data-line">
-                                <span>${h.date}</span>
-                                <span class="${badgeClass}">${displayStatus}</span>
-                            </div>
-                        </div>`;
-            }).join('') + '</div>';
-        }
+                let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
+                const isLevelLocked = user.level < w.lv;
+                const locked = isLevelLocked || isQuotaLocked;
 
-        return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-            <div><h3 style="font-size:18px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
-            <div>
-                <div style="color:${btnColor}; font-size:12px; font-weight:900; margin-top:10px;">${btnTxt}</div>
-                ${historyHtml}
-            </div>
-        </div>`;
-    }).join('');
-}
+                let cardClass = "card ";
+                if (isLevelLocked) cardClass += "locked level-locked";
+                else if (isQuotaLocked) cardClass += "locked quota-locked";
+
+                let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
+                let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
+
+                // 核心邏輯修改處
+                const activeRecords = myRecords.filter(h => {
+                    // 1. 如果是當月登記的福利，永遠顯示 (不論日期是否已過)
+                    if (h.submitMonth === currentMonthStr) return true;
+
+                    // 2. 如果不是當月（即上個月或更早），檢查是否已完成並超過 7 天
+                    const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
+                    if (!isDatePattern) return true; // 若日期非標準格式則顯示
+
+                    const recordDate = new Date(h.date);
+                    const isPast = recordDate.getTime() < todayTime;
+
+                    if (isPast) {
+                        const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
+                        // 超過 7 天則隱藏 (非當月紀錄)
+                        return diffDays <= 7;
+                    }
+
+                    return true; // 未來日期顯示
+                });
+
+                let historyHtml = '';
+                if (activeRecords.length > 0) {
+                    historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
+                        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+                        // 狀態判定：只要日期小於今天就是「已完成」
+                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
+                        
+                        let displayDate = h.date || "處理中";
+                        const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
+                        
+                        return '<div class="history-item-row">' +
+                               '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
+                               '<div class="history-data-line">' +
+                               '<span>福利日期: <span class="date-highlight">' + displayDate + '</span></span>' +
+                               '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
+                    }).join('') + '</div>';
+                }
+
+                return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
+                    <div style="margin-top: 10px;">
+                        <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+                        ${historyHtml}
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
 function openBooking(name) {
     activeWelfare = name;
@@ -340,10 +348,6 @@ function openBooking(name) {
     // 改為這段邏輯，確保兩者皆有的時候會合併顯示
     if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
     if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
-
-        if (name === '女神聚會') {
-        messages.push("📅 舉辦日期：4/25<br>🏠地點：台北市<br>✅ 請先取得主播同意出席後，再填寫主播帳號，謝謝");
-    }
     
     noticeEl.innerText = messages.join('\n');
     noticeEl.classList.toggle('hidden', messages.length === 0);
