@@ -506,37 +506,31 @@ async function syncAndCheck() {
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        async function handleFormSubmit() {
-            const btn = document.getElementById('btn-submit');
-            if (btn.disabled) return; 
+async function handleFormSubmit() {
+    const btn = document.getElementById('btn-submit');
+    const msgEl = document.getElementById('ui-message');
+    
+    if (btn.disabled) return; 
 
-            if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐' && !document.getElementById('swagger_id').value.trim()) {
-                btn.innerText = "請輸入主播帳號（請勿填寫@）";
-                setTimeout(() => btn.innerText = "確認提交申請", 2000);
-                return;
-            }
-            
-            const params = new URLSearchParams(window.location.search);
-            const urlId = params.get('user_id'); 
-            if (!urlId) {
-                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入</h2>";
-                return;
-            }
-            
-            btn.disabled = true; 
-            btn.innerText = "預約中，請稍後...";
-            
-            const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
-
-            const payload = {
-                user_id: user.id, 
-                url_user_id: urlId,
-                username: user.username,
-                level: user.level,
-                benefit: activeWelfare,
-                swagger_id: document.getElementById('swagger_id').value,
-                date: dateVal,
-                content: document.getElementById('reserve_content').value,
+    // 檢查 Swagger ID (用按鈕提示取代 alert)
+    if (!['大神贊助', '女神聚會', '訂製專屬徽章', 'CEO午餐'].includes(activeWelfare) && !document.getElementById('swagger_id').value.trim()) {
+        btn.innerText = "⚠️ 請輸入主播帳號";
+        setTimeout(() => btn.innerText = "確認提交申請", 2000);
+        return;
+    }
+    
+    btn.disabled = true; 
+    btn.innerText = "預約傳送中...";
+    
+    const payload = {
+        user_id: user.id, 
+        url_user_id: new URLSearchParams(window.location.search).get('user_id'),
+        username: user.username,
+        level: user.level,
+        benefit: activeWelfare,
+        swagger_id: document.getElementById('swagger_id').value,
+        date: document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value,
+        content: document.getElementById('reserve_content').value,
                 badge_name: document.getElementById('b_name').value, 
                 badge_elements: document.getElementById('b_elem').value,
                 img_url: document.getElementById('b_url').value, 
@@ -554,29 +548,33 @@ async function syncAndCheck() {
                 copy_text: document.getElementById('cover_copy').value,
                 referrer: window.location.href || "https://swag.live", 
                 current_origin: window.location.origin || "https://swag.live",
-                security_code: "SWAG_INTERNAL_2026"
-            };
+         security_code: "SWAG_INTERNAL_2026",
+        current_origin: window.location.origin,
+        referrer: document.referrer
+    };
 
-            try {
-                const response = await fetch(GAS_API, { 
-                    method: 'POST', 
-                    mode: 'no-cors', // 繞過 Preflight，必填
-                    headers: { 'Content-Type': 'text/plain' }, // 繞過複雜 CORS，必填
-                    body: JSON.stringify(payload) 
-                });
-                
-                // no-cors 下無法捕捉 response.text()
-                // 所以只要沒有拋出 Error，就認定請求已發出
-                btn.innerText = "提交成功！";
-                setTimeout(() => location.reload(), 1500);
-                
-            } catch (e) { 
-                console.error("Network Error:", e);
-                btn.innerText = "網路連線失敗，請重試";
-                btn.disabled = false;
-                setTimeout(() => btn.innerText = "確認提交申請", 3000);
-            }
+    try {
+        const response = await fetch(GAS_API, { 
+            method: 'POST', 
+            body: JSON.stringify(payload) 
+        });
+        
+        const result = await response.text();
+        if (result.includes("Success")) {
+            btn.innerText = "✅ 提交成功！";
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            throw new Error(result); // 觸發 catch 處理錯誤顯示
         }
+    } catch (e) { 
+        console.error("提交錯誤:", e);
+        btn.innerText = "❌ 申請失敗 (檢查日誌)";
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = "確認提交申請";
+        }, 3000);
+    }
+}
     </script>
 </body>
 </html>
