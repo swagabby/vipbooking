@@ -248,67 +248,111 @@ async function init() {
 }
 
 function renderCards() {
+function renderCards() {
     const grid = document.getElementById('benefit-grid');
     const welfareList = getWelfareList(); 
     const now = new Date();
     const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
     const todayTime = now.getTime();
 
+    // 預先計算當前「女神聚會」的目標活動月份 (找下一個偶數月)
+    let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
+    let py = now.getFullYear(); 
+    if (pm > 12) { pm = 2; py += 1; }
+    const targetPartyDate = py + "-" + String(pm).padStart(2, '0'); // 例如：2026-04
+
     grid.innerHTML = welfareList.map(function(w) {
         const myRecords = userHistory.filter(h => h.benefit === w.name);
         const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
         
-        let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
+        // 1. 額度鎖定邏輯
+        let isQuotaLocked = false;
+        if (w.name === '大神贊助' && user.level >= 90) {
+            isQuotaLocked = monthCount >= 2;
+        } else if (w.name === '女神聚會') {
+            // [關鍵修改] 女神聚會不看「送出月份」，只要歷史紀錄中有「目標場次」或「處理中」即鎖定
+            isQuotaLocked = myRecords.some(h => h.date === targetPartyDate || h.date === "處理中");
+        } else {
+            isQuotaLocked = monthCount >= 1;
+        }
+
         const isLevelLocked = user.level < w.lv;
-        const locked = isLevelLocked || isQuotaLocked;
 
-        let cardClass = "card ";
-        if (isLevelLocked) cardClass += "locked level-locked";
-        else if (isQuotaLocked) cardClass += "locked quota-locked";
-
-        let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
-        let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
-
-        const activeRecords = myRecords.filter(h => {
+        // 2. 活躍紀錄判定 (決定卡片是否變灰)
+        const hasActiveRecord = myRecords.some(h => {
+            if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
             if (h.submitMonth === currentMonthStr) return true;
-            const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
-            if (!isDatePattern) return true; 
-
+            if (h.date === "處理中") return true;
             const recordDate = new Date(h.date);
-            const isPast = recordDate.getTime() < todayTime;
-            if (isPast) {
-                const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
-                return diffDays <= 7;
-            }
-            return true; 
+            return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
         });
 
+        const locked = isLevelLocked || isQuotaLocked || hasActiveRecord;
+        let cardClass = "card " + (locked ? "locked" : "");
+        
+        // 按鈕文字判定
+        let btnTxt = "";
+        if (isLevelLocked) btnTxt = "🔒 等級不足";
+        else if (w.name === '女神聚會' && locked) btnTxt = "🔒 本月已預約"; // 女神聚會專屬鎖定文字
+        else if (hasActiveRecord) btnTxt = "⏳ 處理中/已預約";
+        else if (isQuotaLocked) btnTxt = "🔒 本月額度已滿";
+        else btnTxt = "立即預約 →";
+        
+        let btnColor = locked ? "#777777" : "var(--primary)";
+
+        // 3. 客製化「女神聚會」專屬資訊區塊
+        let extraContent = '';
+        if (w.name === '女神聚會') {
+            if (locked && (isQuotaLocked || hasActiveRecord)) {
+                // 已預約狀態
+                extraContent = `
+                <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
+                    <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:50</span><br>
+                    地點：台北市信義區<br>
+                    <span style="color:var(--primary); font-weight:bold;">詳細地址會再由官方通知</span>
+                </div>`;
+            } else {
+                // 未預約狀態
+                extraContent = `
+                <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
+                    <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:50</span><br>
+                    地點：台北市信義區<br>
+                    <button onclick="event.stopPropagation(); window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935--4%E6%9C%88-%E5%A5%B3%E7%A5%9E%E8%81%9A%E6%9C%83-%E6%B4%BB%E5%8B%95%E8%B3%87%E8%A8%8A', '_blank')" style="margin-top: 8px; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight:bold;">ℹ️ 活動資訊</button>
+                </div>`;
+            }
+        }
+
+        // 歷史紀錄顯示
         let historyHtml = '';
-        if (activeRecords.length > 0) {
-            historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
-                const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
-                let displayDate = h.date || "處理中";
-                const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
+        if (myRecords.length > 0) {
+            historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+                const recordDate = new Date(h.date);
+                let displayStatus = (!isNaN(recordDate.getTime()) && recordDate.getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+                if (w.name === '女神聚會') displayStatus = "報名成功"; // 女神聚會專屬狀態文字
                 
-                return '<div class="history-item-row">' +
-                       '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
-                       '<div class="history-data-line">' +
-                       '<span>福利日期: <span class="date-highlight">' + displayDate + '</span></span>' +
-                       '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
+                const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
+                return `<div class="history-item-row">
+                            <div class="history-data-line">
+                                <span>${h.date}</span>
+                                <span class="${badgeClass}">${displayStatus}</span>
+                            </div>
+                        </div>`;
             }).join('') + '</div>';
         }
 
         return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-            <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
-            <div style="margin-top: 10px;">
-                <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+            <div>
+                <h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3>
+                <p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p>
+                ${extraContent}
+            </div>
+            <div>
+                <div style="color:${btnColor}; font-size:12px; font-weight:900; margin-top:10px;">${btnTxt}</div>
                 ${historyHtml}
             </div>
         </div>`;
     }).join('');
 }
-
 function openBooking(name) {
     activeWelfare = name;
     document.getElementById('m-title').innerText = name;
@@ -326,8 +370,16 @@ function openBooking(name) {
     
     if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
     if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
+
+    // [關鍵修改] 插入女神聚會專屬的詳細警語
+    if (name === '女神聚會') {
+        messages.push(`
+            <span style="color:white; font-size:14px;">4月場次：4/25（六）17:50<br>地點：台北市信義區</span><br><br>
+            <span style="color:#ff5a5f; font-size:13px;">請先與主播確認是否出席後再填寫主播帳號<br>若您本人不克出席請勿預約</span>
+        `);
+    }
     
-    noticeEl.innerText = messages.join('\n');
+    noticeEl.innerHTML = messages.join('<br><br>'); // 改用 innerHTML 以支援 HTML 標籤渲染
     noticeEl.classList.toggle('hidden', messages.length === 0);
 
     const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
