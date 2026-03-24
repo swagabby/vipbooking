@@ -501,7 +501,9 @@ async function syncAndCheck() {
         if (btn.disabled) return; 
 
         const isOfficial =['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(activeWelfare);
-        if (!isOfficial && !['大神贊助', '女神聚會', 'CEO午餐', '訂製專屬徽章'].includes(activeWelfare) && !document.getElementById('swagger_id').value.trim()) {
+        const sid = document.getElementById('swagger_id').value.trim();
+
+        if (!isOfficial && !['大神贊助', '女神聚會', 'CEO午餐', '訂製專屬徽章'].includes(activeWelfare) && !sid) {
             btn.innerText = "請輸入主播帳號";
             setTimeout(() => btn.innerText = "確認提交申請", 2000);
             return;
@@ -509,6 +511,25 @@ async function syncAndCheck() {
         
         btn.disabled = true; 
         btn.innerText = "預約中，請稍後...";
+
+        // 🛡️ [防呆 2]：送出前再次驗證主播帳號 (防偷吃步)
+        if (sid) {
+            try {
+                const streamerRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
+                if (!streamerRes.ok) {
+                    btn.style.background = "#ff5a5f";
+                    btn.innerText = "❌ 查無此主播，請檢查帳號";
+                    setTimeout(() => {
+                        btn.style.background = "var(--primary)";
+                        btn.innerText = "確認提交申請";
+                        btn.disabled = false;
+                    }, 2500);
+                    return; // 直接中斷，不送出表單
+                }
+            } catch (e) {
+                console.error("驗證失敗", e);
+            }
+        }
         
         const params = new URLSearchParams(window.location.search);
         const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
@@ -516,7 +537,7 @@ async function syncAndCheck() {
         const payload = {
             user_id: user.id, url_user_id: params.get('user_id'),
             username: user.username, level: user.level, benefit: activeWelfare,
-            swagger_id: document.getElementById('swagger_id').value, date: dateVal,
+            swagger_id: sid, date: dateVal,
             content: document.getElementById('reserve_content').value,
             badge_name: document.getElementById('b_name').value, badge_elements: document.getElementById('b_elem').value,
             img_url: document.getElementById('b_url').value, target_ids: document.getElementById('b_targets').value,
@@ -534,7 +555,7 @@ async function syncAndCheck() {
         };
 
         try {
-            const response = await fetch(GAS_API, { 
+            await fetch(GAS_API, { 
                 method: 'POST', 
                 mode: 'no-cors', 
                 headers: { 'Content-Type': 'text/plain' },
