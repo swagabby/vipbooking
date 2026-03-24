@@ -447,25 +447,21 @@ async function syncAndCheck() {
     const btn = document.getElementById('btn-check');
 
     if (!sid) {
+        const originalText = btn.innerText;
         btn.innerText = "⚠️ 請先輸入主播帳號";
-        setTimeout(() => btn.innerText = "🔍 核對名額狀況", 2000);
+        setTimeout(() => btn.innerText = originalText, 2000);
         return;
     }
 
-    btn.innerText = "⏳ 驗證主播身分..."; 
+    btn.innerText = "⏳ 檢查中..."; 
     btn.disabled = true;
 
     try {
-        // 1. 驗證主播是否存在 (直接打 SWAG 官方 API)
-        const streamerRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
-        if (!streamerRes.ok) throw new Error("主播帳號不存在");
-
-        btn.innerText = "⏳ 同步預約中...";
         const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
         const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
         const text = await res.text();
         bookings = JSON.parse(text);
-
+        
         const select = document.getElementById('reserve_date');
         select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
         const today = new Date();
@@ -478,7 +474,7 @@ async function syncAndCheck() {
                     select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
- const isCover = (activeWelfare === '蓋板創作者封面');
+       const isCover = (activeWelfare === '蓋板創作者封面');
         const isSearch = (activeWelfare === '訂製搜尋框文字');
         let limit = isSearch ? new Date(today.getFullYear(), today.getMonth() + 1, 5) : 
                     (isCover ? new Date(today.getFullYear(), today.getMonth() + 2, 0) : new Date(today.getFullYear(), today.getMonth() + 1, 5));
@@ -495,10 +491,9 @@ async function syncAndCheck() {
             select.options[select.options.length-1].disabled = (occupied || dayFull);
         }
         btn.innerText = "✅ 核對完成";
-
     } catch (e) { 
-        console.error(e);
-        btn.innerText = "❌ " + e.message;
+        console.error("Sync Error:", e);
+        btn.innerText = "❌ 連線失敗，請重試";
         btn.disabled = false;
         setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
     }
