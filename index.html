@@ -442,29 +442,33 @@
             select.value = "";
         }
 
-        async function syncAndCheck() {
-            const sid = document.getElementById('swagger_id').value.trim();
+async function syncAndCheck() {
+    const sid = document.getElementById('swagger_id').value.trim();
+    const btn = document.getElementById('btn-check');
 
-            if (!sid) {
-                const btn = document.getElementById('btn-check');
-                const originalText = btn.innerText;
-                btn.innerText = "⚠️ 請先輸入主播帳號";
-                setTimeout(() => btn.innerText = originalText, 2000);
-                return;
-            }
+    if (!sid) {
+        btn.innerText = "⚠️ 請先輸入主播帳號";
+        setTimeout(() => btn.innerText = "🔍 核對名額狀況", 2000);
+        return;
+    }
 
-            const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 檢查中..."; 
-            btn.disabled = true;
+    btn.innerText = "⏳ 驗證主播身分..."; 
+    btn.disabled = true;
 
-            try {
-                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
-                const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                const text = await res.text();
-                bookings = JSON.parse(text);
-                const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
-                const today = new Date();
+    try {
+        // 1. 驗證主播是否存在 (直接打 SWAG 官方 API)
+        const streamerRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
+        if (!streamerRes.ok) throw new Error("主播帳號不存在");
+
+        btn.innerText = "⏳ 同步預約中...";
+        const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
+        const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
+        const text = await res.text();
+        bookings = JSON.parse(text);
+
+        const select = document.getElementById('reserve_date');
+        select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
+        const today = new Date();
                 
                 if (activeWelfare === '女神聚會') {
                     let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
@@ -474,46 +478,31 @@
                     select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
                     select.options[select.options.length-1].disabled = occupied;
                 } else {
-                    const isCover = (activeWelfare === '蓋板創作者封面');
-                    const isSearch = (activeWelfare === '訂製搜尋框文字');
-                    
-                    let limit;
-                    if (isSearch) {
-                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); 
-                    } else if (isCover) {
-                        limit = new Date(today.getFullYear(), today.getMonth() + 2, 0); 
-                    } else {
-                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); 
-                    }
+ const isCover = (activeWelfare === '蓋板創作者封面');
+        const isSearch = (activeWelfare === '訂製搜尋框文字');
+        let limit = isSearch ? new Date(today.getFullYear(), today.getMonth() + 1, 5) : 
+                    (isCover ? new Date(today.getFullYear(), today.getMonth() + 2, 0) : new Date(today.getFullYear(), today.getMonth() + 1, 5));
 
-                    const startDay = (isCover) ? 14 : 1;
-                    for (let i = startDay; i <= 65; i++) { 
-                        const d = new Date(today); d.setDate(today.getDate() + i);
-                        if (d > limit) break; 
-                        
-                        const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                        const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
-                        
-                        let st = ""; let dis = false;
-                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayFull && (activeWelfare==='大神贊助' || isCover)) {
-                            if (activeWelfare === '大神贊助' && user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
-                            else { st = " (預約額滿)"; dis = true; }
-                        } else if (dayFull) { st = " (預約額滿)"; dis = true; }
-                        
-                        select.add(new Option(ds + st, ds)); 
-                        select.options[select.options.length-1].disabled = dis;
-                    }
-                }
-                btn.innerText = "✅ 核對完成";
-            } catch (e) { 
-                console.error("Sync Error:", e);
-                btn.innerText = "❌ 連線失敗，請重試";
-                btn.disabled = false;
-                setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
-            }
+        for (let i = (isCover ? 14 : 1); i <= 65; i++) { 
+            const d = new Date(today); d.setDate(today.getDate() + i);
+            if (d > limit) break; 
+            const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+            const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+            const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
+            
+            let st = occupied ? " (已被預約)" : (dayFull ? " (預約額滿)" : "");
+            select.add(new Option(ds + st, ds)); 
+            select.options[select.options.length-1].disabled = (occupied || dayFull);
         }
+        btn.innerText = "✅ 核對完成";
+
+    } catch (e) { 
+        console.error(e);
+        btn.innerText = "❌ " + e.message;
+        btn.disabled = false;
+        setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
+    }
+}
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
