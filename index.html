@@ -264,61 +264,46 @@
             }
         }
 
-        function renderCards() {
-            const grid = document.getElementById('benefit-grid');
-            const welfareList = getWelfareList(); 
-            const now = new Date();
-            const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-            const todayTime = now.getTime();
+function renderCards() {
+        const grid = document.getElementById('benefit-grid');
+        const welfareList = getWelfareList(); 
+        const now = new Date();
+        const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+        const todayTime = now.getTime();
 
-            // 預先計算當前「女神聚會」的目標活動月份 (找下一個偶數月)
-            let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
-    let py = now.getFullYear(); 
-    if (pm > 12) { pm = 2; py += 1; }
-    const targetPartyDate = py + "-" + String(pm).padStart(2, '0'); // 例如：2026-04
+ let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
+        let py = now.getFullYear(); 
+        if (pm > 12) { pm = 2; py += 1; }
+        const targetPartyDate = py + "-" + String(pm).padStart(2, '0'); // 例如：2026-04
 
-    grid.innerHTML = welfareList.map(function(w) {
-        const myRecords = userHistory.filter(h => h.benefit === w.name);
-        const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
+        grid.innerHTML = welfareList.map(function(w) {
+            const myRecords = userHistory.filter(h => h.benefit === w.name);
+            const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
+            // 1. 判斷是否有活躍紀錄 (包含本月、處理中、女神聚會目標場次、7天內完成)
+            const hasActiveRecord = myRecords.some(h => {
+                if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
+                if (h.submitMonth === currentMonthStr) return true;
+                if (h.date === "處理中") return true;
+                const recordDate = new Date(h.date);
+                return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
+            });
+            // 2. 額度鎖定邏輯
+            let isQuotaLocked = false;
+            if (w.name === '大神贊助' && user.level >= 90) {
+                isQuotaLocked = monthCount >= 2;
+            } else if (w.name === '女神聚會') {
+                isQuotaLocked = hasActiveRecord; // 女神聚會直接以是否活躍為準 (跨月防呆)
+            } else {
+                isQuotaLocked = monthCount >= 1;
+            }
 
-
-         // 1. 判斷是否有活躍紀錄 (解決「還可以點擊」的關鍵)
-        const hasActiveRecord = myRecords.some(h => {
-            // 女神聚會：只要歷史紀錄有「4月場次」或「處理中」，就視為已報名
-            if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
+            const isLevelLocked = user.level < w.lv;
             
-            // 其他福利：本月有紀錄、處理中、或剛完成 7 天內，都視為活躍
-            if (h.submitMonth === currentMonthStr) return true;
-            if (h.date === "處理中") return true;
-            const recordDate = new Date(h.date);
-            return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
-        });
+            // 【核心修復】只要有活躍紀錄或額度滿，卡片就強制鎖死！
+            const locked = isLevelLocked || isQuotaLocked || hasActiveRecord;
 
-// 2. 額度鎖定邏輯
-        let isQuotaLocked = false;
-        if (w.name === '大神贊助' && user.level >= 90) {
-            isQuotaLocked = monthCount >= 2;
-        } else if (w.name === '女神聚會') {
-            isQuotaLocked = hasActiveRecord; // 女神聚會直接以是否活躍為準
-        } else {
-            isQuotaLocked = monthCount >= 1;
-        }
-
-        const isLevelLocked = user.level < w.lv;
-
-                // 2. 活躍紀錄判定 (決定卡片是否變灰)
-                const hasActiveRecord = myRecords.some(h => {
-                    if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
-                    if (h.submitMonth === currentMonthStr) return true;
-                    if (h.date === "處理中") return true;
-                    const recordDate = new Date(h.date);
-                    return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
-                });
-
-           const locked = isLevelLocked || isQuotaLocked || hasActiveRecord;
-
-        let cardClass = "card " + (locked ? "locked" : "");
-        
+            let cardClass = "card " + (locked ? "locked" : "");
+     
         // 按鈕文字判定
         let btnTxt = "";
         if (isLevelLocked) btnTxt = "🔒 等級不足";
