@@ -203,56 +203,47 @@
 
     window.onload = function() { init(); };
 
-    async function init() {
-        // 僅保留 Iframe 檢查
+async function init() {
         if (window.self === window.top) {
             document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
             return;
         }
 
-        // 🌟 退回原本的「直接從網址拿 ID」模式，不再使用 postMessage 導致超時
-        const params = new URLSearchParams(window.location.search);
+const params = new URLSearchParams(window.location.search);
         const urlId = params.get('user_id'); 
         if (!urlId) return;
 
+        if (new Date() < aprilFirst) {
+            document.getElementById('april-notice').style.display = 'block';
+        }
+
+        try {
+            // 只等待基本身分資訊
+            const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
+            if (!res.ok) throw new Error("API 請求失敗");
+            const data = await res.json();
+            user.id = (data.user_id || data.id || "").toString().trim();
+            user.username = (data?.username || data?.display_name || user.id).trim();
+            user.level = data?.level || 0;
             
-            if (new Date() < aprilFirst) {
-                document.getElementById('april-notice').style.display = 'block';
-            }
+            document.getElementById('u-name').innerText = user.username;
+            document.getElementById('u-lv').innerText = "LV." + user.level;
+            
+            // 頁面先渲染，歷史紀錄後補
+            renderCards(); 
+            
+            // 立即關閉載入動畫
+            document.getElementById('loader-overlay').style.opacity = '0';
+            setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 300);
 
-            try {
-                const params = new URLSearchParams(window.location.search);
-                const urlId = params.get('user_id'); 
-
-                const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
-                if (!res.ok) throw new Error("API 請求失敗");
-                
-                const data = await res.json();
-                const apiUserId = (data.user_id || data.id || "").toString().trim();
-                
-                if (apiUserId !== urlId.trim()) {
-                    document.body.innerHTML = `
-                        <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif;">
-                            <h2 style="color:#ff5a5f;">身分驗證失敗</h2>
-                            <p style="color:#888; margin-top:10px;">偵測到帳號異常，禁止冒用他人身分</p>
-                        </div>`;
-                    return; 
-                }
-
-                user.id = apiUserId;
-                user.username = (data?.username || data?.display_name || user.id).trim();
-                user.level = data?.level || 0;
-                
-                document.getElementById('u-name').innerText = user.username;
-                document.getElementById('u-lv').innerText = "LV." + user.level;
-                
-                const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                const hText = await hRes.text();
-                userHistory = JSON.parse(hText);
-                
-                renderCards();
-                document.getElementById('loader-overlay').style.opacity = '0';
-                setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
+            // 背景非同步抓取歷史資料
+            fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now())
+                .then(r => r.text())
+                .then(text => {
+                    userHistory = JSON.parse(text);
+                    renderCards(); // 資料回來後，重新渲染一次畫面 (顯示歷史紀錄)
+                })
+                .catch(err => console.error("歷史紀錄載入失敗:", err));
 
             } catch(e) { 
                 console.error("初始化失敗:", e);
@@ -337,9 +328,12 @@ function renderCards() {
         }
 
         // 4. 歷史紀錄顯示 (全顯示，不要過濾掉，讓用戶看得到自己約了什麼)
-        let historyHtml = '';
-        if (myRecords.length > 0) {
-            historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+ let historyHtml = '<div class="card-history-wrapper" style="color:var(--text-dim); font-size:11px;">載入紀錄中...</div>';
+
+if (userHistory && userHistory.length > 0) {
+const myRecords = userHistory.filter(h => h.benefit === w.name);
+    if (myRecords.length > 0) {
+        historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
                 const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
                 let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                 
@@ -353,8 +347,11 @@ function renderCards() {
                        <div class="history-data-line">
                        <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
                        <span class="${badgeClass}">${displayStatus}</span></div></div>`;
-            }).join('') + '</div>';
-        }
+          }).join('') + '</div>';
+    } else {
+        historyHtml = '<div class="card-history-wrapper" style="color:var(--text-dim); font-size:11px;">無預約紀錄</div>';
+    }
+}
 
         return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
             <div>
