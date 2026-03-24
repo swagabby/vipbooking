@@ -173,10 +173,10 @@
     </div>
 
     <script>
-        const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        const GAS_API = 'https://script.google.com/macros/s/AKfycbw08hL7pNDOAsGsUrfzFeYW8jlbyluOc18i9We-hbuiGdk2MS7-JkMfmJ4pY0MHADZmLA/exec';
+const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
+const GAS_API = 'https://script.google.com/macros/s/AKfycbw08hL7pNDOAsGsUrfzFeYW8jlbyluOc18i9We-hbuiGdk2MS7-JkMfmJ4pY0MHADZmLA/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory =[], bookings = [], activeWelfare = null;
+let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
 
 const aprilFirst = new Date('2026-04-01T00:00:00');
 const isAfterApril = new Date() >= aprilFirst;
@@ -186,7 +186,7 @@ function getWelfareList() {
     const aprilFirst = new Date('2026-04-01T00:00:00');
     const isAfterApril = new Date() >= aprilFirst;
 
-    const all = [
+    const all =[
         { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
         { name: '訂製小鈴噹通知', lv: 60 },
         { name: '訂製搜尋框文字', lv: 70 },
@@ -197,8 +197,6 @@ function getWelfareList() {
     const badge = { name: '訂製專屬徽章', lv: isAfterApril ? 70 : 80 };
     const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
 
-    // 4/1 後 Badge(徽章) 插入到索引 3 的位置 (變為第 4 個)，Cover 插入到索引 4
-    // 3月前 Cover 在第 4 個，Badge 在第 5 個
     if (isAfterApril) {
         all.splice(3, 0, badge, cover);
     } else {
@@ -207,265 +205,256 @@ function getWelfareList() {
     return all;
 }
 
-        window.onload = function() { init(); };
+window.onload = function() { init(); };
 
 async function init() {
-            const params = new URLSearchParams(window.location.search);
-            user.id = params.get('user_id'); if(!user.id) return;
-            
-            // 檢查預告顯示時機 (4/1 之前顯示)
-            const aprilFirst = new Date('2026-04-01T00:00:00');
-            const now = new Date();
-            if (now < aprilFirst) {
-                document.getElementById('april-notice').style.display = 'block';
-            }
+    // 🛡️ 1. 限定只能用 iframe 開啟 (防止外部瀏覽器偷開)
+    if (window.self === window.top) {
+        document.body.innerHTML = `
+            <div style="height:100vh; display:flex; justify-content:center; align-items:center; background:#050505; color:white; font-family:sans-serif;">
+                <h2>請於 SWAG 站內開啟</h2>
+            </div>`;
+        return; // 直接中斷執行
+    }
 
-            try {
-                const res = await fetch(USER_API + "?user_id=" + user.id);
-                const data = await res.json();
-                user.username = (data?.username || data?.display_name || user.id).trim();
-                user.level = data?.level || 0;
-                document.getElementById('u-name').innerText = user.username;
-                document.getElementById('u-lv').innerText = "LV." + user.level;
-                
-                const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-                const hText = await hRes.text();
-                userHistory = JSON.parse(hText);
-                
-                renderCards();
-                const loader = document.getElementById('loader-overlay');
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
-            } catch(e) { renderCards(); }
-        }
+    const params = new URLSearchParams(window.location.search);
+    user.id = params.get('user_id'); 
+    if(!user.id) return;
+    
+    // 檢查預告顯示時機 (4/1 之前顯示)
+    const aprilFirst = new Date('2026-04-01T00:00:00');
+    const now = new Date();
+    if (now < aprilFirst) {
+        document.getElementById('april-notice').style.display = 'block';
+    }
+
+    try {
+        const res = await fetch(USER_API + "?user_id=" + user.id);
+        const data = await res.json();
+        user.username = (data?.username || data?.display_name || user.id).trim();
+        user.level = data?.level || 0;
+        document.getElementById('u-name').innerText = user.username;
+        document.getElementById('u-lv').innerText = "LV." + user.level;
+        
+        const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
+        const hText = await hRes.text();
+        userHistory = JSON.parse(hText);
+        
+        renderCards();
+        const loader = document.getElementById('loader-overlay');
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.display = 'none'; }, 500);
+    } catch(e) { renderCards(); }
+}
 
 function renderCards() {
     const grid = document.getElementById('benefit-grid');
-    // 呼叫這個函式來獲取當前正確順序與等級的陣列
     const welfareList = getWelfareList(); 
-            const now = new Date();
-            const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-            const todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
-            const todayTime = now.getTime();
+    const now = new Date();
+    const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+    const todayTime = now.getTime();
 
     grid.innerHTML = welfareList.map(function(w) {
-                const myRecords = userHistory.filter(h => h.benefit === w.name);
-                const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
+        const myRecords = userHistory.filter(h => h.benefit === w.name);
+        const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
+        
+        let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
+        const isLevelLocked = user.level < w.lv;
+        const locked = isLevelLocked || isQuotaLocked;
+
+        let cardClass = "card ";
+        if (isLevelLocked) cardClass += "locked level-locked";
+        else if (isQuotaLocked) cardClass += "locked quota-locked";
+
+        let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
+        let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
+
+        const activeRecords = myRecords.filter(h => {
+            if (h.submitMonth === currentMonthStr) return true;
+            const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
+            if (!isDatePattern) return true; 
+
+            const recordDate = new Date(h.date);
+            const isPast = recordDate.getTime() < todayTime;
+            if (isPast) {
+                const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
+                return diffDays <= 7;
+            }
+            return true; 
+        });
+
+        let historyHtml = '';
+        if (activeRecords.length > 0) {
+            historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
+                const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+                let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
+                let displayDate = h.date || "處理中";
+                const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
                 
-                let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
-                const isLevelLocked = user.level < w.lv;
-                const locked = isLevelLocked || isQuotaLocked;
-
-                let cardClass = "card ";
-                if (isLevelLocked) cardClass += "locked level-locked";
-                else if (isQuotaLocked) cardClass += "locked quota-locked";
-
-                let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
-                let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
-
-                // 核心邏輯修改處
-                const activeRecords = myRecords.filter(h => {
-                    // 1. 如果是當月登記的福利，永遠顯示 (不論日期是否已過)
-                    if (h.submitMonth === currentMonthStr) return true;
-
-                    // 2. 如果不是當月（即上個月或更早），檢查是否已完成並超過 7 天
-                    const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; // 若日期非標準格式則顯示
-
-                    const recordDate = new Date(h.date);
-                    const isPast = recordDate.getTime() < todayTime;
-
-                    if (isPast) {
-                        const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
-                        // 超過 7 天則隱藏 (非當月紀錄)
-                        return diffDays <= 7;
-                    }
-
-                    return true; // 未來日期顯示
-                });
-
-                let historyHtml = '';
-                if (activeRecords.length > 0) {
-                    historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
-                        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                        // 狀態判定：只要日期小於今天就是「已完成」
-                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
-                        
-                        let displayDate = h.date || "處理中";
-                        const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
-                        
-                        return '<div class="history-item-row">' +
-                               '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
-                               '<div class="history-data-line">' +
-                               '<span>福利日期: <span class="date-highlight">' + displayDate + '</span></span>' +
-                               '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
-                    }).join('') + '</div>';
-                }
-
-                return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
-                    <div style="margin-top: 10px;">
-                        <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
-                        ${historyHtml}
-                    </div>
-                </div>`;
-            }).join('');
+                return '<div class="history-item-row">' +
+                       '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
+                       '<div class="history-data-line">' +
+                       '<span>福利日期: <span class="date-highlight">' + displayDate + '</span></span>' +
+                       '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
+            }).join('') + '</div>';
         }
 
+        return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+            <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
+            <div style="margin-top: 10px;">
+                <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+                ${historyHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
+
 function openBooking(name) {
-   activeWelfare = name;
+    activeWelfare = name;
     document.getElementById('m-title').innerText = name;
     document.getElementById('modal').style.display = 'flex';
     
     document.getElementById('swagger_id').value = "";
     document.getElementById('reserve_content').value = "";
-    // 確保重置按鈕
     resetCheckStatus(); 
     
-    const isOfficialArrangement = ['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
+    const isOfficialArrangement =['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
     const needsMaterialNotice =['蓋板創作者封面', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
     
     const noticeEl = document.getElementById('anchor-notice');
-    let messages = [];
+    let messages =[];
     
-    // 改為這段邏輯，確保兩者皆有的時候會合併顯示
     if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
     if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
     
     noticeEl.innerText = messages.join('\n');
     noticeEl.classList.toggle('hidden', messages.length === 0);
 
-            const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
-            ids.forEach(id => document.getElementById(id).classList.add('hidden'));
+    const ids =['sw-group', 'date-group', 'btn-check', 'bell-fields', 'badge-fields', 'gift-fields', 'cover-fields', 'ad-fields', 'lunch-fields'];
+    ids.forEach(id => document.getElementById(id).classList.add('hidden'));
 
-            // 根據類型顯示不同欄位
-            if (name === '訂製專屬徽章') {
-                document.getElementById('badge-fields').classList.remove('hidden');
-            } else if (name === '訂製專屬禮物') {
-                document.getElementById('gift-fields').classList.remove('hidden');
-                document.getElementById('sw-group').classList.remove('hidden');
-            } else if (name === 'CEO午餐') {
-                document.getElementById('lunch-fields').classList.remove('hidden');
-                renderLunchSelects();
-            } else if (name === '專屬直播欄位廣告') {
-                document.getElementById('sw-group').classList.remove('hidden');
-                document.getElementById('ad-fields').classList.remove('hidden');
-            } else {
-                document.getElementById('sw-group').classList.remove('hidden');
-                if (!isOfficialArrangement) { // 只有非官方安排的才顯示日期欄位
-                    document.getElementById('date-group').classList.remove('hidden');
-                    document.getElementById('btn-check').classList.remove('hidden');
-                }
-                if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
-                if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
-            }
+    if (name === '訂製專屬徽章') {
+        document.getElementById('badge-fields').classList.remove('hidden');
+    } else if (name === '訂製專屬禮物') {
+        document.getElementById('gift-fields').classList.remove('hidden');
+        document.getElementById('sw-group').classList.remove('hidden');
+    } else if (name === 'CEO午餐') {
+        document.getElementById('lunch-fields').classList.remove('hidden');
+        renderLunchSelects();
+    } else if (name === '專屬直播欄位廣告') {
+        document.getElementById('sw-group').classList.remove('hidden');
+        document.getElementById('ad-fields').classList.remove('hidden');
+    } else {
+        document.getElementById('sw-group').classList.remove('hidden');
+        if (!isOfficialArrangement) { 
+            document.getElementById('date-group').classList.remove('hidden');
+            document.getElementById('btn-check').classList.remove('hidden');
         }
+        if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
+        if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
+    }
+}
 
-        function renderLunchSelects() {
-            const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1', 'l_2', 'l_3'].forEach(id => {
-                const el = document.getElementById(id); el.innerHTML = '';
-                for (let i = 0; i < 30; i++) {
-                    const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
-                    const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                    el.add(new Option(ds, ds));
-                }
-            });
+function renderLunchSelects() {
+    const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1', 'l_2', 'l_3'].forEach(id => {
+        const el = document.getElementById(id); el.innerHTML = '';
+        for (let i = 0; i < 30; i++) {
+            const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
+            const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+            el.add(new Option(ds, ds));
         }
+    });
+}
+
 function resetCheckStatus() {
     const btn = document.getElementById('btn-check');
     const select = document.getElementById('reserve_date');
-    
-    // 重置按鈕文字與狀態
     btn.innerText = "🔍 核對名額狀況";
     btn.disabled = false;
-    
-    // 清空並鎖定日期選單
     select.innerHTML = '<option>請先完成核對</option>';
     select.disabled = true;
-    
-    // 清除已選取的日期值 (如果有)
     select.value = "";
 }
-        async function syncAndCheck() {
-            const sid = document.getElementById('swagger_id').value.trim();
-            if (!sid) return alert("請輸入主播帳號（請勿填寫@）");
-            const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 同步中..."; btn.disabled = true;
-            try {
-                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
-                const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-                const text = await res.text();
-                bookings = JSON.parse(text);
-                const select = document.getElementById('reserve_date');
-                select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
-                const today = new Date();
-                
-                if (activeWelfare === '女神聚會') {
-                    let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
-                    let y = today.getFullYear(); if(m>12){m=2;y+=1;}
-                    const ds = y + "-" + String(m).padStart(2,'0');
-                    const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                    select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
-                    select.options[select.options.length-1].disabled = occupied;
-                } else {
-                    // 修復點 2：加入蓋板與搜尋框日期邏輯
-                    const isCover = (activeWelfare === '蓋板創作者封面');
-                    const isSearch = (activeWelfare === '訂製搜尋框文字');
-                    
-                    let limit;
-                    if (isSearch) {
-                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); // 預約到次月五號
-                    } else if (isCover) {
-                        limit = new Date(today.getFullYear(), today.getMonth() + 2, 0); // 預約到下個月底 (下下個月的第0天=下個月最後一天)
-                    } else {
-                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); // 其他福利預設
-                    }
 
-                    const startDay = (isCover) ? 14 : 1;
-                    for (let i = startDay; i <= 65; i++) { 
-                        const d = new Date(today); d.setDate(today.getDate() + i);
-                        if (d > limit) break; 
-                        
-                        const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                        const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
-                        const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
-                        
-                        let st = ""; let dis = false;
-                        if (occupied) { st = " (此ID已被預約)"; dis = true; }
-                        else if (dayFull && (activeWelfare==='大神贊助' || isCover)) {
-                            if (activeWelfare === '大神贊助' && user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
-                            else { st = " (預約額滿)"; dis = true; }
-                        } else if (dayFull) { st = " (預約額滿)"; dis = true; }
-                        
-                        select.add(new Option(ds + st, ds)); 
-                        select.options[select.options.length-1].disabled = dis;
-                    }
-                }
-                btn.innerText = "✅ 核對完成";
-            // 修復點 3：補齊 catch 與 try...catch 的閉合括號
-            } catch (e) { 
-                alert("連線失敗"); btn.disabled = false; btn.innerText="🔍 重新核對"; 
+async function syncAndCheck() {
+    const sid = document.getElementById('swagger_id').value.trim();
+    const btn = document.getElementById('btn-check');
+
+    // 🛡️ 2. 取代 alert: 使用按鈕文字提示
+    if (!sid) {
+        const originalText = btn.innerText;
+        btn.innerText = "⚠️ 請先輸入主播帳號";
+        setTimeout(() => btn.innerText = originalText, 2000);
+        return;
+    }
+
+    btn.innerText = "⏳ 檢查中..."; 
+    btn.disabled = true;
+    try {
+        const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
+        const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
+        const text = await res.text();
+        bookings = JSON.parse(text);
+        const select = document.getElementById('reserve_date');
+        select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
+        const today = new Date();
+        
+        if (activeWelfare === '女神聚會') {
+            let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
+            let y = today.getFullYear(); if(m>12){m=2;y+=1;}
+            const ds = y + "-" + String(m).padStart(2,'0');
+            const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+            select.add(new Option(y + "年 " + m + "月場次" + (occupied?" (此ID已被預約)":""), ds));
+            select.options[select.options.length-1].disabled = occupied;
+        } else {
+            const isCover = (activeWelfare === '蓋板創作者封面');
+            const isSearch = (activeWelfare === '訂製搜尋框文字');
+            let limit = isSearch ? new Date(today.getFullYear(), today.getMonth() + 1, 5) : 
+                        (isCover ? new Date(today.getFullYear(), today.getMonth() + 2, 0) : new Date(today.getFullYear(), today.getMonth() + 1, 5));
+
+            const startDay = (isCover) ? 14 : 1;
+            for (let i = startDay; i <= 65; i++) { 
+                const d = new Date(today); d.setDate(today.getDate() + i);
+                if (d > limit) break; 
+                const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+                const occupied = bookings.some(b => b.swagger_id === sid && b.date === ds);
+                const dayFull = bookings.filter(b => b.date === ds).length >= (activeWelfare==='大神贊助'?3:1);
+                
+                let st = ""; let dis = false;
+                if (occupied) { st = " (此ID已被預約)"; dis = true; }
+                else if (dayFull && (activeWelfare==='大神贊助' || isCover)) {
+                    if (activeWelfare === '大神贊助' && user.level >= 90) st = " (預約額滿，Lv.90 特別權限)";
+                    else { st = " (預約額滿)"; dis = true; }
+                } else if (dayFull) { st = " (預約額滿)"; dis = true; }
+                
+                select.add(new Option(ds + st, ds)); 
+                select.options[select.options.length-1].disabled = dis;
             }
         }
+        btn.innerText = "✅ 核對完成";
+    } catch (e) { 
+        // 🛡️ 取代 alert
+        btn.innerText = "❌ 連線失敗，請重試";
+        btn.disabled = false;
+        setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
+    }
+}
 
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
 async function handleFormSubmit() {
-const btn = document.getElementById('btn-submit');
-    
-    // 1. 檢查是否已經在處理中
+    const btn = document.getElementById('btn-submit');
     if (btn.disabled) return; 
 
-    // 2. [修正] 移除 confirm()，改為直接檢查是否填寫 Swagger ID
-    // 讓用戶在送出前先自己確認，或用自定義的 UI 確認 (這裡我們先簡化邏輯)
- if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐' && !document.getElementById('swagger_id').value.trim()) {
-        btn.innerText = "請輸入主播帳號（請勿填寫@）";
+    // 🛡️ 3. 取代 confirm 邏輯：檢查必要欄位後直接送出
+    if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐' && !document.getElementById('swagger_id').value.trim()) {
+        btn.innerText = "⚠️ 請輸入主播帳號";
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
     }
-            
- btn.disabled = true; 
-    btn.innerText = "預約中，請稍後";
+
+    btn.disabled = true; 
+    btn.innerText = "預約中，請稍後...";
     
     const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
 
@@ -483,28 +472,41 @@ const btn = document.getElementById('btn-submit');
         lunch_1: document.getElementById('l_1') ? document.getElementById('l_1').value : "",
         lunch_2: document.getElementById('l_2') ? document.getElementById('l_2').value : "",
         lunch_3: document.getElementById('l_3') ? document.getElementById('l_3').value : "",
-        message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value,
-        security_code: "SWAG_INTERNAL_2026" // 務必加上此安全代碼
+        message: document.getElementById('bell_msg').value, copy_text: document.getElementById('cover_copy').value
     };
 
     try {
         const response = await fetch(GAS_API, { 
             method: 'POST', 
-            mode: 'no-cors', // 如果遇到跨域問題，保持 no-cors
             body: JSON.stringify(payload) 
         });
         
-        // 注意：no-cors 模式下無法直接讀取 response.text()
-        // 但如果您的 GAS 部署為「所有人皆可存取」，建議改為 mode: 'cors' 
-        // 這樣您才能收到 "Success" 的回覆並執行後續動作
+        const result = await response.text();
         
-        btn.innerText = "提交成功！";
-        location.reload();
-        
+        // 🛡️ 取代 alert: 使用按鈕狀態提示成功與失敗
+        if (result.includes("Success")) {
+            btn.style.background = "#10b981"; // 成功轉綠色
+            btn.innerText = "✅ 提交成功！";
+            setTimeout(() => location.reload(), 1500); // 1.5秒後重整頁面
+        } else {
+            console.error("GAS Error:", result);
+            btn.style.background = "#ff5a5f"; // 失敗轉紅色
+            btn.innerText = "❌ 申請失敗，請稍後再試";
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.style.background = "var(--primary)";
+                btn.innerText = "確認提交申請";
+            }, 3000);
+        }
     } catch (e) { 
-
-        btn.disabled = false; 
-        btn.innerText = "提交失敗，請重試";
+        console.error("Network Error:", e);
+        btn.style.background = "#ff5a5f";
+        btn.innerText = "❌ 網路連線失敗";
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.style.background = "var(--primary)";
+            btn.innerText = "確認提交申請";
+        }, 3000);
     }
 }
     </script>
