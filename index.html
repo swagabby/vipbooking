@@ -254,14 +254,16 @@
                 document.getElementById('loader-overlay').style.opacity = '0';
                 setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
 
-            } catch(e) { 
-                console.error("初始化失敗:", e);
-                document.body.innerHTML = `
-                    <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                        <h2 style="color:#ff5a5f;">系統連線異常</h2>
-                        <p style="color:#888;">請重新整理頁面</p>
-                    </div>`;
-            }
+} catch(e) { 
+        console.error("Initialization error:", e);
+        // 【強制隱藏 Loader】即使出錯也要讓用戶看到錯誤訊息，而不是永遠轉圈
+        document.getElementById('loader-overlay').style.display = 'none';
+        document.body.innerHTML = `
+            <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <h2 style="color:#ff5a5f;">系統連線異常</h2>
+                <p style="color:#888;">請重新整理頁面，或檢查網路環境</p>
+            </div>`;
+    }
         }
 
         function renderCards() {
@@ -549,30 +551,14 @@ async function handleFormSubmit() {
     };
 
     try {
-        const response = await fetch(GAS_API, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload) 
-        });
+        const url = GAS_API + "?action=submit&data=" + encodeURIComponent(JSON.stringify(payload));
+        await jsonpGet(url); // 使用我們之前定義的 jsonpGet 函式
         
-        const result = await response.text();
-        
-        if (result.includes("Success")) {
-            btn.innerText = "提交成功！";
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            console.error("GAS Error:", result);
-            btn.innerText = "申請失敗，請檢查輸入";
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerText = "確認提交申請";
-            }, 3000);
-        }
-    } catch (e) { 
-        console.error("Network Error:", e);
-        btn.innerText = "連線失敗，請重試";
+        btn.innerText = "提交成功！";
+        setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+        btn.innerText = "提交失敗";
         btn.disabled = false;
-        setTimeout(() => btn.innerText = "確認提交申請", 3000);
     }
 }
     </script>
