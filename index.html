@@ -307,11 +307,10 @@ function renderCards() {
                 
                 const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
                 return `<div class="history-item-row">
-                            <div class="history-data-line">
-                                <span>${h.date}</span>
-                                <span class="${badgeClass}">${displayStatus}</span>
-                            </div>
-                        </div>`;
+                       <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
+                       <div class="history-data-line">
+                       <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
+                       <span class="${badgeClass}">${displayStatus}</span></div></div>`;
             }).join('') + '</div>';
         }
 
