@@ -301,16 +301,22 @@ function renderCards() {
         let historyHtml = '';
         if (myRecords.length > 0) {
             historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
-                const recordDate = new Date(h.date);
-                let displayStatus = (!isNaN(recordDate.getTime()) && recordDate.getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+                const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+                // 狀態判定：只要日期小於今天就是「已完成」 (女神聚會除外)
+                let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                 if (w.name === '女神聚會') displayStatus = "報名成功"; 
                 
+                let displayDate = h.date || "處理中";
                 const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
+                
+                // 這裡精準還原您要的顯示格式
                 return `<div class="history-item-row">
-                       <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
-                       <div class="history-data-line">
-                       <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
-                       <span class="${badgeClass}">${displayStatus}</span></div></div>`;
+                            <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
+                            <div class="history-data-line">
+                                <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
+                                <span class="${badgeClass}">${displayStatus}</span>
+                            </div>
+                        </div>`;
             }).join('') + '</div>';
         }
 
