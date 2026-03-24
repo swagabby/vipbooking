@@ -238,61 +238,96 @@
         } catch(e) { console.error(e); }
     }
 
-    function renderCards() {
-        const grid = document.getElementById('benefit-grid');
-        const welfareList = getWelfareList(); 
-        const now = new Date();
-        const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-        const todayTime = now.getTime();
+function renderCards() {
+    const grid = document.getElementById('benefit-grid');
+    const welfareList = getWelfareList(); 
+    const now = new Date();
+    const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+    const todayTime = now.getTime();
 
-        let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
-        let py = now.getFullYear(); 
-        if (pm > 12) { pm = 2; py += 1; }
-        const targetPartyDate = py + "-" + String(pm).padStart(2, '0');
+    // 預先計算當前「女神聚會」的目標活動月份 (找下一個偶數月)
+    let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
+    let py = now.getFullYear(); 
+    if (pm > 12) { pm = 2; py += 1; }
+    const targetPartyDate = py + "-" + String(pm).padStart(2, '0');
 
-        grid.innerHTML = welfareList.map(function(w) {
-            const myRecords = userHistory.filter(h => h.benefit === w.name);
-            const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
-            
-            // 尚未撈到資料時，卡片全部鎖住
-            if (!isDataLoaded) {
-                return `<div class="card locked"><div class="spinner-small"></div> 正在載入福利狀態...</div>`;
-            }
+    grid.innerHTML = welfareList.map(function(w) {
+        const myRecords = userHistory.filter(h => h.benefit === w.name);
+        const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
+        
+        // 1. 活躍紀錄判定 (決定卡片是否鎖定)
+        const hasActiveRecord = myRecords.some(h => {
+            if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
+            if (h.submitMonth === currentMonthStr) return true;
+            if (h.date === "處理中") return true;
+            const recordDate = new Date(h.date);
+            return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
+        });
 
-            const hasActiveRecord = myRecords.some(h => {
-                if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
-                if (h.submitMonth === currentMonthStr) return true;
-                if (h.date === "處理中") return true;
-                const recordDate = new Date(h.date);
-                return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
-            });
+        // 2. 額度鎖定邏輯
+        let isQuotaLocked = false;
+        if (w.name === '大神贊助' && user.level >= 90) {
+            isQuotaLocked = monthCount >= 2;
+        } else if (w.name === '女神聚會') {
+            isQuotaLocked = hasActiveRecord;
+        } else {
+            isQuotaLocked = monthCount >= 1;
+        }
 
-            let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : 
-                                (w.name === '女神聚會' ? hasActiveRecord : (monthCount >= 1));
-            const isLevelLocked = user.level < w.lv;
-            const locked = isLevelLocked || isQuotaLocked || hasActiveRecord;
+        const isLevelLocked = user.level < w.lv;
+        const locked = !isDataLoaded || isLevelLocked || isQuotaLocked || hasActiveRecord;
 
-            let cardClass = "card " + (locked ? "locked" : "");
-            let btnTxt = isLevelLocked ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中/已預約" : (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →"));
-            let btnColor = locked ? "#777777" : "var(--primary)";
+        let cardClass = "card " + (locked ? "locked" : "");
+        let btnTxt = !isDataLoaded ? "⏳ 讀取中..." : 
+                     (isLevelLocked ? "🔒 等級不足" : 
+                     (w.name === '女神聚會' && locked ? "🔒 已報名本場次" : 
+                     (hasActiveRecord ? "⏳ 處理中/已預約" : 
+                     (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →"))));
+        
+        let btnColor = locked ? "#777777" : "var(--primary)";
 
-            let historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
-                const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
-                if (w.name === '女神聚會') displayStatus = "報名成功";
-                const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
-                return `<div class="history-item-row"><div class="history-data-line"><span>${h.date}</span><span class="${badgeClass}">${displayStatus}</span></div></div>`;
-            }).join('') + '</div>';
-
-            return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                <div>
-                    <h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3>
-                    <p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p>
-                </div>
-                <div><div style="color:${btnColor}; font-size:12px; font-weight:900; margin-top:10px;">${btnTxt}</div>${historyHtml}</div>
+        // 3. 客製化「女神聚會」專屬資訊區塊
+        let extraContent = '';
+        if (w.name === '女神聚會') {
+            extraContent = `
+            <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
+                <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:50</span><br>
+                地點：台北市信義區<br>
+                <button onclick="event.stopPropagation(); window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935', '_blank')" style="margin-top: 8px; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight:bold;">👉🏻活動資訊</button>
             </div>`;
-        }).join('');
-    }
+        }
+
+        // 4. 歷史紀錄顯示
+        let historyHtml = '';
+        if (myRecords.length > 0) {
+            historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+                const recordDate = new Date(h.date);
+                let displayStatus = (!isNaN(recordDate.getTime()) && recordDate.getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+                if (w.name === '女神聚會') displayStatus = "報名成功"; 
+                
+                const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
+                return `<div class="history-item-row">
+                            <div class="history-data-line">
+                                <span>${h.date}</span>
+                                <span class="${badgeClass}">${displayStatus}</span>
+                            </div>
+                        </div>`;
+            }).join('') + '</div>';
+        }
+
+        return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+            <div>
+                <h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3>
+                <p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p>
+                ${extraContent}
+            </div>
+            <div style="margin-top: 10px;">
+                <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+                ${historyHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
 
         function openBooking(name) {
             activeWelfare = name;
