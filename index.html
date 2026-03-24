@@ -201,26 +201,26 @@
             return all;
         }
 
-        window.addEventListener('message', async (event) => {
-            if (!event.origin.includes("swag.live")) return;
-            if (event.data && event.data.type === 'SWAG_VIP_USER_ID') {
-                const authorizedId = String(event.data.userId).trim();
-                await startApp(authorizedId); 
-            }
-        });
+window.onload = function() {
+    // 1. 基礎防禦：禁止外部瀏覽器直接開啟 (必須在 SWAG iframe 內)
+    if (window.self === window.top) {
+        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
+        return;
+    }
 
-        window.onload = function() {
-            if (window.self === window.top) {
-                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
-                return;
-            }
-            window.parent.postMessage({ type: 'SWAG_VIP_GET_USER_ID' }, '*');
-            setTimeout(() => {
-                if (!user.id) {
-                     document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>驗證超時，請重新整理</h2>";
-                }
-            }, 10000);
-        };
+    // 2. 從網址取得 user_id (放棄 postMessage)
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('user_id'); 
+
+    if (!urlId) {
+        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入 (缺少使用者資訊)</h2>";
+        return;
+    }
+
+    // 3. 直接啟動系統
+    startApp(urlId);
+};
+
 
         async function startApp(authorizedId) {
             if (user.id !== '') return; 
