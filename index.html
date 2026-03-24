@@ -201,30 +201,20 @@
             return all;
         }
 
-window.onload = function() {
-    // 1. 基礎防禦：禁止外部瀏覽器直接開啟 (必須在 SWAG iframe 內)
-    if (window.self === window.top) {
-        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
-        return;
-    }
+    window.onload = function() { init(); };
 
-    // 2. 從網址取得 user_id (放棄 postMessage)
-    const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id'); 
+    async function init() {
+        // 僅保留 Iframe 檢查
+        if (window.self === window.top) {
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
+            return;
+        }
 
-    if (!urlId) {
-        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入 (缺少使用者資訊)</h2>";
-        return;
-    }
+        // 🌟 退回原本的「直接從網址拿 ID」模式，不再使用 postMessage 導致超時
+        const params = new URLSearchParams(window.location.search);
+        const urlId = params.get('user_id'); 
+        if (!urlId) return;
 
-    // 3. 直接啟動系統
-    startApp(urlId);
-};
-
-
-        async function startApp(authorizedId) {
-            if (user.id !== '') return; 
-            user.id = authorizedId;
             
             if (new Date() < aprilFirst) {
                 document.getElementById('april-notice').style.display = 'block';
