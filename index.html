@@ -423,7 +423,7 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    async function syncAndCheck() {
+async function syncAndCheck() {
         const sid = document.getElementById('swagger_id').value.trim();
         const btn = document.getElementById('btn-check');
 
@@ -434,14 +434,21 @@
             return;
         }
 
-        btn.innerText = "⏳ 檢查中..."; 
+        btn.innerText = "⏳ 驗證主播中..."; 
         btn.disabled = true;
 
         try {
+            // 🛡️ [防呆 1]：先打 SWAG API 驗證主播是否存在
+            const streamerRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
+            if (!streamerRes.ok) {
+                throw new Error("找不到此主播帳號");
+            }
+
+            // 驗證過關，才開始查檔期
+            btn.innerText = "⏳ 同步預約資料..."; 
             const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
             const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-            const text = await res.text();
-            bookings = JSON.parse(text);
+            bookings = await res.json();
             
             const select = document.getElementById('reserve_date');
             select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
@@ -482,7 +489,8 @@
             btn.innerText = "✅ 核對完成";
         } catch (e) { 
             console.error("Sync Error:", e);
-            btn.innerText = "❌ 連線失敗，請重試";
+            // 動態顯示錯誤原因
+            btn.innerText = (e.message === "找不到此主播帳號") ? "❌ 找不到此主播帳號" : "❌ 連線失敗，請重試";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
         }
