@@ -496,11 +496,19 @@ function renderCards() {
                 document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入</h2>";
                 return;
             }
+
+    const dateSelect = document.getElementById('reserve_date');
+    if (!dateSelect.disabled && !dateSelect.value) {
+        btn.innerText = "⚠️ 請選擇日期";
+        setTimeout(() => btn.innerText = "確認提交申請", 2000);
+        return;
+    }
             
             btn.disabled = true; 
             btn.innerText = "預約中，請稍後...";
             
-            const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
+                const dateVal = dateSelect.disabled ? "" : dateSelect.value;
+
 
             const payload = {
                 user_id: user.id, 
