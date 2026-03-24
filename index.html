@@ -9,7 +9,7 @@
             --bg: #050505; 
             --card-bg: rgba(255, 255, 255, 0.04); 
             --border: rgba(255, 255, 255, 0.1); 
-            --primary: #00D2BE; 
+            --primary: #00D2BE; /* SWAG 品牌色 */
             --text-main: #ffffff; 
             --text-dim: #888888; 
         }
@@ -18,6 +18,7 @@
         .container { max-width: 850px; width: 100%; }
         header { text-align: center; margin-bottom: 30px; }
         
+        /* 載入動畫 */
         #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050505; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0, 210, 190, 0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -50,8 +51,9 @@
         input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
         input:focus, select:focus { border-color: var(--primary); }
         
-        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .submit-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; margin-top: 10px; }
         
+        /* 升級後的核對按鈕 */
         .check-btn { 
             background: linear-gradient(135deg, #ff9900, #ff5e00); 
             color: #fff; 
@@ -66,10 +68,16 @@
             box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4);
             transition: 0.3s;
         }
-        .check-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 153, 0, 0.6); }
-        .check-btn:disabled { background: #555; box-shadow: none; color: #aaa; cursor: not-allowed; transform: none; }
+        .check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 153, 0, 0.6);
+        }
+        .check-btn:disabled {
+            background: #555; box-shadow: none; color: #aaa; cursor: not-allowed; transform: none;
+        }
+
         .hidden { display: none !important; }
-        .anchor-notice { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px dashed var(--primary); padding: 8px; border-radius: 10px; background: rgba(0, 210, 190, 0.05); white-space: pre-wrap;}
+        .anchor-notice { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px dashed var(--primary); padding: 8px; border-radius: 10px; background: rgba(0, 210, 190, 0.05); }
     </style>
 </head>
 <body>
@@ -86,6 +94,7 @@
         </div>
     </header>
 
+    <!-- 預告區塊放在這裡，保證在 header 下方 -->
     <div id="april-notice" class="anchor-notice" style="display:none; margin-bottom:20px;">
         ⚠️ 4/1 起福利等級調整預告：徽章改為 LV.70，蓋板封面改為 LV.80。
     </div>
@@ -101,6 +110,7 @@
             
             <div id="anchor-notice" class="anchor-notice hidden">填寫完畢將由官方向主播拿取素材</div>
 
+            <!-- 1. 徽章專屬 -->
             <div id="badge-fields" class="hidden">
                 <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
                 <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
@@ -108,6 +118,7 @@
                 <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
 
+            <!-- 2. 禮物專屬 -->
             <div id="gift-fields" class="hidden">
                 <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> 是否冠名</div>
@@ -116,11 +127,13 @@
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;"> 需要主播照片作為素材</div>
             </div>
 
+            <!-- 3. 廣告專屬 -->
             <div id="ad-fields" class="hidden">
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> 是否冠名</div>
                 <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
             </div>
 
+            <!-- 4. 午餐專屬 -->
             <div id="lunch-fields" class="hidden">
                 <p style="font-size:12px; color:var(--primary); margin-bottom:10px;">* 請選擇下週開始的三個優先日期</p>
                 <div class="form-group"><label>優先日期 1</label><select id="l_1"></select></div>
@@ -128,22 +141,27 @@
                 <div class="form-group"><label>優先日期 3</label><select id="l_3"></select></div>
             </div>
 
+            <!-- 5. 主播帳號 (常駐) -->
             <div class="form-group" id="sw-group">
-                <label id="label-swagger">指定主播帳號（請勿填寫@）</label>
-                <input type="text" id="swagger_id" placeholder="請輸入主播帳號（請勿填寫@）" oninput="resetCheckStatus()">
-                <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
-            </div>
+    <label id="label-swagger">指定主播帳號（請勿填寫@）</label>
+    <!-- 新增 oninput 事件 -->
+    <input type="text" id="swagger_id" placeholder="請輸入主播帳號（請勿填寫@）" oninput="resetCheckStatus()">
+    <button id="btn-check" class="check-btn" onclick="syncAndCheck()">🔍 核對名額狀況</button>
+</div>
             
+            <!-- 6. 日期/場次 -->
             <div class="form-group" id="date-group">
                 <label>選擇日期 / 場次</label>
                 <select id="reserve_date" disabled><option>請先完成核對</option></select>
             </div>
 
+            <!-- 7. 小鈴噹專屬 -->
             <div id="bell-fields" class="hidden">
                 <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 是否冠名</div>
             </div>
 
+            <!-- 8. 封面專屬 -->
             <div id="cover-fields" class="hidden">
                 <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="cover_brand" style="width:auto;"> 是否冠名</div>
@@ -154,18 +172,21 @@
         </div>
     </div>
 
-    <script>
+<script>
         const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
         const GAS_API = 'https://script.google.com/macros/s/AKfycbw08hL7pNDOAsGsUrfzFeYW8jlbyluOc18i9We-hbuiGdk2MS7-JkMfmJ4pY0MHADZmLA/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
+        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings =[], activeWelfare = null;
+
         const aprilFirst = new Date('2026-04-01T00:00:00');
 
+        // 自動變更等級與提示文案
         function getWelfareList() {
             const isAfterApril = new Date() >= aprilFirst;
             const all =[
                 { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
-                { name: '訂製小鈴噹通知', lv: 60 }, { name: '訂製搜尋框文字', lv: 70 },
+                { name: '訂製小鈴噹通知', lv: 60 },
+                { name: '訂製搜尋框文字', lv: 70 },
                 { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
                 { name: 'CEO午餐', lv: 90 }
             ];
@@ -173,30 +194,36 @@
             const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
 
             if (isAfterApril) {
-                all.splice(3, 0, badge, cover);
+                all.splice(3, 0, badge, cover); 
             } else {
                 all.splice(3, 0, cover, badge);
             }
             return all;
         }
 
-        window.onload = function() { init(); };
+    window.onload = function() { init(); };
 
-        async function init() {
-            if (window.self === window.top) {
-                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
-                return;
-            }
+    async function init() {
+        // 僅保留 Iframe 檢查
+        if (window.self === window.top) {
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
+            return;
+        }
 
-            const params = new URLSearchParams(window.location.search);
-            const urlId = params.get('user_id'); 
-            if (!urlId) return;
+        // 🌟 退回原本的「直接從網址拿 ID」模式，不再使用 postMessage 導致超時
+        const params = new URLSearchParams(window.location.search);
+        const urlId = params.get('user_id'); 
+        if (!urlId) return;
+
             
             if (new Date() < aprilFirst) {
                 document.getElementById('april-notice').style.display = 'block';
             }
 
             try {
+                const params = new URLSearchParams(window.location.search);
+                const urlId = params.get('user_id'); 
+
                 const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
                 if (!res.ok) throw new Error("API 請求失敗");
                 
@@ -244,61 +271,119 @@
             const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
             const todayTime = now.getTime();
 
-            grid.innerHTML = welfareList.map(function(w) {
-                const myRecords = userHistory.filter(h => h.benefit === w.name);
-                const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
-                
-                let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : (monthCount >= 1);
-                const isLevelLocked = user.level < w.lv;
-                const locked = isLevelLocked || isQuotaLocked;
+            // 預先計算當前「女神聚會」的目標活動月份 (找下一個偶數月)
+            let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
+    let py = now.getFullYear(); 
+    if (pm > 12) { pm = 2; py += 1; }
+    const targetPartyDate = py + "-" + String(pm).padStart(2, '0'); // 例如：2026-04
 
-                let cardClass = "card ";
-                if (isLevelLocked) cardClass += "locked level-locked";
-                else if (isQuotaLocked) cardClass += "locked quota-locked";
+    grid.innerHTML = welfareList.map(function(w) {
+        const myRecords = userHistory.filter(h => h.benefit === w.name);
+        const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
 
-                let btnTxt = isLevelLocked ? "🔒 等級不足" : (isQuotaLocked ? "🔒 本月已預約" : "立即預約 →");
-                let btnColor = (isLevelLocked || isQuotaLocked) ? "#777777" : "var(--primary)";
 
-                const activeRecords = myRecords.filter(h => {
+         // 1. 判斷是否有活躍紀錄 (解決「還可以點擊」的關鍵)
+        const hasActiveRecord = myRecords.some(h => {
+            // 女神聚會：只要歷史紀錄有「4月場次」或「處理中」，就視為已報名
+            if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
+            
+            // 其他福利：本月有紀錄、處理中、或剛完成 7 天內，都視為活躍
+            if (h.submitMonth === currentMonthStr) return true;
+            if (h.date === "處理中") return true;
+            const recordDate = new Date(h.date);
+            return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
+        });
+
+// 2. 額度鎖定邏輯
+        let isQuotaLocked = false;
+        if (w.name === '大神贊助' && user.level >= 90) {
+            isQuotaLocked = monthCount >= 2;
+        } else if (w.name === '女神聚會') {
+            isQuotaLocked = hasActiveRecord; // 女神聚會直接以是否活躍為準
+        } else {
+            isQuotaLocked = monthCount >= 1;
+        }
+
+        const isLevelLocked = user.level < w.lv;
+
+                // 2. 活躍紀錄判定 (決定卡片是否變灰)
+                const hasActiveRecord = myRecords.some(h => {
+                    if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
                     if (h.submitMonth === currentMonthStr) return true;
-                    const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(h.date);
-                    if (!isDatePattern) return true; 
-
+                    if (h.date === "處理中") return true;
                     const recordDate = new Date(h.date);
-                    const isPast = recordDate.getTime() < todayTime;
-
-                    if (isPast) {
-                        const diffDays = (todayTime - recordDate.getTime()) / (1000 * 3600 * 24);
-                        return diffDays <= 7;
-                    }
-                    return true; 
+                    return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
                 });
 
-                let historyHtml = '';
-                if (activeRecords.length > 0) {
-                    historyHtml = '<div class="card-history-wrapper">' + activeRecords.map(h => {
-                        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime) ? "已完成" : "已收到";
-                        let displayDate = h.date || "處理中";
-                        const badgeClass = (displayStatus === "已完成") ? 'st-badge st-green' : 'st-badge st-red';
-                        
-                        return '<div class="history-item-row">' +
-                               '<div>預約月份: <span class="date-highlight">' + h.submitMonth + '</span></div>' +
-                               '<div class="history-data-line">' +
-                               '<span>福利日期: <span class="date-highlight">' + displayDate + '</span></span>' +
-                               '<span class="' + badgeClass + '">' + displayStatus + '</span></div></div>';
-                    }).join('') + '</div>';
-                }
+           const locked = isLevelLocked || isQuotaLocked || hasActiveRecord;
 
-                return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                    <div><h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3><p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p></div>
-                    <div style="margin-top: 10px;">
-                        <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
-                        ${historyHtml}
-                    </div>
+        let cardClass = "card " + (locked ? "locked" : "");
+        
+        // 按鈕文字判定
+        let btnTxt = "";
+        if (isLevelLocked) btnTxt = "🔒 等級不足";
+        else if (w.name === '女神聚會' && locked) btnTxt = "🔒 已報名本場次";
+        else if (hasActiveRecord) btnTxt = "⏳ 處理中/已預約";
+        else if (isQuotaLocked) btnTxt = "🔒 本月額度已滿";
+        else btnTxt = "立即預約 →";
+
+        let btnColor = locked ? "#777777" : "var(--primary)";
+
+           // 3. 客製化「女神聚會」專屬資訊區塊
+        let extraContent = '';
+        if (w.name === '女神聚會') {
+            if (locked && hasActiveRecord) {
+                // 已預約狀態：隱藏活動按鈕，顯示官方通知
+                extraContent = `
+                <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
+                    <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:30</span><br>
+                    地點：台北市信義區<br>
+                    <span style="color:var(--primary); font-weight:bold;">詳細地址會再由官方通知</span>
                 </div>`;
-            }).join('');
+            } else {
+                // 未預約狀態：顯示活動按鈕
+                extraContent = `
+                <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
+                    <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:30</span><br>
+                    地點：台北市信義區<br>
+                    <button onclick="event.stopPropagation(); window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935--4%E6%9C%88-%E5%A5%B3%E7%A5%9E%E8%81%9A%E6%9C%83-%E6%B4%BB%E5%8B%95%E8%B3%87%E8%A8%8A', '_blank')" style="margin-top: 8px; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight:bold;">👉🏻活動資訊請點我</button>
+                </div>`;
+            }
         }
+
+        // 4. 歷史紀錄顯示 (全顯示，不要過濾掉，讓用戶看得到自己約了什麼)
+        let historyHtml = '';
+        if (myRecords.length > 0) {
+            historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+                const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+                let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+                
+                if (w.name === '女神聚會') displayStatus = "報名成功"; // 女神聚會專屬狀態
+                
+                let displayDate = h.date || "處理中";
+                const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
+                
+                return `<div class="history-item-row">
+                       <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
+                       <div class="history-data-line">
+                       <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
+                       <span class="${badgeClass}">${displayStatus}</span></div></div>`;
+            }).join('') + '</div>';
+        }
+
+        return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+            <div>
+                <h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3>
+                <p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p>
+                ${extraContent}
+            </div>
+            <div style="margin-top: 10px;">
+                <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
+                ${historyHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
 
         function openBooking(name) {
             activeWelfare = name;
@@ -310,7 +395,7 @@
             resetCheckStatus(); 
             
             const isOfficialArrangement =['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(name);
-            const needsMaterialNotice =['蓋板創作者封面', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
+            const needsMaterialNotice = ['蓋板創作者封面', '訂製專屬禮物', '專屬直播欄位廣告'].includes(name);
             
             const noticeEl = document.getElementById('anchor-notice');
             let messages =[];
@@ -320,7 +405,7 @@
 
             if (name === '女神聚會') {
                 messages.push(`
-                    <span style="color:white; font-size:14px;">4月場次：4/25（六）17:50<br>地點：台北市信義區</span><br><br>
+                    <span style="color:white; font-size:14px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br>
                     <span style="color:#ff5a5f; font-size:13px;">請先與主播確認是否出席後再填寫主播帳號<br>若您本人不克出席請勿預約</span>
                 `);
             }
@@ -376,36 +461,24 @@
 
         async function syncAndCheck() {
             const sid = document.getElementById('swagger_id').value.trim();
-            const btn = document.getElementById('btn-check');
 
             if (!sid) {
+                const btn = document.getElementById('btn-check');
                 const originalText = btn.innerText;
                 btn.innerText = "⚠️ 請先輸入主播帳號";
                 setTimeout(() => btn.innerText = originalText, 2000);
                 return;
             }
 
-            btn.innerText = "⏳ 驗證主播中..."; 
+            const btn = document.getElementById('btn-check');
+            btn.innerText = "⏳ 檢查中..."; 
             btn.disabled = true;
 
             try {
-                // 【防呆 1】打 API 驗證主播帳號
-                const streamerRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
-                if (streamerRes.status === 404) {
-                    btn.innerText = "❌ 找不到此主播帳號";
-                    btn.disabled = false;
-                    setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000);
-                    return; // 帳號不存在直接中斷
-                } else if (!streamerRes.ok) {
-                    throw new Error("API 異常");
-                }
-
-                btn.innerText = "⏳ 同步預約資料...";
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
                 const text = await res.text();
                 bookings = JSON.parse(text);
-                
                 const select = document.getElementById('reserve_date');
                 select.disabled = false; select.innerHTML = '<option value="">請選擇日期</option>';
                 const today = new Date();
@@ -420,8 +493,15 @@
                 } else {
                     const isCover = (activeWelfare === '蓋板創作者封面');
                     const isSearch = (activeWelfare === '訂製搜尋框文字');
-                    let limit = isSearch ? new Date(today.getFullYear(), today.getMonth() + 1, 5) : 
-                                (isCover ? new Date(today.getFullYear(), today.getMonth() + 2, 0) : new Date(today.getFullYear(), today.getMonth() + 1, 5));
+                    
+                    let limit;
+                    if (isSearch) {
+                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); 
+                    } else if (isCover) {
+                        limit = new Date(today.getFullYear(), today.getMonth() + 2, 0); 
+                    } else {
+                        limit = new Date(today.getFullYear(), today.getMonth() + 1, 5); 
+                    }
 
                     const startDay = (isCover) ? 14 : 1;
                     for (let i = startDay; i <= 65; i++) { 
@@ -446,7 +526,7 @@
                 btn.innerText = "✅ 核對完成";
             } catch (e) { 
                 console.error("Sync Error:", e);
-                btn.innerText = "❌ 連線或驗證失敗";
+                btn.innerText = "❌ 連線失敗，請重試";
                 btn.disabled = false;
                 setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
             }
@@ -458,47 +538,31 @@
             const btn = document.getElementById('btn-submit');
             if (btn.disabled) return; 
 
-            const isOfficial =['蓋板創作者封面', '訂製搜尋框文字', '專屬直播欄位廣告'].includes(activeWelfare);
-            const sid = document.getElementById('swagger_id').value.trim();
-
-            if (!isOfficial && activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐' && !sid) {
-                btn.innerText = "請輸入主播帳號";
+            if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐' && !document.getElementById('swagger_id').value.trim()) {
+                btn.innerText = "請輸入主播帳號（請勿填寫@）";
                 setTimeout(() => btn.innerText = "確認提交申請", 2000);
                 return;
             }
-
-            btn.disabled = true; 
-            btn.innerText = "預約中，請稍後...";
-
-            // 【防呆 2】送出前再次打 API 驗證主播帳號
-            if (sid) {
-                try {
-                    const streamerRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
-                    if (streamerRes.status === 404) {
-                        btn.style.background = "#ff5a5f";
-                        btn.innerText = "❌ 查無此主播，請檢查帳號";
-                        setTimeout(() => {
-                            btn.style.background = "var(--primary)";
-                            btn.innerText = "確認提交申請";
-                            btn.disabled = false;
-                        }, 2500);
-                        return; // 中斷，不送出
-                    }
-                } catch (e) {
-                    console.error("主播驗證失敗:", e);
-                }
-            }
             
             const params = new URLSearchParams(window.location.search);
+            const urlId = params.get('user_id'); 
+            if (!urlId) {
+                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入</h2>";
+                return;
+            }
+            
+            btn.disabled = true; 
+            btn.innerText = "預約中，請稍後...";
+            
             const dateVal = document.getElementById('reserve_date').disabled ? "" : document.getElementById('reserve_date').value;
 
             const payload = {
                 user_id: user.id, 
-                url_user_id: params.get('user_id'),
-                username: user.username, 
-                level: user.level, 
+                url_user_id: urlId,
+                username: user.username,
+                level: user.level,
                 benefit: activeWelfare,
-                swagger_id: sid,
+                swagger_id: document.getElementById('swagger_id').value,
                 date: dateVal,
                 content: document.getElementById('reserve_content').value,
                 badge_name: document.getElementById('b_name').value, 
@@ -524,24 +588,21 @@
             try {
                 const response = await fetch(GAS_API, { 
                     method: 'POST', 
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'text/plain' },
+                    mode: 'no-cors', // 繞過 Preflight，必填
+                    headers: { 'Content-Type': 'text/plain' }, // 繞過複雜 CORS，必填
                     body: JSON.stringify(payload) 
                 });
                 
-                btn.style.background = "#10b981"; 
-                btn.innerText = "✅ 提交成功！";
+                // no-cors 下無法捕捉 response.text()
+                // 所以只要沒有拋出 Error，就認定請求已發出
+                btn.innerText = "提交成功！";
                 setTimeout(() => location.reload(), 1500);
-
+                
             } catch (e) { 
                 console.error("Network Error:", e);
-                btn.style.background = "#ff5a5f"; 
-                btn.innerText = "❌ 網路不穩，但申請可能已送出";
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.style.background = "var(--primary)";
-                    btn.innerText = "確認提交申請";
-                }, 3000);
+                btn.innerText = "網路連線失敗，請重試";
+                btn.disabled = false;
+                setTimeout(() => btn.innerText = "確認提交申請", 3000);
             }
         }
     </script>
