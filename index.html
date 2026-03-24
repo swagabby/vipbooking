@@ -29,6 +29,9 @@
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; position: relative; }
         .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
+
+.card-loading { opacity: 0.6; cursor: wait !important; }
+.spinner-small { width: 16px; height: 16px; border: 2px solid rgba(0,210,190,0.1); border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 5px; }
         
         .card.locked { cursor: not-allowed; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); border-color: #222; }
@@ -204,7 +207,7 @@
     window.onload = function() { init(); };
 
 async function init() {
-    // 1. Iframe 檢查
+async function init() {
     if (window.self === window.top) {
         document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
         return;
@@ -214,13 +217,12 @@ async function init() {
     const urlId = params.get('user_id'); 
     if (!urlId) return;
 
-    // 顯示 Loading
-    document.getElementById('loader-overlay').style.display = 'flex';
+    // 顯示初次渲染 (空的卡片，但有載入狀態)
+    renderCards(true); 
+    document.getElementById('loader-overlay').style.display = 'none'; // 移除全螢幕遮罩
 
     try {
-        // 先取得基本資訊
         const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
-        if (!res.ok) throw new Error("API 請求失敗");
         const data = await res.json();
         
         user.id = (data.user_id || data.id || "").toString().trim();
@@ -230,40 +232,28 @@ async function init() {
         document.getElementById('u-name').innerText = user.username;
         document.getElementById('u-lv').innerText = "LV." + user.level;
         
-        // 【關鍵】一定要 await 等到歷史資料回來才 renderCards
-        const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-        const hText = await hRes.text();
-        userHistory = JSON.parse(hText);
-        
-        // 渲染完畢後，移除遮罩
-        renderCards();
-        document.getElementById('loader-overlay').style.opacity = '0';
-        setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 500);
+        // 背景撈取歷史資料，撈完自動更新卡片
+        fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now())
+            .then(r => r.text())
+            .then(text => {
+                userHistory = JSON.parse(text);
+                renderCards(false); // 資料回來，重新渲染所有卡片
+            });
 
-    } catch(e) { 
-        console.error(e);
-        document.body.innerHTML = `
-            <div style="background:#050505; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <h2 style="color:#ff5a5f;">系統連線異常</h2>
-                <p style="color:#888;">請重新整理頁面</p>
-            </div>`;
-    }
+    } catch(e) { console.error(e); }
 }
-
-function renderCards() {
-        const grid = document.getElementById('benefit-grid');
-        const welfareList = getWelfareList(); 
-        const now = new Date();
-        const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-        const todayTime = now.getTime();
-
+function renderCards(isLoading = false) {
+    const grid = document.getElementById('benefit-grid');
+    const welfareList = getWelfareList(); 
+    const todayTime = new Date().getTime();
+        
  let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
         let py = now.getFullYear(); 
         if (pm > 12) { pm = 2; py += 1; }
         const targetPartyDate = py + "-" + String(pm).padStart(2, '0'); // 例如：2026-04
 
         grid.innerHTML = welfareList.map(function(w) {
-            const myRecords = userHistory.filter(h => h.benefit === w.name);
+         const myRecords = isLoading ? [] : userHistory.filter(h => h.benefit === w.name);
             const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
             // 1. 判斷是否有活躍紀錄 (包含本月、處理中、女神聚會目標場次、7天內完成)
             const hasActiveRecord = myRecords.some(h => {
@@ -292,7 +282,7 @@ const locked = !isDataLoaded || isLevelLocked || isQuotaLocked || hasActiveRecor
             let cardClass = "card " + (locked ? "locked" : "");
      
         // 按鈕文字判定
-        let btnTxt = "";
+let btnTxt = isLoading ? "⏳ 讀取中..." : (isLevelLocked ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中" : "立即預約 →"));
         if (isLevelLocked) btnTxt = "🔒 等級不足";
         else if (w.name === '女神聚會' && locked) btnTxt = "🔒 已報名本場次";
         else if (hasActiveRecord) btnTxt = "⏳ 處理中/已預約";
@@ -324,8 +314,8 @@ const locked = !isDataLoaded || isLevelLocked || isQuotaLocked || hasActiveRecor
         }
 
         // 4. 歷史紀錄顯示 (全顯示，不要過濾掉，讓用戶看得到自己約了什麼)
- let historyHtml = '<div class="card-history-wrapper" style="color:var(--text-dim); font-size:11px;">載入紀錄中...</div>';
-
+        let historyHtml = isLoading ? '<div class="card-history-wrapper"><div class="spinner-small"></div> 載入中...</div>' : 
+                          (myRecords.length > 0 ? '<div class="card-history-wrapper">' + myRecords.map(...) + '</div>' : '');
 if (userHistory && userHistory.length > 0) {
 const myRecords = userHistory.filter(h => h.benefit === w.name);
     if (myRecords.length > 0) {
@@ -338,7 +328,7 @@ const myRecords = userHistory.filter(h => h.benefit === w.name);
                 let displayDate = h.date || "處理中";
                 const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
                 
-                return `<div class="history-item-row">
+return `<div class="card ${locked ? 'card-loading' : ''}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
                        <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
                        <div class="history-data-line">
                        <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
