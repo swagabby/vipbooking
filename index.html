@@ -29,9 +29,6 @@
         .benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; min-height: 190px; position: relative; }
         .card:not(.locked):hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0, 210, 190, 0.3); cursor: pointer; }
-
-.card-loading { opacity: 0.6; cursor: wait !important; }
-.spinner-small { width: 16px; height: 16px; border: 2px solid rgba(0,210,190,0.1); border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 5px; }
         
         .card.locked { cursor: not-allowed; }
         .card.level-locked { opacity: 0.35; filter: grayscale(1); border-color: #222; }
@@ -176,86 +173,92 @@
     </div>
 
 <script>
-        const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-        const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
+    const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
+    const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
 
-        let user = { id: '', username: '', level: 0 }, userHistory = [], bookings =[], activeWelfare = null;
+    let user = { id: '', username: '', level: 0 }, userHistory = [], bookings = [], activeWelfare = null;
+    let isDataLoaded = false; // 用來標記歷史紀錄是否已載入完成
 
-        const aprilFirst = new Date('2026-04-01T00:00:00');
+    const aprilFirst = new Date('2026-04-01T00:00:00');
 
-        // 自動變更等級與提示文案
-        function getWelfareList() {
-            const isAfterApril = new Date() >= aprilFirst;
-            const all =[
-                { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
-                { name: '訂製小鈴噹通知', lv: 60 },
-                { name: '訂製搜尋框文字', lv: 70 },
-                { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
-                { name: 'CEO午餐', lv: 90 }
-            ];
-            const badge = { name: '訂製專屬徽章', lv: isAfterApril ? 70 : 80 };
-            const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
-
-            if (isAfterApril) {
-                all.splice(3, 0, badge, cover); 
-            } else {
-                all.splice(3, 0, cover, badge);
-            }
-            return all;
-        }
+    function getWelfareList() {
+        const isAfterApril = new Date() >= aprilFirst;
+        const all = [
+            { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
+            { name: '訂製小鈴噹通知', lv: 60 }, { name: '訂製搜尋框文字', lv: 70 },
+            { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
+            { name: 'CEO午餐', lv: 90 }
+        ];
+        const badge = { name: '訂製專屬徽章', lv: isAfterApril ? 70 : 80 };
+        const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
+        if (isAfterApril) all.splice(3, 0, badge, cover); 
+        else all.splice(3, 0, cover, badge);
+        return all;
+    }
 
     window.onload = function() { init(); };
 
-async function init() {
-async function init() {
-    if (window.self === window.top) {
-        document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
-        return;
+    async function init() {
+        if (window.self === window.top) {
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const urlId = params.get('user_id'); 
+        if (!urlId) return;
+
+        if (new Date() < aprilFirst) {
+            const noticeEl = document.getElementById('april-notice');
+            if (noticeEl) noticeEl.style.display = 'block';
+        }
+
+        // 1. 立即渲染空白卡片 (Loading 狀態)
+        renderCards(); 
+        document.getElementById('loader-overlay').style.display = 'none';
+
+        try {
+            const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
+            const data = await res.json();
+            
+            user.id = (data.user_id || data.id || "").toString().trim();
+            user.username = (data?.username || data?.display_name || user.id).trim();
+            user.level = data?.level || 0;
+            
+            document.getElementById('u-name').innerText = user.username;
+            document.getElementById('u-lv').innerText = "LV." + user.level;
+            
+            // 2. 背景撈取歷史資料
+            const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
+            userHistory = JSON.parse(await hRes.text());
+            isDataLoaded = true; // 標記載入完成
+            
+            // 3. 資料回來後，重新渲染卡片
+            renderCards();
+        } catch(e) { console.error(e); }
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('user_id'); 
-    if (!urlId) return;
+    function renderCards() {
+        const grid = document.getElementById('benefit-grid');
+        const welfareList = getWelfareList(); 
+        const now = new Date();
+        const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+        const todayTime = now.getTime();
 
-    // 顯示初次渲染 (空的卡片，但有載入狀態)
-    renderCards(true); 
-    document.getElementById('loader-overlay').style.display = 'none'; // 移除全螢幕遮罩
-
-    try {
-        const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
-        const data = await res.json();
-        
-        user.id = (data.user_id || data.id || "").toString().trim();
-        user.username = (data?.username || data?.display_name || user.id).trim();
-        user.level = data?.level || 0;
-        
-        document.getElementById('u-name').innerText = user.username;
-        document.getElementById('u-lv').innerText = "LV." + user.level;
-        
-        // 背景撈取歷史資料，撈完自動更新卡片
-        fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now())
-            .then(r => r.text())
-            .then(text => {
-                userHistory = JSON.parse(text);
-                renderCards(false); // 資料回來，重新渲染所有卡片
-            });
-
-    } catch(e) { console.error(e); }
-}
-function renderCards(isLoading = false) {
-    const grid = document.getElementById('benefit-grid');
-    const welfareList = getWelfareList(); 
-    const todayTime = new Date().getTime();
-        
- let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
+        let pm = ((now.getMonth() + 1) % 2 === 0) ? now.getMonth() + 1 : now.getMonth() + 2;
         let py = now.getFullYear(); 
         if (pm > 12) { pm = 2; py += 1; }
-        const targetPartyDate = py + "-" + String(pm).padStart(2, '0'); // 例如：2026-04
+        const targetPartyDate = py + "-" + String(pm).padStart(2, '0');
 
         grid.innerHTML = welfareList.map(function(w) {
-         const myRecords = isLoading ? [] : userHistory.filter(h => h.benefit === w.name);
+            const myRecords = userHistory.filter(h => h.benefit === w.name);
             const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
-            // 1. 判斷是否有活躍紀錄 (包含本月、處理中、女神聚會目標場次、7天內完成)
+            
+            // 尚未撈到資料時，卡片全部鎖住
+            if (!isDataLoaded) {
+                return `<div class="card locked"><div class="spinner-small"></div> 正在載入福利狀態...</div>`;
+            }
+
             const hasActiveRecord = myRecords.some(h => {
                 if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
                 if (h.submitMonth === currentMonthStr) return true;
@@ -263,95 +266,33 @@ function renderCards(isLoading = false) {
                 const recordDate = new Date(h.date);
                 return !isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) <= 7;
             });
-            // 2. 額度鎖定邏輯
-            let isQuotaLocked = false;
-            if (w.name === '大神贊助' && user.level >= 90) {
-                isQuotaLocked = monthCount >= 2;
-            } else if (w.name === '女神聚會') {
-                isQuotaLocked = hasActiveRecord; // 女神聚會直接以是否活躍為準 (跨月防呆)
-            } else {
-                isQuotaLocked = monthCount >= 1;
-            }
 
+            let isQuotaLocked = (w.name === '大神贊助' && user.level >= 90) ? (monthCount >= 2) : 
+                                (w.name === '女神聚會' ? hasActiveRecord : (monthCount >= 1));
             const isLevelLocked = user.level < w.lv;
-            
-            // 【核心修復】只要有活躍紀錄或額度滿，卡片就強制鎖死！
-const isDataLoaded = userHistory && userHistory.length >= 0; 
-const locked = !isDataLoaded || isLevelLocked || isQuotaLocked || hasActiveRecord;
+            const locked = isLevelLocked || isQuotaLocked || hasActiveRecord;
 
             let cardClass = "card " + (locked ? "locked" : "");
-     
-        // 按鈕文字判定
-let btnTxt = isLoading ? "⏳ 讀取中..." : (isLevelLocked ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中" : "立即預約 →"));
-        if (isLevelLocked) btnTxt = "🔒 等級不足";
-        else if (w.name === '女神聚會' && locked) btnTxt = "🔒 已報名本場次";
-        else if (hasActiveRecord) btnTxt = "⏳ 處理中/已預約";
-        else if (isQuotaLocked) btnTxt = "🔒 本月額度已滿";
-        else btnTxt = "立即預約 →";
+            let btnTxt = isLevelLocked ? "🔒 等級不足" : (hasActiveRecord ? "⏳ 處理中/已預約" : (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →"));
+            let btnColor = locked ? "#777777" : "var(--primary)";
 
-        let btnColor = locked ? "#777777" : "var(--primary)";
-
-           // 3. 客製化「女神聚會」專屬資訊區塊
-        let extraContent = '';
-        if (w.name === '女神聚會') {
-            if (locked && hasActiveRecord) {
-                // 已預約狀態：隱藏活動按鈕，顯示官方通知
-                extraContent = `
-                <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
-                    <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:30</span><br>
-                    地點：台北市信義區<br>
-                    <span style="color:var(--primary); font-weight:bold;">詳細地址會再由官方通知</span>
-                </div>`;
-            } else {
-                // 未預約狀態：顯示活動按鈕
-                extraContent = `
-                <div style="margin-top: 15px; font-size: 12px; color: #ccc; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 10px;">
-                    <span style="color:white; font-weight:bold;">4月場次：4/25（六）17:30</span><br>
-                    地點：台北市信義區<br>
-                    <button onclick="event.stopPropagation(); window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935--4%E6%9C%88-%E5%A5%B3%E7%A5%9E%E8%81%9A%E6%9C%83-%E6%B4%BB%E5%8B%95%E8%B3%87%E8%A8%8A', '_blank')" style="margin-top: 8px; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight:bold;">👉🏻活動資訊請點我</button>
-                </div>`;
-            }
-        }
-
-        // 4. 歷史紀錄顯示 (全顯示，不要過濾掉，讓用戶看得到自己約了什麼)
-        let historyHtml = isLoading ? '<div class="card-history-wrapper"><div class="spinner-small"></div> 載入中...</div>' : 
-                          (myRecords.length > 0 ? '<div class="card-history-wrapper">' + myRecords.map(...) + '</div>' : '');
-if (userHistory && userHistory.length > 0) {
-const myRecords = userHistory.filter(h => h.benefit === w.name);
-    if (myRecords.length > 0) {
-        historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+            let historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
                 const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
                 let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
-                
-                if (w.name === '女神聚會') displayStatus = "報名成功"; // 女神聚會專屬狀態
-                
-                let displayDate = h.date || "處理中";
+                if (w.name === '女神聚會') displayStatus = "報名成功";
                 const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
-                
-return `<div class="card ${locked ? 'card-loading' : ''}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                       <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
-                       <div class="history-data-line">
-                       <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
-                       <span class="${badgeClass}">${displayStatus}</span></div></div>`;
-          }).join('') + '</div>';
-    } else {
-        historyHtml = '<div class="card-history-wrapper" style="color:var(--text-dim); font-size:11px;">無預約紀錄</div>';
-    }
-}
+                return `<div class="history-item-row"><div class="history-data-line"><span>${h.date}</span><span class="${badgeClass}">${displayStatus}</span></div></div>`;
+            }).join('') + '</div>';
 
-        return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-            <div>
-                <h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3>
-                <p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p>
-                ${extraContent}
-            </div>
-            <div style="margin-top: 10px;">
-                <div style="color:${btnColor}; font-size:12px; font-weight:900;">${btnTxt}</div>
-                ${historyHtml}
-            </div>
-        </div>`;
-    }).join('');
-}
+            return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+                <div>
+                    <h3 style="font-size:18px; margin-bottom:5px;">${w.name}</h3>
+                    <p style="font-size:14px; color:var(--primary); font-weight:900;">LV.${w.lv}+</p>
+                </div>
+                <div><div style="color:${btnColor}; font-size:12px; font-weight:900; margin-top:10px;">${btnTxt}</div>${historyHtml}</div>
+            </div>`;
+        }).join('');
+    }
 
         function openBooking(name) {
             activeWelfare = name;
