@@ -498,10 +498,15 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
         setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
         return;
     }
+   if (activeWelfare === '訂製專屬禮物') {
+        btn.innerText = "✅ 主播帳號已確認";
+        return;
+    }
+
     btn.innerText = "⏳ 檢查中...";
 
     try {
-                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData', '訂製專屬禮物': 'getGiftData', '專屬直播欄位廣告': 'getAdSpotData' };
+                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData', '專屬直播欄位廣告': 'getAdSpotData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
                 const text = await res.text();
                 bookings = JSON.parse(text);
