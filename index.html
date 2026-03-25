@@ -258,7 +258,15 @@ function renderCards() {
     const targetPartyDate = py + "-" + String(pm).padStart(2, '0');
 
     grid.innerHTML = welfareList.map(function(w) {
-        const myRecords = userHistory.filter(h => h.benefit === w.name);
+       const myRecords = userHistory.filter(h => {
+            if (h.benefit !== w.name) return false;
+            // 超過14天的已完成紀錄不顯示
+            if (h.date && h.date !== "處理中") {
+                const recordDate = new Date(h.date);
+                if (!isNaN(recordDate.getTime()) && (todayTime - recordDate.getTime()) / (1000 * 3600 * 24) > 14) return false;
+            }
+            return true;
+        });
         const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
         
         // 1. 活躍紀錄判定 (決定卡片是否鎖定)
