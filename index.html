@@ -310,19 +310,19 @@ function renderCards() {
                 const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
                 const swaggerLine = h.swagger_id ? `<div>預約主播：<span class="date-highlight">${h.swagger_id}</span></div>` : '';
                 
- return `<div class="history-item-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+return `<div class="history-item-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
                        <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
-                           <div style="display:flex; justify-content:space-between;">
-                               <span style="color:var(--text-dim);">預約月份</span>
-                               <span class="date-highlight">${h.submitMonth}</span>
+                           <div style="display:flex; gap:8px;">
+                               <span style="color:var(--text-dim); font-size:13px;">預約月份</span>
+                               <span class="date-highlight" style="font-size:13px;">${h.submitMonth}</span>
                            </div>
-                           <div style="display:flex; justify-content:space-between;">
-                               <span style="color:var(--text-dim);">預約日期</span>
-                               <span class="date-highlight">${displayDate}</span>
+                           <div style="display:flex; gap:8px;">
+                               <span style="color:var(--text-dim); font-size:13px;">預約日期</span>
+                               <span class="date-highlight" style="font-size:13px;">${displayDate}</span>
                            </div>
-                           ${h.swagger_id ? `<div style="display:flex; justify-content:space-between;">
-                               <span style="color:var(--text-dim);">預約主播</span>
-                               <span class="date-highlight">${h.swagger_id}</span>
+                           ${h.swagger_id ? `<div style="display:flex; gap:8px;">
+                               <span style="color:var(--text-dim); font-size:13px;">預約主播</span>
+                               <span class="date-highlight" style="font-size:13px;">${h.swagger_id}</span>
                            </div>` : ''}
                        </div>
                        <div style="display:flex; align-items:center; padding-left:12px; border-left:1px solid rgba(255,255,255,0.08);">
