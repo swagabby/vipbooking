@@ -577,9 +577,7 @@ const needSwagger = activeWelfare !== '大神贊助' && activeWelfare !== '女�
                 return;
             }
             
-            const params = new URLSearchParams(window.location.search);
-            const urlId = params.get('user_id'); 
-            if (!urlId) {
+            if (!user.id) {
                 document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請從官方渠道進入</h2>";
                 return;
             }
@@ -598,8 +596,8 @@ const needSwagger = activeWelfare !== '大神贊助' && activeWelfare !== '女�
 
 
             const payload = {
-                user_id: user.id, 
-                url_user_id: urlId,
+                user_id: user.id,
+                url_user_id: user.id,
                 username: user.username,
                 level: user.level,
                 benefit: activeWelfare,
