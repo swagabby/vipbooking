@@ -304,13 +304,15 @@ function renderCards() {
                 const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
                 let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                 
-                if (w.name === '女神聚會') displayStatus = "報名成功"; // 女神聚會專屬狀態
+                if (w.name === '女神聚會') displayStatus = "報名成功";
                 
                 let displayDate = h.date || "處理中";
                 const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? 'st-badge st-green' : 'st-badge st-red';
+                const swaggerLine = h.swagger_id ? `<div>預約主播：<span class="date-highlight">${h.swagger_id}</span></div>` : '';
                 
                 return `<div class="history-item-row">
                        <div>預約月份: <span class="date-highlight">${h.submitMonth}</span></div>
+                       ${swaggerLine}
                        <div class="history-data-line">
                        <span>福利日期: <span class="date-highlight">${displayDate}</span></span>
                        <span class="${badgeClass}">${displayStatus}</span></div></div>`;
