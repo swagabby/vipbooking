@@ -407,7 +407,7 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
             select.value = "";
         }
 
-        async function syncAndCheck() {
+       async function syncAndCheck() {
     const sid = document.getElementById('swagger_id').value.trim();
 
     if (!sid) {
@@ -419,35 +419,55 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
     }
 
     const btn = document.getElementById('btn-check');
-    btn.innerText = "⏳ 驗證主播帳號..."; 
+    btn.innerText = "⏳ 驗證主播帳號...";
     btn.disabled = true;
 
-    try {
-        // 驗證主播帳號是否存在
-        const creatorRes = await fetch("https://creator-info-f2327.web.app/api/v1/check-creator?userId=" + encodeURIComponent(sid), {
-            headers: {
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJraWQiOiJCZ0tTWHRMU0FNYmtZVThYRW5sTSIsIm5hbWUiOiJPUOmgkOe0hOezu-e1seafpeipouS4u-aSrSIsInR5cGUiOiJhcGlfa2V5IiwiaWF0IjoxNzc0MzQ2MzgzfQ.LnJL7lQY2D1iaER6k7U8ZfpmZ09Z2lT6vkxbfUWt-4U"
-            }
-        });
-
-        if (!creatorRes.ok) {
+ try {
+        // 第一步：username → userid
+        const step1Res = await fetch("https://api.swag.live/users/" + encodeURIComponent(sid));
+        if (!step1Res.ok) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
             return;
         }
 
-        const creatorData = await creatorRes.json();
+        const step1Data = await step1Res.json();
+        const userId = step1Data.id;
 
-        // 判斷是否為有效主播（依 API 回傳結構調整）
-        if (!creatorData || creatorData.exists === false || creatorData.isCreator === false) {
+        if (!userId) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
             return;
         }
 
-        btn.innerText = "⏳ 檢查中...";
+        // 第二步：userid → 確認帳號資料存在
+        const step2Res = await fetch("https://api.swag.live/users/" + encodeURIComponent(userId));
+        if (!step2Res.ok) {
+            btn.innerText = "❌ 查無此主播帳號";
+            btn.disabled = false;
+            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
+            return;
+        }
+
+        const step2Data = await step2Res.json();
+        if (!step2Data || !step2Data.id) {
+            btn.innerText = "❌ 查無此主播帳號";
+            btn.disabled = false;
+            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
+            return;
+        }
+
+    } catch (e) {
+        console.error("Creator Check Error:", e);
+        btn.innerText = "❌ 驗證失敗，請重試";
+        btn.disabled = false;
+        setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
+        return;
+    }
+
+    btn.innerText = "⏳ 檢查中...";
 
     try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
@@ -505,14 +525,7 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
                 btn.disabled = false;
                 setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
             }
-
-    } catch (e) {
-        console.error("Creator Check Error:", e);
-        btn.innerText = "❌ 驗證失敗，請重試";
-        btn.disabled = false;
-        setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
-    }
-}
+        }
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
