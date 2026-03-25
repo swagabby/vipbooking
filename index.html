@@ -204,12 +204,6 @@
             return;
         }
 
-        user.id = (data.user_id || data.id || "").toString().trim();
-if (user.id !== urlId) {
-    document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>身分驗證失敗，請重新進入</h2>";
-    return;
-}
-
         const params = new URLSearchParams(window.location.search);
         const urlId = params.get('user_id'); 
         if (!urlId) return;
@@ -227,7 +221,13 @@ if (user.id !== urlId) {
             const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
             const data = await res.json();
             
-            user.id = (data.user_id || data.id || "").toString().trim();
+user.id = (data.user_id || data.id || "").toString().trim();
+
+            if (user.id !== urlId) {
+                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>身分驗證失敗，請重新進入</h2>";
+                return;
+            }
+
             user.username = (data?.username || data?.display_name || user.id).trim();
             user.level = data?.level || 0;
             
