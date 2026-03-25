@@ -408,21 +408,48 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
         }
 
         async function syncAndCheck() {
-            const sid = document.getElementById('swagger_id').value.trim();
+    const sid = document.getElementById('swagger_id').value.trim();
 
-            if (!sid) {
-                const btn = document.getElementById('btn-check');
-                const originalText = btn.innerText;
-                btn.innerText = "⚠️ 請先輸入主播帳號";
-                setTimeout(() => btn.innerText = originalText, 2000);
-                return;
+    if (!sid) {
+        const btn = document.getElementById('btn-check');
+        const originalText = btn.innerText;
+        btn.innerText = "⚠️ 請先輸入主播帳號";
+        setTimeout(() => btn.innerText = originalText, 2000);
+        return;
+    }
+
+    const btn = document.getElementById('btn-check');
+    btn.innerText = "⏳ 驗證主播帳號..."; 
+    btn.disabled = true;
+
+    try {
+        // 驗證主播帳號是否存在
+        const creatorRes = await fetch("https://creator-info-f2327.web.app/api/v1/check-creator?userId=" + encodeURIComponent(sid), {
+            headers: {
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJraWQiOiJCZ0tTWHRMU0FNYmtZVThYRW5sTSIsIm5hbWUiOiJPUOmgkOe0hOezu-e1seafpeipouS4u-aSrSIsInR5cGUiOiJhcGlfa2V5IiwiaWF0IjoxNzc0MzQ2MzgzfQ.LnJL7lQY2D1iaER6k7U8ZfpmZ09Z2lT6vkxbfUWt-4U"
             }
+        });
 
-            const btn = document.getElementById('btn-check');
-            btn.innerText = "⏳ 檢查中..."; 
-            btn.disabled = true;
+        if (!creatorRes.ok) {
+            btn.innerText = "❌ 查無此主播帳號";
+            btn.disabled = false;
+            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
+            return;
+        }
 
-            try {
+        const creatorData = await creatorRes.json();
+
+        // 判斷是否為有效主播（依 API 回傳結構調整）
+        if (!creatorData || creatorData.exists === false || creatorData.isCreator === false) {
+            btn.innerText = "❌ 查無此主播帳號";
+            btn.disabled = false;
+            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
+            return;
+        }
+
+        btn.innerText = "⏳ 檢查中...";
+
+    try {
                 const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
                 const text = await res.text();
@@ -478,7 +505,14 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
                 btn.disabled = false;
                 setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000); 
             }
-        }
+
+    } catch (e) {
+        console.error("Creator Check Error:", e);
+        btn.innerText = "❌ 驗證失敗，請重試";
+        btn.disabled = false;
+        setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
+    }
+}
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
