@@ -430,11 +430,10 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
             }
         }
 
-        function toggleGiftSwagger() {
+       function toggleGiftSwagger() {
             const checked = document.getElementById('g_photo').checked;
             document.getElementById('sw-group').classList.toggle('hidden', !checked);
             document.getElementById('btn-check').classList.toggle('hidden', !checked);
-            document.getElementById('date-group').classList.toggle('hidden', !checked);
             if (!checked) {
                 document.getElementById('swagger_id').value = '';
                 resetCheckStatus();
