@@ -423,36 +423,16 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
     btn.disabled = true;
 
  try {
-        // 第一步：username → userid
-        const step1Res = await fetch("https://api.swag.live/users/" + encodeURIComponent(sid));
-        if (!step1Res.ok) {
+        const creatorRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
+        if (!creatorRes.ok) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
             return;
         }
 
-        const step1Data = await step1Res.json();
-        const userId = step1Data.id;
-
-        if (!userId) {
-            btn.innerText = "❌ 查無此主播帳號";
-            btn.disabled = false;
-            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
-            return;
-        }
-
-        // 第二步：userid → 確認帳號資料存在
-        const step2Res = await fetch("https://api.swag.live/users/" + encodeURIComponent(userId));
-        if (!step2Res.ok) {
-            btn.innerText = "❌ 查無此主播帳號";
-            btn.disabled = false;
-            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
-            return;
-        }
-
-        const step2Data = await step2Res.json();
-        if (!step2Data || !step2Data.id) {
+        const creatorData = await creatorRes.json();
+        if (!creatorData || !creatorData.id) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
@@ -466,7 +446,6 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
         setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
         return;
     }
-
     btn.innerText = "⏳ 檢查中...";
 
     try {
