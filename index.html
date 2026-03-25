@@ -430,7 +430,7 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
         });
 
         const creatorData = await creatorRes.json();
-        if (!creatorData || creatorData.isCreator !== true) {
+        if (!creatorData || creatorData.found !== true) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
