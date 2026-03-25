@@ -423,18 +423,14 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
     btn.disabled = true;
 
  try {
-       const creatorRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid), {
-            redirect: 'follow'
+        const creatorRes = await fetch("https://creator-info-f2327.web.app/api/v1/check-creator?userId=" + encodeURIComponent(sid), {
+            headers: {
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJraWQiOiJCZ0tTWHRMU0FNYmtZVThYRW5sTSIsIm5hbWUiOiJPUOmgkOe0hOezu-e1seafpeipouS4u-aSrSIsInR5cGUiOiJhcGlfa2V5IiwiaWF0IjoxNzc0MzQ2MzgzfQ.LnJL7lQY2D1iaER6k7U8ZfpmZ09Z2lT6vkxbfUWt-4U"
+            }
         });
-        if (!creatorRes.ok) {
-            btn.innerText = "❌ 查無此主播帳號";
-            btn.disabled = false;
-            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
-            return;
-        }
 
         const creatorData = await creatorRes.json();
-        if (!creatorData || !creatorData.id) {
+        if (!creatorData || creatorData.isCreator !== true) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
             setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
