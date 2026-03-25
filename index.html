@@ -387,15 +387,18 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
 
             if (name === '訂製專屬徽章') {
                 document.getElementById('badge-fields').classList.remove('hidden');
-            } else if (name === '訂製專屬禮物') {
+} else if (name === '訂製專屬禮物') {
                 document.getElementById('gift-fields').classList.remove('hidden');
                 document.getElementById('sw-group').classList.remove('hidden');
+                document.getElementById('btn-check').classList.remove('hidden');
+                document.getElementById('date-group').classList.remove('hidden');
             } else if (name === 'CEO午餐') {
                 document.getElementById('lunch-fields').classList.remove('hidden');
                 renderLunchSelects();
-            } else if (name === '專屬直播欄位廣告') {
+ } else if (name === '專屬直播欄位廣告') {
                 document.getElementById('sw-group').classList.remove('hidden');
                 document.getElementById('ad-fields').classList.remove('hidden');
+                document.getElementById('btn-check').classList.remove('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
                 if (!isOfficialArrangement) { 
@@ -468,7 +471,7 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
     btn.innerText = "⏳ 檢查中...";
 
     try {
-                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData' };
+                const actionMap = { '大神贊助': 'getGrandSponsorData', '女神聚會': 'getPartyData', '訂製小鈴噹通知': 'getBellData', '蓋板創作者封面': 'getCoverData', '訂製搜尋框文字': 'getSearchBoxData', '訂製專屬禮物': 'getGiftData', '專屬直播欄位廣告': 'getAdSpotData' };
                 const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
                 const text = await res.text();
                 bookings = JSON.parse(text);
