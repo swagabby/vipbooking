@@ -204,9 +204,18 @@
             return;
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const urlId = params.get('user_id'); 
+const params = new URLSearchParams(window.location.search);
+        const urlId = params.get('user_id');
         if (!urlId) return;
+
+        // 第一次進入時記住 user_id，之後若被竄改就鎖死
+        const storedId = sessionStorage.getItem('vip_uid');
+        if (!storedId) {
+            sessionStorage.setItem('vip_uid', urlId);
+        } else if (storedId !== urlId) {
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 身分異常，請重新從官方渠道進入</h2>";
+            return;
+        }
 
         if (new Date() < aprilFirst) {
             const noticeEl = document.getElementById('april-notice');
