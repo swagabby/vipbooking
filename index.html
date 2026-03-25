@@ -565,7 +565,9 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
             const btn = document.getElementById('btn-submit');
             if (btn.disabled) return; 
 
-            if (activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐' && !document.getElementById('swagger_id').value.trim()) {
+const needSwagger = activeWelfare !== '大神贊助' && activeWelfare !== '女神聚會' && activeWelfare !== '訂製專屬徽章' && activeWelfare !== 'CEO午餐';
+            const isGiftNoPhoto = activeWelfare === '訂製專屬禮物' && !document.getElementById('g_photo').checked;
+            if (needSwagger && !isGiftNoPhoto && !document.getElementById('swagger_id').value.trim()) {
                 btn.innerText = "請輸入主播帳號（請勿填寫@）";
                 setTimeout(() => btn.innerText = "確認提交申請", 2000);
                 return;
