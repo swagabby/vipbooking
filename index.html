@@ -196,12 +196,15 @@
         return all;
     }
 
+    window.onload = function() { init(); };
+
+    async function init() {
         if (window.self === window.top) {
             document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
             return;
         }
 
-const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.location.search);
         const urlId = params.get('user_id');
         if (!urlId) return;
 
@@ -214,20 +217,30 @@ const params = new URLSearchParams(window.location.search);
             return;
         }
 
+        // 檢查來源頁面
+        const allowedReferrer = "https://swag.live/settings/vvip";
+        const storedRef = sessionStorage.getItem('vip_ref');
+        if (!storedRef) {
+            if (!document.referrer.startsWith(allowedReferrer)) {
+                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 請從官方 VIP 頁面進入</h2>";
+                return;
+            }
+            sessionStorage.setItem('vip_ref', '1');
+        }
+
         if (new Date() < aprilFirst) {
             const noticeEl = document.getElementById('april-notice');
             if (noticeEl) noticeEl.style.display = 'block';
         }
 
-        // 1. 立即渲染空白卡片 (Loading 狀態)
-        renderCards(); 
+        renderCards();
         document.getElementById('loader-overlay').style.display = 'none';
 
         try {
             const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
             const data = await res.json();
-            
-user.id = (data.user_id || data.id || "").toString().trim();
+
+            user.id = (data.user_id || data.id || "").toString().trim();
 
             if (user.id !== urlId) {
                 document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>身分驗證失敗，請重新進入</h2>";
@@ -236,16 +249,14 @@ user.id = (data.user_id || data.id || "").toString().trim();
 
             user.username = (data?.username || data?.display_name || user.id).trim();
             user.level = data?.level || 0;
-            
+
             document.getElementById('u-name').innerText = user.username;
             document.getElementById('u-lv').innerText = "LV." + user.level;
-            
-            // 2. 背景撈取歷史資料
+
             const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
             userHistory = JSON.parse(await hRes.text());
-            isDataLoaded = true; // 標記載入完成
-            
-            // 3. 資料回來後，重新渲染卡片
+            isDataLoaded = true;
+
             renderCards();
         } catch(e) { console.error(e); }
     }
