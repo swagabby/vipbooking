@@ -423,7 +423,9 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
     btn.disabled = true;
 
  try {
-        const creatorRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid));
+       const creatorRes = await fetch("https://api.swag.live/u/" + encodeURIComponent(sid), {
+            redirect: 'follow'
+        });
         if (!creatorRes.ok) {
             btn.innerText = "❌ 查無此主播帳號";
             btn.disabled = false;
