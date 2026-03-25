@@ -199,9 +199,22 @@
     window.onload = function() { init(); };
 
     async function init() {
-        if (window.self === window.top) {
+ if (window.self === window.top) {
             document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>請於 SWAG 站內開啟</h2>";
             return;
+        }
+
+        // 檢查來源頁面是否為指定頁面
+        const allowedReferrer = "https://swag.live/settings/vvip";
+        const referrer = document.referrer;
+        const storedRef = sessionStorage.getItem('vip_ref');
+
+        if (!storedRef) {
+            if (!referrer.startsWith(allowedReferrer)) {
+                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 請從官方 VIP 頁面進入</h2>";
+                return;
+            }
+            sessionStorage.setItem('vip_ref', '1');
         }
 
 const params = new URLSearchParams(window.location.search);
