@@ -120,16 +120,16 @@
 
             <!-- 2. 禮物專屬 -->
             <div id="gift-fields" class="hidden">
-                <div class="form-group"><label>禮物名稱</label><input type="text" id="g_name"></div>
+                <div class="form-group"><label>禮物名稱 (限 20 全形字) <span id="g_name_count" style="color:var(--primary);">0/20</span></label><input type="text" id="g_name" oninput="countChars(this,'g_name_count',20)"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_brand" style="width:auto;"> 是否冠名</div>
-                <div class="form-group"><label>禮物圖上文字</label><input type="text" id="g_txt"></div>
+                <div class="form-group"><label>禮物圖上文字 (限 8 全形字) <span id="g_txt_count" style="color:var(--primary);">0/8</span></label><input type="text" id="g_txt" oninput="countChars(this,'g_txt_count',8)"></div>
                 <div class="form-group"><label>禮物鑽石數</label><input type="number" id="g_dia"></div>
 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="g_photo" style="width:auto;" onchange="toggleGiftSwagger()"> 需要主播照片作為素材</div>            </div>
 
             <!-- 3. 廣告專屬 -->
             <div id="ad-fields" class="hidden">
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="ad_brand" style="width:auto;"> 是否冠名</div>
-                <div class="form-group"><label>客製化文案 (限 8 字內)</label><input type="text" id="ad_copy" maxlength="8"></div>
+                <div class="form-group"><label>客製化文案 (限 20 全形字) <span id="ad_copy_count" style="color:var(--primary);">0/20</span></label><input type="text" id="ad_copy" oninput="countChars(this,'ad_copy_count',20)"></div>
             </div>
 
             <!-- 4. 午餐專屬 -->
@@ -156,13 +156,13 @@
 
             <!-- 7. 小鈴噹專屬 -->
             <div id="bell-fields" class="hidden">
-                <div class="form-group"><label>發送文字 (限 20 字)</label><input type="text" id="bell_msg" maxlength="20"></div>
+                <div class="form-group"><label>發送文字 (限 20 全形字) <span id="bell_msg_count" style="color:var(--primary);">0/20</span></label><input type="text" id="bell_msg" oninput="countChars(this,'bell_msg_count',20)"></div>
                 <div style="display:flex; gap:10px; font-size:14px; color:#888; margin-bottom:15px;"><input type="checkbox" id="bell_brand" style="width:auto;"> 是否冠名</div>
             </div>
 
             <!-- 8. 封面專屬 -->
             <div id="cover-fields" class="hidden">
-                <div class="form-group"><label>客製化文案 (限 20 字)</label><input type="text" id="cover_copy" maxlength="20"></div>
+                <div class="form-group"><label>客製化文案 (限 20 全形字) <span id="cover_copy_count" style="color:var(--primary);">0/20</span></label><input type="text" id="cover_copy" oninput="countChars(this,'cover_copy_count',20)"></div>
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="cover_brand" style="width:auto;"> 是否冠名</div>
             </div>
             
@@ -432,15 +432,43 @@ return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.nam
                 document.getElementById('btn-check').classList.remove('hidden');
             } else {
                 document.getElementById('sw-group').classList.remove('hidden');
+                document.getElementById('btn-check').classList.remove('hidden');
                 if (!isOfficialArrangement) { 
                     document.getElementById('date-group').classList.remove('hidden');
-                    document.getElementById('btn-check').classList.remove('hidden');
                 }
                 if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
                 if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
             }
         }
 
+        function countChars(input, countId, max) {
+            // 全形字算2，半形算1，換算成全形字數
+            let count = 0;
+            for (let c of input.value) {
+                count += c.charCodeAt(0) > 127 ? 1 : 0.5;
+            }
+            count = Math.ceil(count);
+            document.getElementById(countId).innerText = count + '/' + max;
+            if (count > max) {
+                document.getElementById(countId).style.color = '#ff5a5f';
+                // 超過就截斷
+                let trimmed = '';
+                let cur = 0;
+                for (let c of input.value) {
+                    let w = c.charCodeAt(0) > 127 ? 1 : 0.5;
+                    if (cur + w > max) break;
+                    trimmed += c;
+                    cur += w;
+                }
+                input.value = trimmed;
+                document.getElementById(countId).innerText = max + '/' + max;
+                document.getElementById(countId).style.color = '#ff5a5f';
+            } else {
+                document.getElementById(countId).style.color = 'var(--primary)';
+            }
+        }
+
+    
        function toggleGiftSwagger() {
             const checked = document.getElementById('g_photo').checked;
             document.getElementById('sw-group').classList.toggle('hidden', !checked);
