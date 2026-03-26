@@ -611,7 +611,8 @@ const needSwagger = activeWelfare !== '大神贊助' && activeWelfare !== '女�
             }
 
     const dateSelect = document.getElementById('reserve_date');
-    if (!dateSelect.disabled && !dateSelect.value) {
+    const noDateNeeded = ['訂製搜尋框文字', '蓋板創作者封面', '專屬直播欄位廣告', '訂製專屬禮物', '訂製專屬徽章', 'CEO午餐'].includes(activeWelfare);
+    if (!noDateNeeded && !dateSelect.disabled && !dateSelect.value) {
         btn.innerText = "⚠️ 請選擇日期";
         setTimeout(() => btn.innerText = "確認提交申請", 2000);
         return;
