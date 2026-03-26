@@ -231,17 +231,18 @@
             if (noticeEl) noticeEl.style.display = 'block';
         }
         
-  renderCards();
-document.getElementById('loader-overlay').style.display = 'none';
-
-        // 只有從 swag.live 進來才打 API
+// 只有從 swag.live 進來才打 API
         const ref = document.referrer;
         const isFromSwag = ref.includes('swag.live') || sessionStorage.getItem('vip_ref');
         if (!isFromSwag) {
+            document.getElementById('loader-overlay').style.display = 'none';
             document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 請從官方 SWAG 頁面進入</h2>";
             return;
         }
         sessionStorage.setItem('vip_ref', '1');
+
+        renderCards();
+        document.getElementById('loader-overlay').style.display = 'none';
 
         try {
             const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
@@ -263,6 +264,7 @@ document.getElementById('loader-overlay').style.display = 'none';
             const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
             userHistory = JSON.parse(await hRes.text());
             isDataLoaded = true;
+            renderCards();
 
         } catch(e) { console.error(e); }
     }
