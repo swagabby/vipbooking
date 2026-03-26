@@ -207,41 +207,30 @@
         const urlId = params.get('user_id');
         if (!urlId) return;
 
+       // referrer 檢查：每次都驗，不單靠 sessionStorage 放行
+        const isFromSwag = document.referrer.includes('swag.live');
         const storedRef = sessionStorage.getItem('vip_ref');
-        if (!storedRef) {
-            if (!document.referrer.includes('swag.live')) {
-                document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 請從官方 SWAG 頁面進入</h2>";
-                return;
-            }
-            sessionStorage.setItem('vip_ref', '1');
+        if (!isFromSwag && !storedRef) {
+            document.getElementById('loader-overlay').style.display = 'none';
+            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 請從官方 SWAG 頁面進入</h2>";
+            return;
         }
-        
-        // 第一次進入時記住 user_id，之後若被竄改就鎖死
+        if (isFromSwag) sessionStorage.setItem('vip_ref', '1');
+
+        // user_id 鎖定
         const storedId = sessionStorage.getItem('vip_uid');
         if (!storedId) {
             sessionStorage.setItem('vip_uid', urlId);
         } else if (storedId !== urlId) {
+            document.getElementById('loader-overlay').style.display = 'none';
             document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 身分異常，請重新從官方渠道進入</h2>";
             return;
         }
-
 
         if (new Date() < aprilFirst) {
             const noticeEl = document.getElementById('april-notice');
             if (noticeEl) noticeEl.style.display = 'block';
         }
-        
-// 只有從 swag.live 進來才打 API
-
-       const ref = document.referrer;
-        const isFromSwag = ref.includes('swag.live') || sessionStorage.getItem('vip_ref');
-        if (!isFromSwag) {
-            document.getElementById('loader-overlay').style.display = 'none';
-            document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>⚠️ 請從官方 SWAG 頁面進入</h2>";
-            return;
-        }
-        sessionStorage.setItem('vip_ref', '1');
-
         renderCards();
         document.getElementById('loader-overlay').style.display = 'none';
 
