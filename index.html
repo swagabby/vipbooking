@@ -230,7 +230,8 @@
             const noticeEl = document.getElementById('april-notice');
             if (noticeEl) noticeEl.style.display = 'block';
         }
-
+        
+  renderCards();
 document.getElementById('loader-overlay').style.display = 'none';
 
         // 只有從 swag.live 進來才打 API
@@ -263,7 +264,6 @@ document.getElementById('loader-overlay').style.display = 'none';
             userHistory = JSON.parse(await hRes.text());
             isDataLoaded = true;
 
-            renderCards();
         } catch(e) { console.error(e); }
     }
 
