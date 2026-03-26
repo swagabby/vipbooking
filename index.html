@@ -232,7 +232,8 @@
         }
         
 // 只有從 swag.live 進來才打 API
-        const ref = document.referrer;
+
+       const ref = document.referrer;
         const isFromSwag = ref.includes('swag.live') || sessionStorage.getItem('vip_ref');
         if (!isFromSwag) {
             document.getElementById('loader-overlay').style.display = 'none';
