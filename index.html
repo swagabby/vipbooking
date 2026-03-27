@@ -112,8 +112,8 @@
 
             <!-- 1. 徽章專屬 -->
             <div id="badge-fields" class="hidden">
-                <div class="form-group"><label>徽章名稱</label><input type="text" id="b_name"></div>
-                <div class="form-group"><label>元素或文字</label><input type="text" id="b_elem"></div>
+<div class="form-group"><label>徽章名稱 (限 8 全形字) <span id="b_name_count" style="color:var(--primary);">0/8</span></label><input type="text" id="b_name" oninput="countChars(this,'b_name_count',8)"></div>
+                <div class="form-group"><label>元素或文字 (限 20 全形字) <span id="b_elem_count" style="color:var(--primary);">0/20</span></label><input type="text" id="b_elem" oninput="countChars(this,'b_elem_count',20)"></div>
                 <div class="form-group"><label>示意圖 (雲端網址)</label><input type="url" id="b_url"></div>
                 <div class="form-group"><label>贈與帳號 (每行一個 ID)</label><textarea id="b_targets" rows="2"></textarea></div>
             </div>
