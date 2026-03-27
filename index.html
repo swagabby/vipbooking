@@ -166,7 +166,7 @@
                 <div style="display:flex; gap:10px; font-size:13px; color:#888; margin-bottom:15px;"><input type="checkbox" id="cover_brand" style="width:auto;"> 是否冠名</div>
             </div>
             
-            <div class="form-group"><label>需求備註</label><textarea id="reserve_content" rows="2"></textarea></div>
+            <div class="form-group"><label>需求備註 <span id="reserve_content_count" style="color:var(--primary);">0/100</span></label><textarea id="reserve_content" rows="2" oninput="countChars(this,'reserve_content_count',100)"></textarea></div>
             <button id="btn-submit" class="submit-btn" onclick="handleFormSubmit()">確認提交申請</button>
         </div>
     </div>
