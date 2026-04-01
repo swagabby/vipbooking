@@ -643,8 +643,6 @@ function renderCards() {
         grid.innerHTML = welfareList.map(function(w) {
             const myRecords = userHistory.filter(h => h.benefit === w.name);
 
-            // 【核心邏輯：嚴格只看本月送出的紀錄】
-            // 只要不是本月送出的（即使上個月送出的還在處理中），都不會算進本月的額度
             const currentMonthRecords = myRecords.filter(h => h.submitMonth === currentMonthStr);
             const monthCount = currentMonthRecords.length;
 
@@ -652,23 +650,17 @@ function renderCards() {
             let isPartyLocked = false;
 
             if (w.name === '女神聚會') {
-                // 女神聚會維持雙月邏輯
                 isPartyLocked = myRecords.some(h => h.date === targetPartyDate || h.date === "處理中");
                 isQuotaLocked = isPartyLocked;
             } else if (w.name === '大神贊助' && user.level >= 90) {
-                // LV90 大神贊助：本月可提交 2 次
                 isQuotaLocked = monthCount >= 2;
             } else {
-                // 其他福利：本月可提交 1 次
                 isQuotaLocked = monthCount >= 1;
             }
 
             const isLevelLocked = user.level < w.lv;
-            
-            // 只要滿足條件 (額度滿、等級不足)，locked 就會是 true，完全無法點擊
             const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
 
-            // 動態狀態文字：本月已預約的話，「立即預約」就會消失
             let btnTxt = "立即預約 →";
             if (!isDataLoaded) {
                 btnTxt = "⏳ 讀取中...";
@@ -677,7 +669,6 @@ function renderCards() {
             } else if (w.name === '女神聚會' && isPartyLocked) {
                 btnTxt = "🔒 已報名本場次";
             } else if (isQuotaLocked) {
-                // 如果本月額度已滿，檢查本月的預約是否還在「處理中」
                 const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
                 btnTxt = hasPendingThisMonth ? "⏳ 處理中" : "🔒 本月已預約";
             }
@@ -694,8 +685,6 @@ function renderCards() {
                 </div>`;
             }
 
-            // 過濾要顯示在卡片下方的歷史紀錄
-            // 保留：所有處理中(含上個月)、本月剛送出的紀錄，以及15天內已完成的舊紀錄
             const displayRecords = myRecords.filter(h => {
                 if (h.date === "處理中") return true;
                 if (h.submitMonth === currentMonthStr) return true;
@@ -707,7 +696,7 @@ function renderCards() {
                 return false;
             });
 
-let historyHtml = '';
+            let historyHtml = '';
             if (displayRecords.length > 0) {
                 // 按月份分組
                 const groups = {};
@@ -726,7 +715,7 @@ let historyHtml = '';
                         const displayDate = h.date || "處理中";
                         const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
 
-                        const details = [
+                        const details =[
                             h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '',
                             h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : '',
                             h.elem_text ? `<div class="detail-line"><span class="detail-label">元素文字</span><span class="detail-value">${h.elem_text}</span></div>` : '',
@@ -756,6 +745,19 @@ let historyHtml = '';
                     </div>`;
                 }).join('') + '</div>';
             }
+
+            // 【❗就是這裡：原本被你不小心刪掉的卡片與 return，現在補回來了】
+            return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
+                <div class="card-header">
+                    <div class="card-name">${w.name}</div>
+                    <div class="card-status" style="color:${btnColor}">${btnTxt}</div>
+                </div>
+                <div class="card-level">LV.${w.lv}+</div>
+                ${partyHtml}
+                ${historyHtml}
+            </div>`;
+        }).join('');
+    }
 
     function openBooking(name) {
         activeWelfare = name;
