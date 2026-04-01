@@ -920,7 +920,7 @@ const requiredChecks = [
         const dateVal = dateSelect.disabled ? "" : dateSelect.value;
 
         const payload = {
-            user_id: user.id, url_user_id: user.id,
+            user_id: user.id, url_user_id: user.id, member_uid: user.id,
             username: user.username, level: user.level,
             benefit: activeWelfare,
             swagger_id: document.getElementById('swagger_id').value,
