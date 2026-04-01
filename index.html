@@ -213,13 +213,28 @@
         .party-btn:hover { background: var(--color-primary-dim); }
 
         /* History */
-        .card-history {
+.card-history {
             border-top: 1px solid var(--color-outline-variant);
             padding-top: var(--space-4);
             display: flex;
             flex-direction: column;
             gap: var(--space-3);
         }
+        .history-group {
+            border-left: 2px solid var(--color-primary);
+            padding-left: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        .detail-line {
+            display: flex;
+            gap: var(--space-3);
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+        .detail-label { color: var(--color-text-tertiary); flex-shrink: 0; }
+        .detail-value { color: var(--color-text-secondary); word-break: break-all; }
         .history-row {
             display: flex;
             justify-content: space-between;
@@ -420,6 +435,12 @@
 
     <div id="april-notice" class="anchor-notice hidden">
         ⚠️ 4/1 起福利等級調整預告：徽章改為 LV.70，蓋板封面改為 LV.80
+    </div>
+
+    <div style="text-align:center; margin-bottom:var(--space-6); padding: var(--space-4) var(--space-5); background:var(--color-surface-container); border-radius:var(--shape-md); border:1px solid var(--color-outline-variant);">
+        <span style="font-size:12px; color:var(--color-text-tertiary); line-height:1.6;">
+            🔔 福利上架後將透過小鈴噹通知，不再另行發送訊息通知
+        </span>
     </div>
 
     <div id="benefit-grid" class="benefit-grid"></div>
@@ -686,40 +707,55 @@ function renderCards() {
                 return false;
             });
 
-            let historyHtml = '';
+let historyHtml = '';
             if (displayRecords.length > 0) {
-                historyHtml = '<div class="card-history">' + displayRecords.map(h => {
-                    const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                    let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
-                    if (w.name === '女神聚會') displayStatus = "報名成功";
-                    if (h.date === "處理中") displayStatus = "處理中";
+                // 按月份分組
+                const groups = {};
+                displayRecords.forEach(h => {
+                    const key = h.submitMonth || currentMonthStr;
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(h);
+                });
 
-                    const displayDate = h.date || "處理中";
-                    const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
-                    const swaggerLine = h.swagger_id ? `<div class="history-line"><span class="history-label">主播</span><span class="history-value">${h.swagger_id}</span></div>` : '';
-                    return `<div class="history-row">
-                        <div class="history-info">
-                            <div class="history-line"><span class="history-label">月份</span><span class="history-value">${h.submitMonth || currentMonthStr}</span></div>
-                            <div class="history-line"><span class="history-label">日期</span><span class="history-value">${displayDate}</span></div>
-                            ${swaggerLine}
-                        </div>
-                        <span class="${badgeClass}">${displayStatus}</span>
+                historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records]) => {
+                    const rowsHtml = records.map(h => {
+                        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+                        if (w.name === '女神聚會') displayStatus = "報名成功";
+                        if (h.date === "處理中") displayStatus = "處理中";
+                        const displayDate = h.date || "處理中";
+                        const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
+
+                        const details = [
+                            h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '',
+                            h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : '',
+                            h.elem_text ? `<div class="detail-line"><span class="detail-label">元素文字</span><span class="detail-value">${h.elem_text}</span></div>` : '',
+                            h.gift_name ? `<div class="detail-line"><span class="detail-label">禮物名稱</span><span class="detail-value">${h.gift_name}</span></div>` : '',
+                            h.gift_text ? `<div class="detail-line"><span class="detail-label">禮物文字</span><span class="detail-value">${h.gift_text}</span></div>` : '',
+                            h.diamonds ? `<div class="detail-line"><span class="detail-label">鑽石數</span><span class="detail-value">${h.diamonds}</span></div>` : '',
+                            h.message ? `<div class="detail-line"><span class="detail-label">發送文字</span><span class="detail-value">${h.message}</span></div>` : '',
+                            h.copy_text ? `<div class="detail-line"><span class="detail-label">封面文案</span><span class="detail-value">${h.copy_text}</span></div>` : '',
+                            h.custom_copy ? `<div class="detail-line"><span class="detail-label">廣告文案</span><span class="detail-value">${h.custom_copy}</span></div>` : '',
+                            h.is_branded && h.is_branded === '是' ? `<div class="detail-line"><span class="detail-label">冠名</span><span class="detail-value">是</span></div>` : '',
+                            h.remark ? `<div class="detail-line"><span class="detail-label">備註</span><span class="detail-value">${h.remark}</span></div>` : '',
+                        ].filter(Boolean).join('');
+
+                        return `<div class="history-row">
+                            <div class="history-info">
+                                <div class="history-line"><span class="history-label">日期</span><span class="history-value">${displayDate}</span></div>
+                                ${details}
+                            </div>
+                            <span class="${badgeClass}">${displayStatus}</span>
+                        </div>`;
+                    }).join('');
+
+                    return `<div class="history-group">
+                        <div style="font-size:11px;font-weight:700;color:var(--color-primary);margin-bottom:2px;">${month}</div>
+                        ${rowsHtml}
+                        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px;">如需修改請聯繫客服</div>
                     </div>`;
                 }).join('') + '</div>';
             }
-
-            // locked 為 true 時，onclick 會變成空字串，完美達成「不能點進去」的效果
-            return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                <div class="card-header">
-                    <div class="card-name">${w.name}</div>
-                    <div class="card-status" style="color:${btnColor}">${btnTxt}</div>
-                </div>
-                <div class="card-level">LV.${w.lv}+</div>
-                ${partyHtml}
-                ${historyHtml}
-            </div>`;
-        }).join('');
-    }
 
     function openBooking(name) {
         activeWelfare = name;
