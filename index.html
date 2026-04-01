@@ -537,18 +537,18 @@
     const aprilFirst = new Date('2026-04-01T00:00:00');
 
     function getWelfareList() {
-        const isAfterApril = new Date() >= aprilFirst;
         const all = [
-            { name: '大神贊助', lv: 50 }, { name: '女神聚會', lv: 50 },
-            { name: '訂製小鈴噹通知', lv: 60 }, { name: '訂製搜尋框文字', lv: 70 },
-            { name: '訂製專屬禮物', lv: 80 }, { name: '專屬直播欄位廣告', lv: 90 },
+            { name: '大神贊助', lv: 50 },
+            { name: '女神聚會', lv: 50 },
+            { name: '訂製小鈴噹通知', lv: 60 },
+            { name: '訂製搜尋框文字', lv: 70 },
+            { name: '訂製專屬徽章', lv:  70 },
+            { name: '蓋板創作者封面', lv: 80 },
+            { name: '訂製專屬禮物', lv: 80 },
+            { name: '專屬直播欄位廣告', lv: 90 },
             { name: 'CEO午餐', lv: 90 }
         ];
-        const badge = { name: '訂製專屬徽章', lv: isAfterApril ? 70 : 80 };
-        const cover = { name: '蓋板創作者封面', lv: isAfterApril ? 80 : 70 };
-        if (isAfterApril) all.splice(3, 0, badge, cover);
-        else all.splice(3, 0, cover, badge);
-        return all;
+        return all.sort((a, b) => a.lv - b.lv);
     }
 
     window.onload = function() { init(); };
@@ -899,7 +899,22 @@
             setTimeout(() => btn.innerText = "確認提交申請", 2000);
             return;
         }
-
+const requiredChecks = [
+            { id: 'bell_msg', welfare: '訂製小鈴噹通知', label: '發送文字' },
+            { id: 'cover_copy', welfare: '蓋板創作者封面', label: '客製化文案' },
+            { id: 'b_name', welfare: '訂製專屬徽章', label: '徽章名稱' },
+            { id: 'b_elem', welfare: '訂製專屬徽章', label: '徽章元素' },
+            { id: 'g_name', welfare: '訂製專屬禮物', label: '禮物名稱' },
+            { id: 'g_txt', welfare: '訂製專屬禮物', label: '禮物圖上文字' },
+            { id: 'ad_copy', welfare: '專屬直播欄位廣告', label: '客製化文案' },
+        ];
+        for (const check of requiredChecks) {
+            if (activeWelfare === check.welfare && !document.getElementById(check.id).value.trim()) {
+                btn.innerText = `⚠️ 請填寫「${check.label}」`;
+                setTimeout(() => btn.innerText = "確認提交申請", 2000);
+                return;
+            }
+        }
         btn.disabled = true;
         btn.innerText = "預約中，請稍後...";
         const dateVal = dateSelect.disabled ? "" : dateSelect.value;
