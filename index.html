@@ -607,7 +607,7 @@
         } catch(e) { console.error(e); }
     }
 
-    function renderCards() {
+function renderCards() {
         const grid = document.getElementById('benefit-grid');
         const welfareList = getWelfareList();
         const now = new Date();
@@ -620,37 +620,34 @@
         const targetPartyDate = py + "-" + String(pm).padStart(2,'0');
 
         grid.innerHTML = welfareList.map(function(w) {
-            const myRecords = userHistory.filter(h => {
-                if (h.benefit !== w.name) return false;
-                if (h.date && h.date !== "處理中") {
-                    const rd = new Date(h.date);
-                    if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 > 14) return false;
-                }
-                return true;
-            });
+            const myRecords = userHistory.filter(h => h.benefit === w.name);
+
+            // 【核心邏輯】：只看「提交月份 (submitMonth)」是不是這個月！
+            // 只要是上個月送出的，哪怕還在「處理中」或是日期排在未來，這裡算出來都是 0，這個月就可以再次預約。
             const monthCount = myRecords.filter(h => h.submitMonth === currentMonthStr).length;
 
-            const hasActiveRecord = myRecords.some(h => {
-                if (w.name === '女神聚會') return h.date === targetPartyDate || h.date === "處理中";
-                if (h.submitMonth === currentMonthStr) return true;
-                if (h.date === "處理中") return true;
-                const rd = new Date(h.date);
-                return !isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 7;
-            });
-
             let isQuotaLocked = false;
-            if (w.name === '大神贊助' && user.level >= 90) isQuotaLocked = monthCount >= 2;
-            else if (w.name === '女神聚會') isQuotaLocked = hasActiveRecord;
-            else isQuotaLocked = monthCount >= 1;
+            let isPartyLocked = false;
+
+            if (w.name === '女神聚會') {
+                // 女神聚會維持雙月邏輯
+                isPartyLocked = myRecords.some(h => h.date === targetPartyDate || h.date === "處理中");
+                isQuotaLocked = isPartyLocked;
+            } else if (w.name === '大神贊助' && user.level >= 90) {
+                // LV90 大神贊助：當月(從 1 號開始算) 可提交 2 次
+                isQuotaLocked = monthCount >= 2;
+            } else {
+                // 其他福利：當月(從 1 號開始算) 可提交 1 次
+                isQuotaLocked = monthCount >= 1;
+            }
 
             const isLevelLocked = user.level < w.lv;
-            const locked = !isDataLoaded || isLevelLocked || isQuotaLocked || hasActiveRecord;
+            const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
 
             let btnTxt = !isDataLoaded ? "⏳ 讀取中..." :
                 (isLevelLocked ? "🔒 等級不足" :
-                (w.name === '女神聚會' && locked ? "🔒 已報名本場次" :
-                (hasActiveRecord ? "⏳ 處理中/已預約" :
-                (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →"))));
+                (w.name === '女神聚會' && isPartyLocked ? "🔒 已報名本場次" :
+                (isQuotaLocked ? "🔒 本月額度已滿" : "立即預約 →")));
 
             const btnColor = locked ? "var(--color-text-tertiary)" : "var(--color-primary)";
             const cardClass = "card" + (locked ? " locked" : "");
@@ -664,18 +661,33 @@
                 </div>`;
             }
 
+            // 過濾要顯示在卡片下方的歷史紀錄
+            // 保留：所有處理中(含上個月)、本月剛送出的紀錄，以及15天內已完成的舊紀錄
+            const displayRecords = myRecords.filter(h => {
+                if (h.date === "處理中") return true;
+                if (h.submitMonth === currentMonthStr) return true;
+                if (w.name === '女神聚會' && h.date === targetPartyDate) return true;
+                if (h.date && h.date !== "處理中") {
+                    const rd = new Date(h.date);
+                    if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 15) return true;
+                }
+                return false;
+            });
+
             let historyHtml = '';
-            if (myRecords.length > 0) {
-                historyHtml = '<div class="card-history">' + myRecords.map(h => {
+            if (displayRecords.length > 0) {
+                historyHtml = '<div class="card-history">' + displayRecords.map(h => {
                     const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
                     let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                     if (w.name === '女神聚會') displayStatus = "報名成功";
+                    if (h.date === "處理中") displayStatus = "處理中";
+
                     const displayDate = h.date || "處理中";
                     const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
                     const swaggerLine = h.swagger_id ? `<div class="history-line"><span class="history-label">主播</span><span class="history-value">${h.swagger_id}</span></div>` : '';
                     return `<div class="history-row">
                         <div class="history-info">
-                            <div class="history-line"><span class="history-label">月份</span><span class="history-value">${h.submitMonth}</span></div>
+                            <div class="history-line"><span class="history-label">月份</span><span class="history-value">${h.submitMonth || currentMonthStr}</span></div>
                             <div class="history-line"><span class="history-label">日期</span><span class="history-value">${displayDate}</span></div>
                             ${swaggerLine}
                         </div>
