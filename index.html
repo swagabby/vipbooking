@@ -602,6 +602,12 @@
             <textarea id="reserve_content" oninput="countChars(this,'reserve_content_count',100)"></textarea>
         </div>
 
+        <div id="party-fields" class="hidden">
+    <label class="checkbox-row">
+        <input type="checkbox" id="p_confirm" style="width:auto;"> 已與主播確認出席
+    </label>
+</div>
+
         <button id="btn-submit" class="btn-submit" onclick="handleFormSubmit()">確認提交申請</button>
     </div>
 </div>
@@ -756,24 +762,23 @@
             });
 
             let historyHtml = '';
-            if (displayRecords.length > 0) {
-                // 按月份分組
-                const groups = {};
-                displayRecords.forEach(h => {
-                    const key = h.submitMonth || currentMonthStr;
-                    if (!groups[key]) groups[key] = [];
-                    groups[key].push(h);
-                });
+if (myRecords.length > 0) {
+    historyHtml = '<div class="card-history-wrapper">' + myRecords.map(h => {
+        // --- 優化：預約月份格式 ---
+        const monthMatch = h.submitMonth.match(/(\d+)-(\d+)/);
+        const displayMonth = monthMatch ? `${parseInt(monthMatch[2])}月預約` : h.submitMonth;
+        
+        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+        
+        // 女神聚會專屬狀態判定
+        if (w.name === '女神聚會') {
+            displayStatus = (h.host_confirm === "已確認") ? "主播同意出席" : "與主播確認出席狀況中";
+        }
 
-                historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records]) => {
-                    const rowsHtml = records.map(h => {
-                        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
-                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
-                        if (w.name === '女神聚會') displayStatus = "報名成功";
-                        if (h.date === "處理中") displayStatus = "處理中";
-                        const displayDate = h.date || "處理中";
-                        const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
-
+        let displayDate = h.date || "處理中";
+        const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功" || displayStatus === "主播同意出席") ? 'st-badge st-green' : 'st-badge st-red';
+        
                         const details =[
                             h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '',
                             h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : '',
@@ -788,16 +793,16 @@
                             h.remark ? `<div class="detail-line"><span class="detail-label">備註</span><span class="detail-value">${h.remark}</span></div>` : '',
                         ].filter(Boolean).join('');
 
-                        return `<div class="history-row">
-                            <div class="history-info">
-                                <div class="history-line"><span class="history-label">日期</span><span class="history-value">${displayDate}</span></div>
-                                ${details}
-                            </div>
-                            <span class="${badgeClass}">${displayStatus}</span>
-                        </div>`;
+        return `<div class="history-item-row">
+            <div style="color:var(--color-primary); font-weight:bold; margin-bottom: 5px;">${displayMonth}</div>
+            <div class="history-data-line">
+                <span style="color:var(--text-main)">日期: ${displayDate}</span>
+                <span class="${badgeClass}">${displayStatus}</span>
+            </div>
+            ${h.swagger_id ? `<div class="history-data-line" style="color:var(--text-main)">主播: ${h.swagger_id}</div>` : ''}
+        </div>`;
                     }).join('');
-
-                    // 移除了卡片內部的「如需修改請聯繫客服」
+    
                     return `<div class="history-group">
                         <div style="font-size:12px;font-weight:600;color:var(--color-primary);margin-bottom:var(--space-2);">${month}</div>
                         ${rowsHtml}
@@ -837,6 +842,7 @@
         }
         noticeEl.innerHTML = messages.join('<br><br>');
         noticeEl.classList.toggle('hidden', messages.length === 0);
+        
 
         const ids =['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields'];
         ids.forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -852,12 +858,15 @@
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('ad-fields').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
+
         } else {
             document.getElementById('sw-group').classList.remove('hidden');
             document.getElementById('btn-check').classList.remove('hidden');
             if (!isOfficialArrangement) document.getElementById('date-group').classList.remove('hidden');
             if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
             if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
+            if (name === '女神聚會') 
+    document.getElementById('party-fields').classList.remove('hidden');
         }
     }
 
