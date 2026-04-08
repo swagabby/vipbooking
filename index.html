@@ -860,8 +860,9 @@
         let messages =[];
         if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
         if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
-        if (name === '女神聚會') {
-            messages.push(`<span style="color:#fff;font-size:13px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br><span style="color:#ff5a5f;font-size:12px;">請先與主播確認是否出席後再填寫主播帳號<br>若您本人不克出席請勿預約</span>`);
+                if (name === '女神聚會') {
+            messages.push(`<span style="color:#fff;font-size:13px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br><span style="color:#ff5a5f;font-size:12px;">請先與主播確認是否出席後再填寫主播帳號<br>為維護活動品質與 VIP 權益，活動採實名預約，需由帳號本人出席
+<br>若經查證為借帳號參與，將取消雙方之所有福利權利</span>`);
                 document.getElementById('party-fields').classList.remove('hidden'); // 顯示此欄位
 
         }
