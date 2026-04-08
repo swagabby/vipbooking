@@ -808,7 +808,7 @@ if (myRecords.length > 0) {
                         ${rowsHtml}
                     </div>`;
                 }).join('') + '</div>';
-            }
+
 
             // 【✅ 修正語法錯誤】：補回遺失的卡片 return 與大括號
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
