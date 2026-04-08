@@ -716,8 +716,6 @@
             if (w.name === '女神聚會') {
                 isPartyLocked = myRecords.some(h => h.date === targetPartyDate || h.date === "處理中");
                 isQuotaLocked = isPartyLocked;
-                    const confirmText = h.host_confirm || "⏳ 與主播確認出席狀況中";
-    const confirmColor = h.host_confirm === "✅ 主播同意出席" ? "var(--color-success)" : "var(--color-text-tertiary)";
             } else if (w.name === '大神贊助' && user.level >= 90) {
                 isQuotaLocked = monthCount >= 2;
             } else {
@@ -785,7 +783,14 @@
                         // 🌟 新增：女神聚會專屬出席確認狀態
                         let hostConfirmHtml = '';
                         if (w.name === '女神聚會') {
-                            const isConfirmed = (h.host_confirmed === true || h.host_confirmed === 'TRUE' || h.host_confirmed === '是');
+                            const isConfirmed = (
+                                h.host_confirmed === true ||
+                                h.host_confirmed === 'TRUE' ||
+                                h.host_confirmed === '是' ||
+                                h.host_confirm === true ||
+                                h.host_confirm === 'TRUE' ||
+                                h.host_confirm === '是'
+                            );
                             const confirmText = isConfirmed ? '✅ 主播同意出席' : '⏳ 與主播確認出席狀況中';
                             const confirmColor = isConfirmed ? 'var(--color-success)' : 'var(--color-text-secondary)';
                             hostConfirmHtml = `<div class="detail-line"><span class="detail-label">出席狀態</span><span class="detail-value" style="color:${confirmColor}; font-weight:bold;">${confirmText}</span></div>`;
@@ -827,8 +832,8 @@
                         ${rowsHtml}
                     </div>`;
                 }).join('') + '</div>';
+            }
 
-            // 【✅ 修正語法錯誤】：補回遺失的卡片 return 與大括號
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
                 <div class="card-header">
                     <div class="card-name">${w.name}</div>
@@ -864,7 +869,8 @@
         noticeEl.innerHTML = messages.join('<br><br>');
         noticeEl.classList.toggle('hidden', messages.length === 0);
 
-        const ids =['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields'];
+        document.getElementById('host_confirm').checked = false;
+        const ids =['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields','party-fields'];
         ids.forEach(id => document.getElementById(id).classList.add('hidden'));
 
         if (name === '訂製專屬徽章') {
