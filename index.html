@@ -822,7 +822,7 @@
                 if (w.name === '女神聚會' && h.date === targetPartyDate) return true;
                 if (h.date && h.date !== "處理中") {
                     const rd = new Date(h.date);
-                    if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 15) return true;
+                    if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 7) return true;
                 }
                 return false;
             });
@@ -864,9 +864,12 @@
                         }
 
    const hostDetail = h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '';
+                        const badgeNameDetail = (w.name === '訂製專屬徽章' && h.badge_name)
+                            ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>`
+                            : '';
                         const extraItems =[
                         hostConfirmHtml, // 插入出席狀態
-                            h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : '',
+                            w.name === '訂製專屬徽章' ? '' : (h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : ''),
                             h.elem_text ? `<div class="detail-line"><span class="detail-label">元素文字</span><span class="detail-value">${h.elem_text}</span></div>` : '',
                             h.gift_name ? `<div class="detail-line"><span class="detail-label">禮物名稱</span><span class="detail-value">${h.gift_name}</span></div>` : '',
                             h.gift_text ? `<div class="detail-line"><span class="detail-label">禮物文字</span><span class="detail-value">${h.gift_text}</span></div>` : '',
@@ -880,7 +883,7 @@
 
                         const detailId = `detail-extra-${w.name}-${groupIndex}-${recordIndex}-${detailIdCounter++}`.replace(/\s+/g, '-');
                         const extraDetails = extraItems.join('');
-                        const detailExpandHtml = extraDetails
+                        const detailExpandHtml = (w.name !== '女神聚會' && extraDetails)
                             ? `<div class="detail-expand">
                                 <button class="detail-arrow-btn detail-expand-btn" onclick="toggleDetailExpand(event, '${detailId}')" aria-label="展開更多資訊">⌄</button>
                                 <div class="detail-extra hidden" id="${detailId}">
@@ -893,8 +896,10 @@
                         
                         return `<div class="history-row">
                             <div class="history-info">
-                                <div class="history-line"><span class="history-label">日期</span><span class="history-value">${displayDate}</span></div>
+                                <div class="history-line"><span class="history-label">上架日期</span><span class="history-value">${displayDate}</span></div>
                                 ${hostDetail}
+                                ${hostConfirmHtml}
+                                ${badgeNameDetail}
                                 ${detailExpandHtml}
                             </div>
                             <span class="${badgeClass}">${displayStatus}</span>
