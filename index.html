@@ -1067,8 +1067,16 @@
                 let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
                 let y = today.getFullYear(); if(m>12){m=2;y+=1;}
                 const ds = y+"-"+String(m).padStart(2,'0');
-                const occupied = bookings.some(b => b.swagger_id===sid && b.date===ds);
-                select.add(new Option(y+"年 "+m+"月場次"+(occupied?" (此ID已被預約)":""), ds));
+ const sidNorm = sid.toLowerCase();
+                const sameSlotBookings = bookings.filter(b =>
+                    String(b.swagger_id || '').trim().toLowerCase() === sidNorm && String(b.date || '').trim() === ds
+                );
+                const hasOwnBooking = sameSlotBookings.some(b =>
+                    String((b.user_id || b.member_uid || b.url_user_id || '')).trim() === String(user.id).trim()
+                );
+                const occupied = sameSlotBookings.length > 0;
+                const occupiedText = hasOwnBooking ? ' (此ID已被預約)' : (occupied ? '（請與主播確認）' : '');
+                select.add(new Option(y+"年 "+m+"月場次"+occupiedText, ds));
                 select.options[select.options.length-1].disabled = occupied;
             } else {
                 const isCover = activeWelfare==='蓋板創作者封面';
