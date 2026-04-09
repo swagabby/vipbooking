@@ -196,6 +196,15 @@
             font-weight: 600;
             color: var(--color-text-primary);
             line-height: 1.3;
+              display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .card-name-icon {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            object-fit: contain;
         }
         .card-status {
             font-size: 14px;
@@ -619,7 +628,18 @@
     let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
     let isDataLoaded = false;
     const aprilFirst = new Date('2026-04-01T00:00:00');
-
+ const welfareIconMap = {
+        '大神贊助': 'https://public.swag.live/badges/user_level_benefit_pin_livestream_v2.svg',
+        '女神聚會': 'https://public.swag.live/badges/user_level_benefit_offline_meetup_v2.svg',
+        '訂製小鈴噹通知': 'https://public.swag.live/badges/user_level_benefit_custom_notification.svg',
+        '訂製搜尋框文字': 'https://public.swag.live/badges/user_level_benefit_customer_search_v2.svg',
+        '訂製專屬徽章': 'https://public.swag.live/badges/user_level_benefit_customer_badge_v2.svg',
+        '蓋板創作者封面': 'https://public.swag.live/badges/user_level_benefit_customer_center_girl_v2.svg',
+        '訂製專屬禮物': 'https://public.swag.live/badges/user_level_benefit_customer_gift_v2.svg',
+        '專屬直播欄位廣告': 'https://public.swag.live/badges/user_level_benefit_customer_ad_v2.svg',
+        'CEO午餐': 'https://public.swag.live/badges/user_level_benefit_ceo_lunch_v2.svg'
+    };
+    
     function getWelfareList() {
         const all =[
             { name: '大神贊助', lv: 50 },
@@ -705,6 +725,7 @@
 
         grid.innerHTML = welfareList.map(function(w) {
             const myRecords = userHistory.filter(h => h.benefit === w.name);
+            const iconUrl = welfareIconMap[w.name];
 
             // 【核心邏輯：嚴格只看本月送出的紀錄】
             const currentMonthRecords = myRecords.filter(h => h.submitMonth === currentMonthStr);
@@ -836,7 +857,10 @@
 
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
                 <div class="card-header">
-                    <div class="card-name">${w.name}</div>
+<div class="card-name">
+                        ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
+                        <span>${w.name}</span>
+                    </div>
                     <div class="card-status" style="color:${btnColor}">${btnTxt}</div>
                 </div>
                 <div class="card-level">LV.${w.lv}+</div>
