@@ -647,6 +647,7 @@
     const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
 
     let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
+    let authToken = '';
     let isDataLoaded = false;
     const aprilFirst = new Date('2026-04-01T00:00:00');
  const welfareIconMap = {
@@ -684,8 +685,12 @@
             return;
         }
         const params = new URLSearchParams(window.location.search);
-        const urlId = params.get('user_id');
-        if (!urlId) return;
+        authToken = (params.get('token') || params.get('t') || '').trim();
+        if (!authToken) {
+            document.getElementById('loader-overlay').style.display = 'none';
+            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>⚠️ 缺少 Token，請從官方頁面重新進入</h2>";
+            return;
+        }
 
         const isFromSwag = document.referrer.includes('swag.live');
         const storedRef = sessionStorage.getItem('vip_ref');
@@ -696,10 +701,10 @@
         }
         if (isFromSwag) sessionStorage.setItem('vip_ref', '1');
 
-        const storedId = sessionStorage.getItem('vip_uid');
-        if (!storedId) {
-            sessionStorage.setItem('vip_uid', urlId);
-        } else if (storedId !== urlId) {
+        const storedToken = sessionStorage.getItem('vip_token');
+        if (!storedToken) {
+            sessionStorage.setItem('vip_token', authToken);
+        } else if (storedToken !== authToken) {
             document.getElementById('loader-overlay').style.display = 'none';
             document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>⚠️ 身分異常，請重新從官方渠道進入</h2>";
             return;
@@ -713,14 +718,14 @@
         document.getElementById('loader-overlay').style.display = 'none';
 
         try {
-            const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
+            const res = await fetch(GAS_API + "?action=resolveToken&token=" + encodeURIComponent(authToken) + "&v=" + Date.now());
             const data = await res.json();
             user.id = (data.user_id || data.id || "").toString().trim();
-            if (user.id !== urlId) {
+            if (!user.id) {
                 document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>身分驗證失敗，請重新進入</h2>";
                 return;
             }
-            user.username = (data?.username || data?.display_name || user.id).trim();
+            user.username = (data?.username || data?.display_name || "VIP Member").trim();
             user.level = data?.level || 0;
             document.getElementById('u-name').innerText = user.username;
             document.getElementById('u-lv').innerText = "LV." + user.level;
@@ -1178,6 +1183,7 @@
         const dateVal = dateSelect.disabled ? "" : dateSelect.value;
 
         const payload = {
+            token: authToken,
             user_id: user.id, url_user_id: user.id, member_uid: user.id,
             username: user.username, level: user.level,
             benefit: activeWelfare,
