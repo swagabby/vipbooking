@@ -711,6 +711,24 @@
         } catch(e) { console.error(e); }
     }
 
+     function normalizeMonthString(raw) {
+        if (!raw) return '';
+        const text = String(raw).trim();
+        const m = text.match(/^(\d{4})[-\/](\d{1,2})$/);
+        if (!m) return '';
+        return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0');
+    }
+
+    function getRecordMonth(record) {
+        const submitMonth = normalizeMonthString(record && record.submitMonth);
+        if (submitMonth) return submitMonth;
+
+        const dateText = String((record && record.date) || '').trim();
+        const dateMatch = dateText.match(/^(\d{4})[-\/](\d{1,2})(?:[-\/]\d{1,2})?/);
+        if (!dateMatch) return '';
+        return dateMatch[1] + '-' + String(parseInt(dateMatch[2], 10)).padStart(2, '0');
+    }
+
     function renderCards() {
         const grid = document.getElementById('benefit-grid');
         const welfareList = getWelfareList();
@@ -728,7 +746,7 @@
             const iconUrl = welfareIconMap[w.name];
 
             // 【核心邏輯：嚴格只看本月送出的紀錄】
-            const currentMonthRecords = myRecords.filter(h => h.submitMonth === currentMonthStr);
+ const currentMonthRecords = myRecords.filter(h => getRecordMonth(h) === currentMonthStr);
             const monthCount = currentMonthRecords.length;
 
             let isQuotaLocked = false;
@@ -773,7 +791,7 @@
             // 過濾要顯示在卡片下方的歷史紀錄
             const displayRecords = myRecords.filter(h => {
                 if (h.date === "處理中") return true;
-                if (h.submitMonth === currentMonthStr) return true;
+                if (getRecordMonth(h) === currentMonthStr) return true;
                 if (w.name === '女神聚會' && h.date === targetPartyDate) return true;
                 if (h.date && h.date !== "處理中") {
                     const rd = new Date(h.date);
@@ -787,14 +805,14 @@
                 // 按月份分組
                 const groups = {};
                 displayRecords.forEach(h => {
-                    const key = h.submitMonth || currentMonthStr;
+                    const key = getRecordMonth(h) || currentMonthStr;
                     if (!groups[key]) groups[key] = [];
                     groups[key].push(h);
                 });
 
             historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records]) => {
                     const rowsHtml = records.map(h => {
-                        const isDatePattern = /^\d{4}-\d{2}/.test(h.date);
+               const isDatePattern = /^\d{4}[-\/]\d{1,2}/.test(h.date);
                         let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                         if (w.name === '女神聚會') displayStatus = "報名成功";
                         if (h.date === "處理中") displayStatus = "處理中";
