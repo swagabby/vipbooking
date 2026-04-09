@@ -270,20 +270,20 @@
             font-size: 12px;
             flex-wrap: wrap;
         }
-       .detail-label { color: var(--color-text-secondary); font-weight: 600; flex-shrink: 0; }
+        .detail-label { color: var(--color-text-secondary); font-weight: 600; flex-shrink: 0; }
         .detail-value { color: var(--color-text-primary); word-break: break-all; }
-.detail-expand {
-    margin-top: var(--space-2);
+        .detail-expand {
+            margin-top: var(--space-2);
             border-top: 1px dashed var(--color-outline-variant);
             padding-top: var(--space-2);
-     
+     }
         .detail-extra {
             margin-top: var(--space-2);
             display: flex;
             flex-direction: column;
             gap: var(--space-2);
         }
-.detail-arrow-btn {
+        .detail-arrow-btn {
             border: none;
             background: transparent;
             color: var(--color-primary);
@@ -838,8 +838,8 @@
                     groups[key].push(h);
                 });
 
-            historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records]) => {
-                    const rowsHtml = records.map(h => {
+            historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records], groupIndex) => {
+                    const rowsHtml = records.map((h, recordIndex) => {
                const isDatePattern = /^\d{4}[-\/]\d{1,2}/.test(h.date);
                         let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                         if (w.name === '女神聚會') displayStatus = "報名成功";
@@ -878,7 +878,7 @@
                             h.remark ? `<div class="detail-line"><span class="detail-label">備註</span><span class="detail-value">${h.remark}</span></div>` : '',
             ].filter(Boolean);
 
-                        const detailId = `detail-extra-${detailIdCounter++}`;
+                        const detailId = `detail-extra-${w.name}-${groupIndex}-${recordIndex}-${detailIdCounter++}`.replace(/\s+/g, '-');
                         const extraDetails = extraItems.join('');
                         const detailExpandHtml = extraDetails
                             ? `<div class="detail-expand">
@@ -954,26 +954,24 @@
         document.getElementById('swagger_id').value = "";
         document.getElementById('reserve_content').value = "";
         resetCheckStatus();
-
+        document.getElementById('host_confirm').checked = false;
+        const ids = ['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields','party-fields'];
+        ids.forEach(id => document.getElementById(id).classList.add('hidden'));
+        
         const isOfficialArrangement = ['蓋板創作者封面','訂製搜尋框文字','專屬直播欄位廣告'].includes(name);
-        const needsMaterialNotice =['蓋板創作者封面','訂製專屬禮物','專屬直播欄位廣告'].includes(name);
+        const needsMaterialNotice = ['蓋板創作者封面','訂製專屬禮物','專屬直播欄位廣告'].includes(name);
         const noticeEl = document.getElementById('anchor-notice');
-        let messages =[];
+        let messages = [];
         if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
         if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
-                if (name === '女神聚會') {
+        if (name === '女神聚會') {
             messages.push(`<span style="color:#fff;font-size:13px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br><span style="color:#ff5a5f;font-size:12px;">請先與主播確認是否出席後再填寫主播帳號<br>為維護活動品質與 VIP 權益，活動採實名預約，需由帳號本人出席
 <br>若經查證為借帳號參與，將取消雙方之所有福利權利</span>`);
-                document.getElementById('party-fields').classList.remove('hidden'); // 顯示此欄位
-
+            document.getElementById('party-fields').classList.remove('hidden');
         }
-        
+
         noticeEl.innerHTML = messages.join('<br><br>');
         noticeEl.classList.toggle('hidden', messages.length === 0);
-
-        document.getElementById('host_confirm').checked = false;
-        const ids =['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields','party-fields'];
-        ids.forEach(id => document.getElementById(id).classList.add('hidden'));
 
         if (name === '訂製專屬徽章') {
             document.getElementById('badge-fields').classList.remove('hidden');
@@ -1189,7 +1187,8 @@
             swagger_id: document.getElementById('swagger_id').value,
             date: dateVal,
             content: document.getElementById('reserve_content').value,
-            host_confirm: document.getElementById('host_confirm').checked, // 抓取核取方塊狀態
+            host_confirm: activeWelfare === '女神聚會' ? document.getElementById('host_confirm').checked : "",
+            host_confirmed: activeWelfare === '女神聚會' ? document.getElementById('host_confirm').checked : "",
             badge_name: document.getElementById('b_name').value,
             badge_elements: document.getElementById('b_elem').value,
             img_url: document.getElementById('b_url').value,
