@@ -632,12 +632,6 @@
             <label class="checkbox-row"><input type="checkbox" id="cover_brand"> 是否冠名</label>
         </div>
 
-        <div id="party-fields" class="hidden">
-    <label class="checkbox-row">
-        <input type="checkbox" id="host_confirm" style="width:auto;"> 
-        <span id="host_confirm_label">已確認主播同意出席</span>
-    </label>
-</div>
 
         <div class="form-group">
             <label class="form-label">需求備註 <span class="char-count" id="reserve_content_count">0/100</span></label>
@@ -959,8 +953,7 @@
         document.getElementById('swagger_id').value = "";
         document.getElementById('reserve_content').value = "";
         resetCheckStatus();
-        document.getElementById('host_confirm').checked = false;
-        const ids = ['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields','party-fields'];
+        const ids = ['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields'];
         ids.forEach(id => document.getElementById(id).classList.add('hidden'));
         
         const isOfficialArrangement = ['蓋板創作者封面','訂製搜尋框文字','專屬直播欄位廣告'].includes(name);
@@ -972,7 +965,6 @@
         if (name === '女神聚會') {
             messages.push(`<span style="color:#fff;font-size:13px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br><span style="color:#ff5a5f;font-size:12px;">請先與主播確認是否出席後再填寫主播帳號<br>為維護活動品質與 VIP 權益，活動採實名預約，需由帳號本人出席
 <br>若經查證為借帳號參與，將取消雙方之所有福利權利</span>`);
-            document.getElementById('party-fields').classList.remove('hidden');
         }
 
         noticeEl.innerHTML = messages.join('<br><br>');
@@ -1107,7 +1099,7 @@
                 const occupied = sameSlotBookings.length > 0;
                 const occupiedText = hasOwnBooking ? ' (此ID已被預約)' : (occupied ? '（請與主播確認）' : '');
                 select.add(new Option(y+"年 "+m+"月場次"+occupiedText, ds));
-                select.options[select.options.length-1].disabled = occupied;
+                select.options[select.options.length-1].disabled = hasOwnBooking;
             } else {
                 const isCover = activeWelfare==='蓋板創作者封面';
                 const isSearch = activeWelfare==='訂製搜尋框文字';
@@ -1192,8 +1184,8 @@
             swagger_id: document.getElementById('swagger_id').value,
             date: dateVal,
             content: document.getElementById('reserve_content').value,
-            host_confirm: activeWelfare === '女神聚會' ? document.getElementById('host_confirm').checked : "",
-            host_confirmed: activeWelfare === '女神聚會' ? document.getElementById('host_confirm').checked : "",
+            host_confirm: "",
+            host_confirmed: "",
             badge_name: document.getElementById('b_name').value,
             badge_elements: document.getElementById('b_elem').value,
             img_url: document.getElementById('b_url').value,
