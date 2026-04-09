@@ -272,26 +272,31 @@
         }
        .detail-label { color: var(--color-text-secondary); font-weight: 600; flex-shrink: 0; }
         .detail-value { color: var(--color-text-primary); word-break: break-all; }
-.detail-more {
-            margin-top: var(--space-2);
+.detail-expand {
+    margin-top: var(--space-2);
             border-top: 1px dashed var(--color-outline-variant);
             padding-top: var(--space-2);
-        }
-        .detail-toggle {
-            color: var(--color-primary);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            list-style: none;
-            user-select: none;
-        }
-        .detail-toggle::-webkit-details-marker { display: none; }
-        .detail-more[open] .detail-toggle { color: var(--color-text-secondary); }
+     
         .detail-extra {
             margin-top: var(--space-2);
             display: flex;
             flex-direction: column;
             gap: var(--space-2);
+        }
+.detail-arrow-btn {
+            border: none;
+            background: transparent;
+            color: var(--color-primary);
+            font-size: 20px;
+            line-height: 1;
+            font-weight: 700;
+            cursor: pointer;
+            padding: var(--space-1) var(--space-2);
+            align-self: center;
+        }
+        .detail-collapse-btn {
+            margin-top: var(--space-2);
+            color: var(--color-text-secondary);
         }
 
         
@@ -823,6 +828,7 @@
             });
 
             let historyHtml = '';
+            let detailIdCounter = 0;
             if (displayRecords.length > 0) {
                 // 按月份分組
                 const groups = {};
@@ -857,9 +863,9 @@
                             hostConfirmHtml = `<div class="detail-line"><span class="detail-label">出席狀態</span><span class="detail-value" style="color:${confirmColor}; font-weight:bold;">${confirmText}</span></div>`;
                         }
 
-                        const detailItems =[
-                            hostConfirmHtml, // 插入出席狀態
-                            h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '',
+   const hostDetail = h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '';
+                        const extraItems =[
+                        hostConfirmHtml, // 插入出席狀態
                             h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : '',
                             h.elem_text ? `<div class="detail-line"><span class="detail-label">元素文字</span><span class="detail-value">${h.elem_text}</span></div>` : '',
                             h.gift_name ? `<div class="detail-line"><span class="detail-label">禮物名稱</span><span class="detail-value">${h.gift_name}</span></div>` : '',
@@ -872,20 +878,23 @@
                             h.remark ? `<div class="detail-line"><span class="detail-label">備註</span><span class="detail-value">${h.remark}</span></div>` : '',
             ].filter(Boolean);
 
-                        const primaryDetails = detailItems.slice(0, 2).join('');
-                        const extraDetails = detailItems.slice(2).join('');
+                        const detailId = `detail-extra-${detailIdCounter++}`;
+                        const extraDetails = extraItems.join('');
                         const detailExpandHtml = extraDetails
-                            ? `<details class="detail-more">
-                                <summary class="detail-toggle">展開更多資訊</summary>
-                                <div class="detail-extra">${extraDetails}</div>
-                               </details>`
+                            ? `<div class="detail-expand">
+                                <button class="detail-arrow-btn detail-expand-btn" onclick="toggleDetailExpand(event, '${detailId}')" aria-label="展開更多資訊">⌄</button>
+                                <div class="detail-extra hidden" id="${detailId}">
+                                    ${extraDetails}
+                                    <button class="detail-arrow-btn detail-collapse-btn" onclick="toggleDetailCollapse(event, '${detailId}')" aria-label="收合資訊">⌃</button>
+                                </div>
+                               </div>`
                             : '';
 
                         
                         return `<div class="history-row">
                             <div class="history-info">
                                 <div class="history-line"><span class="history-label">日期</span><span class="history-value">${displayDate}</span></div>
-                                ${primaryDetails}
+                                ${hostDetail}
                                 ${detailExpandHtml}
                             </div>
                             <span class="${badgeClass}">${displayStatus}</span>
@@ -918,6 +927,24 @@
                 ${historyHtml}
             </div>`;
         }).join('');
+    }
+
+    function toggleDetailExpand(event, detailId) {
+        event.stopPropagation();
+        const container = document.getElementById(detailId);
+        if (!container) return;
+        container.classList.remove('hidden');
+        const expandBtn = container.previousElementSibling;
+        if (expandBtn) expandBtn.classList.add('hidden');
+    }
+
+    function toggleDetailCollapse(event, detailId) {
+        event.stopPropagation();
+        const container = document.getElementById(detailId);
+        if (!container) return;
+        container.classList.add('hidden');
+        const expandBtn = container.previousElementSibling;
+        if (expandBtn) expandBtn.classList.remove('hidden');
     }
 
     function openBooking(name) {
