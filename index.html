@@ -644,7 +644,7 @@
 </div>
 
 <script>
-    const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
+    const ME_API = 'https://api.swag.live/me';
     const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
 
     let authToken = '';
@@ -772,15 +772,21 @@
                 return;
             }
 try {
-                const profileRes = await fetch(USER_API + "?user_id=" + encodeURIComponent(user.id));
-                const profile = await profileRes.json();
-                user.username = (profile?.username || profile?.display_name || "").trim();
-                user.level = Number(profile?.level || 0);
+const profileRes = await fetch(ME_API, {
+                    headers: {
+                        Authorization: 'Bearer ' + authToken
+                    }
+                });
+                if (!profileRes.ok) throw new Error('ME_API HTTP ' + profileRes.status);
+    const profile = await profileRes.json();
+const account = profile?.data || profile;
+                user.id = (account?.id || account?.user_id || user.id || "").toString().trim();
+                user.username = (account?.username || account?.display_name || account?.nickname || "").trim();
+                user.level = Number(account?.level || account?.user_level || 0);
             } catch (profileErr) {
-                console.warn("USER_API profile fetch failed, fallback to token payload", profileErr);
-            }
+                console.warn("ME_API profile fetch failed, fallback to resolveToken payload", profileErr);
+}
 
-            // fallback：若 USER_API 暫時異常，才回退到 resolveToken 資料
             if (!user.username) {
                 user.username = (data?.username || data?.display_name || "VIP Member").trim();
             }
