@@ -209,12 +209,29 @@
         .card-status {
             font-size: 14px;
             font-weight: 600;
-            white-space: nowrap;
             flex-shrink: 0;
             min-height: 40px; /* Touch target hint */
             display: flex;
             align-items: center;
+            justify-content: flex-end;
+            text-align: right;
+            flex-direction: column;
+            gap: var(--space-2);
         }
+         .upgrade-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 0 var(--space-3);
+            border-radius: var(--shape-full);
+            background: var(--color-primary);
+            color: var(--color-surface);
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .upgrade-cta:hover { background: var(--color-primary-hover); }
         .card-level {
             font-size: 12px;
             font-weight: 600;
@@ -500,6 +517,14 @@
             margin-bottom: var(--space-4);
             font-weight: 400;
         }
+           .text-field-hint {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-top: calc(var(--space-2) * -1);
+            margin-bottom: var(--space-4);
+            line-height: 1.6;
+        }
+
 
         .hidden { display: none !important; }
     </style>
@@ -631,7 +656,7 @@
             </div>
             <label class="checkbox-row"><input type="checkbox" id="cover_brand"> 是否冠名</label>
         </div>
-
+        <p class="text-field-hint">＊文字欄位請與主播討論後自行填寫</p>
 
         <div class="form-group">
             <label class="form-label">需求備註 <span class="char-count" id="reserve_content_count">0/100</span></label>
@@ -786,11 +811,12 @@
             const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
 
             let btnTxt = "立即預約 →";
+            let statusActionHtml = '';
             if (!isDataLoaded) {
                 btnTxt = "⏳ 讀取中...";
             } else if (isLevelLocked) {
-                btnTxt = "🔒 等級不足";
-            } else if (w.name === '女神聚會' && isPartyLocked) {
+ btnTxt = "🔒 等級不足，立即升級";
+                statusActionHtml = `<a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">立即升級</a>`;            } else if (w.name === '女神聚會' && isPartyLocked) {
                 btnTxt = "🔒 已報名本場次";
             } else if (isQuotaLocked) {
                 const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
@@ -915,12 +941,15 @@
 
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
                 <div class="card-header">
-<div class="card-name">
-                        ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
+                    <div class="card-name">
+                    ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
                         <span>${w.name}</span>
                     </div>
-                    <div class="card-status" style="color:${btnColor}">${btnTxt}</div>
-                </div>
+                    <div class="card-status" style="color:${btnColor}">
+                        <span>${btnTxt}</span>
+                        ${statusActionHtml}
+                    </div>
+                    </div>
                 <div class="card-level">LV.${w.lv}+</div>
                 ${partyHtml}
                 ${historyHtml}
@@ -1108,7 +1137,9 @@
                 else if (isCover) limit = new Date(today.getFullYear(), today.getMonth()+2, 0);
                 else limit = new Date(today.getFullYear(), today.getMonth()+1, 5);
 
-                for (let i = (isCover?14:1); i <= 65; i++) {
+                let startOffset = isCover ? 14 : 1;
+                if (startOffset === 0) startOffset = 2;
+                for (let i = startOffset; i <= 65; i++) {
                     const d = new Date(today); d.setDate(today.getDate()+i);
                     if (d > limit) break;
                     const ds = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');
