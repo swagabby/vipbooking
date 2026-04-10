@@ -177,6 +177,28 @@
             gap: var(--space-4);
             position: relative;
         }
+          .card-main {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            border-radius: var(--shape-lg);
+            transition: opacity 0.2s ease;
+        }
+        .card-main-locked {
+            opacity: 0.45;
+        }
+        .lock-overlay {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--shape-full);
+            border: 1px solid var(--color-outline);
+            background: rgba(0, 0, 0, 0.35);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
         .card:not(.locked):hover {
             border-color: var(--color-primary);
             transform: translateY(-2px);
@@ -218,20 +240,15 @@
             flex-direction: column;
             gap: var(--space-2);
         }
-         .upgrade-cta {
+        .upgrade-cta {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            min-height: 32px;
-            padding: 0 var(--space-3);
-            border-radius: var(--shape-full);
-            background: var(--color-primary);
-            color: var(--color-surface);
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: 600;
             text-decoration: none;
+            color: var(--color-primary);
         }
-        .upgrade-cta:hover { background: var(--color-primary-hover); }
+        .upgrade-cta:hover { color: var(--color-primary-hover); }
         .card-level {
             font-size: 12px;
             font-weight: 600;
@@ -273,6 +290,10 @@
             display: flex;
             flex-direction: column;
             gap: var(--space-4);
+        }
+        .card-cta-row {
+            border-top: 1px solid var(--color-outline-variant);
+            padding-top: var(--space-4);
         }
         .history-group {
             border-left: 2px solid var(--color-primary);
@@ -810,13 +831,12 @@
             const isLevelLocked = user.level < w.lv;
             const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
 
-            let btnTxt = "立即預約 →";
             let statusActionHtml = '';
             if (!isDataLoaded) {
                 btnTxt = "⏳ 讀取中...";
             } else if (isLevelLocked) {
- btnTxt = "🔒 等級不足，立即升級";
-                statusActionHtml = `<a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">立即升級</a>`;            } else if (w.name === '女神聚會' && isPartyLocked) {
+                btnTxt = "🔒 等級不足";
+            } else if (w.name === '女神聚會' && isPartyLocked) {
                 btnTxt = "🔒 已報名本場次";
             } else if (isQuotaLocked) {
                 const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
@@ -938,20 +958,25 @@
                     </div>`;
                 }).join('') + '</div>';
             }
-
+            const showUpgradeCta = isLevelLocked;
+            
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
-                <div class="card-header">
-                    <div class="card-name">
-                    ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
-                        <span>${w.name}</span>
-                    </div>
-                    <div class="card-status" style="color:${btnColor}">
-                        <span>${btnTxt}</span>
-                        ${statusActionHtml}
-                    </div>
-                    </div>
-                <div class="card-level">LV.${w.lv}+</div>
-                ${partyHtml}
+ <div class="card-main${isLevelLocked ? ' card-main-locked' : ''}">
+                    <div class="card-header">
+                        <div class="card-name">
+                        ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
+                            <span>${w.name}</span>
+                            ${isLevelLocked ? '<span class="lock-overlay" aria-label="等級不足">🔒</span>' : ''}
+                        </div>
+                        <div class="card-status" style="color:${btnColor}">
+                            <span>${btnTxt}</span>
+                            ${statusActionHtml}
+                        </div>
+                    </div>                        
+<div class="card-level">LV.${w.lv}+</div>
+                    ${partyHtml}
+                </div>
+                ${showUpgradeCta ? `<div class="card-cta-row"><a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">等級不足，立即升級</a></div>` : ''}
                 ${historyHtml}
             </div>`;
         }).join('');
