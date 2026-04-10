@@ -177,27 +177,33 @@
             gap: var(--space-4);
             position: relative;
         }
-          .card-main {
+        .card-main {
             display: flex;
             flex-direction: column;
             gap: var(--space-4);
             border-radius: var(--shape-lg);
             transition: opacity 0.2s ease;
+            position: relative;            
         }
         .card-main-locked {
             opacity: 0.45;
         }
         .lock-overlay {
-            display: inline-flex;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 42px;
+            height: 42px;
             border-radius: var(--shape-full);
             border: 1px solid var(--color-outline);
-            background: rgba(0, 0, 0, 0.35);
-            font-size: 14px;
+            background: rgba(0, 0, 0, 0.45);
+            font-size: 20px;
             flex-shrink: 0;
+            z-index: 2;
         }
         .card:not(.locked):hover {
             border-color: var(--color-primary);
@@ -832,15 +838,16 @@
             const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
 
             let statusActionHtml = '';
+            let btnTxt = '';
             if (!isDataLoaded) {
                 btnTxt = "⏳ 讀取中...";
             } else if (isLevelLocked) {
-                btnTxt = "🔒 等級不足";
+                btnTxt = "";
             } else if (w.name === '女神聚會' && isPartyLocked) {
-                btnTxt = "🔒 已報名本場次";
+                btnTxt = "🔒 已預約";
             } else if (isQuotaLocked) {
                 const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
-                btnTxt = hasPendingThisMonth ? "⏳ 處理中" : "🔒 本月已預約";
+                btnTxt = hasPendingThisMonth ? "⏳ 處理中" : "🔒 已預約";
             }
 
             const btnColor = locked ? "var(--color-text-tertiary)" : "var(--color-primary)";
@@ -966,14 +973,14 @@
                         <div class="card-name">
                         ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
                             <span>${w.name}</span>
-                            ${isLevelLocked ? '<span class="lock-overlay" aria-label="等級不足">🔒</span>' : ''}
                         </div>
                         <div class="card-status" style="color:${btnColor}">
-                            <span>${btnTxt}</span>
+                            ${btnTxt ? `<span>${btnTxt}</span>` : ''}
                             ${statusActionHtml}
                         </div>
-                    </div>                        
-<div class="card-level">LV.${w.lv}+</div>
+                    </div>
+                    ${isLevelLocked ? '<span class="lock-overlay" aria-label="等級不足">🔒</span>' : ''}
+                    <div class="card-level">LV.${w.lv}+</div>
                     ${partyHtml}
                 </div>
                 ${showUpgradeCta ? `<div class="card-cta-row"><a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">等級不足，立即升級</a></div>` : ''}
