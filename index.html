@@ -194,38 +194,17 @@
         .card-main-locked .party-info,
         .card-main-locked .card-status > span,
         .card-main-locked .card-status > button,
-        .card-main-locked .card-status > a:not(.upgrade-cta) {
+        .card-main-locked .card-status > a:not(.lock-booking-cta) {
             opacity: 0.35;
         }
-        .card-main-locked .upgrade-cta {
-            position: relative;
-            z-index: 3;
-            opacity: 1;
-        }
-        .card-main-locked .lock-overlay {
-            z-index: 3;
-            opacity: 1;
-        }
-        .lock-overlay {
+        .card-main-locked .lock-booking-cta {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 64px;
-            height: 64px;
-            border-radius: var(--shape-full);
-            border: 1px solid rgba(200, 200, 200, 0.45);
-            background: rgba(90, 90, 90, 0.45);
-            color: rgba(235, 235, 235, 0.95);
-            font-size: 30px;
-            backdrop-filter: blur(1px);
-            pointer-events: none;
-            flex-shrink: 0;
-            z-index: 2;
+            right: var(--space-6);
+            bottom: var(--space-5);
+            z-index: 3;
+            opacity: 1;
         }
+
         .card:not(.locked):hover {
             border-color: var(--color-primary);
             transform: translateY(-2px);
@@ -267,10 +246,11 @@
             flex-direction: column;
             gap: var(--space-2);
         }
-        .upgrade-cta {
+        .lock-booking-cta {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: var(--space-2);
             font-size: 14px;
             font-weight: 600;
             text-decoration: none;
@@ -283,7 +263,7 @@
             transition: background 0.2s ease, border-color 0.2s ease;
             box-shadow: 0 0 0 1px rgba(0, 245, 221, 0.2), 0 4px 12px rgba(0, 210, 190, 0.35);            
         }
-        .upgrade-cta:hover {
+        .lock-booking-cta:hover {
             color: var(--color-surface);
             background: #15f0dc;
             border-color: #15f0dc;
@@ -1000,9 +980,9 @@
                     </div>`;
                 }).join('') + '</div>';
             }
-            const showUpgradeCta = isLevelLocked;
-            const upgradeCtaHtml = showUpgradeCta
-                ? `<a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">立即升級</a>`
+            const showLockBookingCta = isLevelLocked;
+            const lockBookingCtaHtml = showLockBookingCta
+                ? `<a class="lock-booking-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"><span aria-hidden="true">🔒</span><span>立即預約</span></a>`
                 : '';
             
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
@@ -1015,10 +995,9 @@
                         <div class="card-status" style="color:${btnColor}">
                             ${btnTxt ? `<span>${btnTxt}</span>` : ''}
                             ${statusActionHtml}
-                            ${upgradeCtaHtml}
-                        </div>
+                            ${lockBookingCtaHtml}
+                            </div>
                     </div>
-                    ${isLevelLocked ? '<span class="lock-overlay" aria-label="等級不足">🔒</span>' : ''}
                     ${isLevelLocked ? `<div class="card-level">LV.${w.lv}+</div>` : ''}
                     ${partyHtml}
                 </div>
