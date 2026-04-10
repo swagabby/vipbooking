@@ -197,9 +197,12 @@
         .card-main-locked .card-status > a:not(.upgrade-cta) {
             opacity: 0.35;
         }
-        .card-main-locked .upgrade-cta,
-        .card-main-locked .lock-overlay {
+        .card-main-locked .upgrade-cta {
             position: relative;
+            z-index: 3;
+            opacity: 1;
+        }
+        .card-main-locked .lock-overlay {
             z-index: 3;
             opacity: 1;
         }
