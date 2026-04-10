@@ -187,22 +187,21 @@
             position: relative;            
         }
         .card-main-locked {
-            opacity: 0.45;
-             position: relative;
+            position: relative;
         }
-        .card-main-locked::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: var(--shape-lg);
-            background: rgba(25, 25, 25, 0.55);
-            pointer-events: none;
-            z-index: 1;
+        .card-main-locked .card-name,
+        .card-main-locked .card-level,
+        .card-main-locked .party-info,
+        .card-main-locked .card-status > span,
+        .card-main-locked .card-status > button,
+        .card-main-locked .card-status > a:not(.upgrade-cta) {
+            opacity: 0.45;
         }
         .card-main-locked .upgrade-cta,
         .card-main-locked .lock-overlay {
             position: relative;
-            z-index: 3;           
+            z-index: 3;
+            opacity: 1;
         }
         .lock-overlay {
             position: absolute;
@@ -269,10 +268,9 @@
             font-size: 14px;
             font-weight: 600;
             text-decoration: none;
-            color: var(--color-primary);
-            color: #ffffff;
-            background: #00e6d0;
-            border: 1px solid #00f5dd;
+            color: var(--color-surface);
+            background: var(--color-primary);
+            border: 1px solid var(--color-primary);
             border-radius: var(--shape-full);
             padding: 0 var(--space-4);
             min-height: 36px;
@@ -280,9 +278,9 @@
             box-shadow: 0 0 0 1px rgba(0, 245, 221, 0.2), 0 4px 12px rgba(0, 210, 190, 0.35);            
         }
         .upgrade-cta:hover {
-color: #ffffff;
-            background: #0bf9e3;
-            border-color: #3bfce9;
+            color: var(--color-surface);
+            background: #15f0dc;
+            border-color: #15f0dc;
         }
         .card-level {
             font-size: 12px;
