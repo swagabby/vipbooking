@@ -62,6 +62,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 var(--space-5);
+            border-radius: var(--shape-full);
+            border: 1px solid var(--color-primary);
+            background: rgba(0, 210, 190, 0.12);
             min-height: 100vh;
         }
 
@@ -254,7 +260,10 @@
             text-decoration: none;
             color: var(--color-primary);
         }
-        .upgrade-cta:hover { color: var(--color-primary-hover); }
+        .upgrade-cta:hover {
+            color: var(--color-primary-hover);
+            background: rgba(0, 210, 190, 0.2);
+        }
         .card-level {
             font-size: 12px;
             font-weight: 600;
@@ -293,6 +302,8 @@
         .card-history {
             border-top: 1px solid var(--color-outline-variant);
             padding-top: var(--space-4);
+            display: flex;
+            justify-content: center;
             display: flex;
             flex-direction: column;
             gap: var(--space-4);
@@ -834,7 +845,7 @@
                 isQuotaLocked = monthCount >= 1;
             }
 
-            const isLevelLocked = user.level < w.lv;
+            const isLevelLocked = isDataLoaded && user.level < w.lv;
             const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
 
             let statusActionHtml = '';
@@ -848,6 +859,8 @@
             } else if (isQuotaLocked) {
                 const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
                 btnTxt = hasPendingThisMonth ? "⏳ 處理中" : "🔒 已預約";
+                  } else {
+                btnTxt = "立即預約";
             }
 
             const btnColor = locked ? "var(--color-text-tertiary)" : "var(--color-primary)";
@@ -980,10 +993,10 @@
                         </div>
                     </div>
                     ${isLevelLocked ? '<span class="lock-overlay" aria-label="等級不足">🔒</span>' : ''}
-                    <div class="card-level">LV.${w.lv}+</div>
+                    ${isLevelLocked ? `<div class="card-level">LV.${w.lv}+</div>` : ''}
                     ${partyHtml}
                 </div>
-                ${showUpgradeCta ? `<div class="card-cta-row"><a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">等級不足，立即升級</a></div>` : ''}
+                ${showUpgradeCta ? `<div class="card-cta-row"><a class="upgrade-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">立即升級</a></div>` : ''}
                 ${historyHtml}
             </div>`;
         }).join('');
