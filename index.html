@@ -199,8 +199,8 @@
         }
         .card-main-locked .lock-booking-cta {
             position: absolute;
-            right: var(--space-6);
-            bottom: var(--space-5);
+            right: var(--space-2);
+            bottom: var(--space-2);
             z-index: 3;
             opacity: 1;
         }
@@ -982,7 +982,7 @@
             }
             const showLockBookingCta = isLevelLocked;
             const lockBookingCtaHtml = showLockBookingCta
-                ? `<a class="lock-booking-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"><span aria-hidden="true">🔒</span><span>立即預約</span></a>`
+                ? `<a class="lock-booking-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"><span aria-hidden="true">🔒</span><span>立即升級</span></a>`
                 : '';
             
             return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
