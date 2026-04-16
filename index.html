@@ -1122,6 +1122,16 @@
         }
     }
 
+    const WEEKDAY_SHORT = ['日', '一', '二', '三', '四', '五', '六'];
+
+    function formatDateWithWeekday(dateString) {
+        const d = new Date(dateString + 'T00:00:00');
+        if (Number.isNaN(d.getTime())) return dateString;
+        return `${dateString}（${WEEKDAY_SHORT[d.getDay()]}）`;
+    }
+
+
+    
     async function renderLunchSelects() {
         const startDate = new Date();
         startDate.setHours(0, 0, 0, 0);
@@ -1150,7 +1160,7 @@
         ['l_1', 'l_2', 'l_3'].forEach(id => {
             const el = document.getElementById(id);
             el.innerHTML = '';
-            dateOptions.forEach(ds => el.add(new Option(ds, ds)));
+            dateOptions.forEach(ds => el.add(new Option(formatDateWithWeekday(ds), ds)));
         });
     }
 
@@ -1246,7 +1256,7 @@
                         if (activeWelfare==='大神贊助' && user.level>=90) st=" (預約額滿，Lv.90 特別權限)";
                         else { st=" (預約額滿)"; dis=true; }
                     } else if (dayFull) { st=" (預約額滿)"; dis=true; }
-                    select.add(new Option(ds+st, ds));
+                    select.add(new Option(formatDateWithWeekday(ds)+st, ds));
                     select.options[select.options.length-1].disabled = dis;
                 }
             }
