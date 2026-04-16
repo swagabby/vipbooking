@@ -1136,8 +1136,8 @@
 
         const dateOptions = [];
         for (let i = 0; i < 90; i++) {
-            const d = new Date(nextWeek);
-            d.setDate(nextWeek.getDate() + i);
+            const d = new Date(startDate);
+            d.setDate(startDate.getDate() + i);
             const weekDay = d.getDay();
             if (weekDay === 0 || weekDay === 6) continue;
 
