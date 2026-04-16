@@ -1123,14 +1123,12 @@
     }
 
     async function renderLunchSelects() {
-        const nextWeek = new Date();
-       nextWeek.setHours(0, 0, 0, 0);
-        const day = nextWeek.getDay();
-        const daysUntilNextMonday = day === 0 ? 1 : 8 - day;
-        nextWeek.setDate(nextWeek.getDate() + daysUntilNextMonday);
+        const startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        startDate.setDate(startDate.getDate() + 7);
 
-        const years = new Set([nextWeek.getFullYear()]);
-        const rangeEnd = new Date(nextWeek);
+        const years = new Set([startDate.getFullYear()]);
+        const rangeEnd = new Date(startDate);
         rangeEnd.setDate(rangeEnd.getDate() + 90);
         years.add(rangeEnd.getFullYear());
         const holidaySets = await Promise.all([...years].map(fetchTaiwanHolidays));
