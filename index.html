@@ -712,6 +712,7 @@
     const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
 
     let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
+    let isDataLoaded = false;
     const taiwanHolidayCache = new Map();
     const aprilFirst = new Date('2026-04-01T00:00:00');
  const welfareIconMap = {
@@ -750,8 +751,11 @@
         }
         const params = new URLSearchParams(window.location.search);
         const urlId = params.get('user_id');
-        if (!urlId) return;
-
+        if (!urlId) {
+            document.getElementById('loader-overlay').style.display = 'none';
+            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>⚠️ 缺少使用者資訊，請從 SWAG 站內重新進入</h2>";
+            return;
+        }
         const isFromSwag = document.referrer.includes('swag.live');
         const storedRef = sessionStorage.getItem('vip_ref');
         if (!isFromSwag && !storedRef) {
