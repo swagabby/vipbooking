@@ -712,7 +712,7 @@
     const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
 
     let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
-    let isDataLoaded = false;
+    const taiwanHolidayCache = new Map();
     const aprilFirst = new Date('2026-04-01T00:00:00');
  const welfareIconMap = {
         '大神贊助': 'https://public.swag.live/badges/user_level_benefit_pin_livestream_v2.svg',
@@ -1096,15 +1096,59 @@
         if (!checked) { document.getElementById('swagger_id').value = ''; resetCheckStatus(); }
     }
 
-    function renderLunchSelects() {
+    async function fetchTaiwanHolidays(year) {
+        if (taiwanHolidayCache.has(year)) return taiwanHolidayCache.get(year);
+
+        const fallbackByYear = {
+            2026: ['2026-01-01', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-27', '2026-04-06', '2026-05-01', '2026-06-19', '2026-09-25', '2026-10-09'],
+            2027: ['2027-01-01', '2027-02-08', '2027-02-09', '2027-02-10', '2027-02-11', '2027-02-12', '2027-02-15', '2027-02-26', '2027-04-05', '2027-05-03', '2027-06-09', '2027-09-15', '2027-10-11']
+        };
+
+        try {
+            const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/TW`);
+            if (!res.ok) throw new Error('Holiday API unavailable');
+            const data = await res.json();
+            const dates = new Set((Array.isArray(data) ? data : []).map(d => d.date).filter(Boolean));
+            taiwanHolidayCache.set(year, dates);
+            return dates;
+        } catch (err) {
+            const fallback = new Set(fallbackByYear[year] || []);
+            taiwanHolidayCache.set(year, fallback);
+            return fallback;
+        }
+    }
+
+    async function renderLunchSelects() {
         const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + (7 - (nextWeek.getDay() || 7) + 1));['l_1','l_2','l_3'].forEach(id => {
-            const el = document.getElementById(id); el.innerHTML = '';
-            for (let i = 0; i < 30; i++) {
-                const d = new Date(nextWeek); d.setDate(nextWeek.getDate() + i);
-                const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-                el.add(new Option(ds, ds));
-            }
+       nextWeek.setHours(0, 0, 0, 0);
+        const day = nextWeek.getDay();
+        const daysUntilNextMonday = day === 0 ? 1 : 8 - day;
+        nextWeek.setDate(nextWeek.getDate() + daysUntilNextMonday);
+
+        const years = new Set([nextWeek.getFullYear()]);
+        const rangeEnd = new Date(nextWeek);
+        rangeEnd.setDate(rangeEnd.getDate() + 90);
+        years.add(rangeEnd.getFullYear());
+        const holidaySets = await Promise.all([...years].map(fetchTaiwanHolidays));
+        const allHolidayDates = new Set(holidaySets.flatMap(set => [...set]));
+
+        const dateOptions = [];
+        for (let i = 0; i < 90; i++) {
+            const d = new Date(nextWeek);
+            d.setDate(nextWeek.getDate() + i);
+            const weekDay = d.getDay();
+            if (weekDay === 0 || weekDay === 6) continue;
+
+            const ds = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+            if (allHolidayDates.has(ds)) continue;
+            dateOptions.push(ds);
+            if (dateOptions.length >= 30) break;
+        }
+
+        ['l_1', 'l_2', 'l_3'].forEach(id => {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            dateOptions.forEach(ds => el.add(new Option(ds, ds)));
         });
     }
 
