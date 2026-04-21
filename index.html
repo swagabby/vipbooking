@@ -1,1470 +1,1712 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAG VIP Welfare System</title>
-    <style>
-        :root {
-            /* 🎨 Semantic Colors (Dark Theme) */
-            --color-primary: #00D2BE;
-            --color-primary-hover: rgba(0, 210, 190, 0.8);
-            --color-primary-pressed: rgba(0, 210, 190, 0.4);
-            --color-primary-dim: rgba(0, 210, 190, 0.2);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>璀璨之星爭奪戰</title>
+  <style>
+    /* =========================================
+       1. UI Design Tokens (Apple Glassmorphism)
+       ========================================= */
+    :root {
+      --font-family: "PingFang TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --surface: #0a0a0c;
+      --surface-container: rgba(25, 25, 30, 0.6);
+      --text-primary: #FFFFFF;
+      --text-secondary: #A0A0A8;
+      --text-tertiary: #686870;
+      --outline-variant: rgba(255, 255, 255, 0.08);
+      --brand-primary: #00D2BE;
+      --info: #60C4E8;
+      
+      --rank-1-color: #f5c85d;
+      --rank-1-glow: rgba(245, 200, 93, 0.6);
+      --rank-2-color: #dde5f2;
+      --rank-2-glow: rgba(221, 229, 242, 0.45);
+      --rank-3-color: #d4925f;
+      --rank-3-glow: rgba(212, 146, 95, 0.42);
+      
+      --radius-full: 1000px;
+      --container-standard: 640px;
+      
+      --podium-avatar-size: 68px;
+      --podium-avatar-first: 92px;
+      --list-avatar-size: 48px;
+      --podium-card-max-width: clamp(108px, 28vw, 172px);
+      --podium-card-padding-x: clamp(8px, 1.8vw, 14px);
+      --podium-card-padding-y: clamp(14px, 2.2vw, 20px);
+      --podium-gap: clamp(8px, 2.4vw, 24px);
+      --podium-top-offset: clamp(46px, 6.4vw, 66px);
+      --podium-no1-lift: clamp(14px, 2.6vw, 28px);		
+    }
 
-            --color-surface: #191919;
-            --color-surface-container: #232323;
-            --color-surface-variant: rgba(71, 71, 71, 0.4);
+    /* =========================================
+       2. Base Layout & Background
+       ========================================= */
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+    
+    html {
+      background: var(--surface);
+      background-image: 
+        radial-gradient(circle at 0% 0%, rgba(0, 210, 190, 0.15), transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(255, 215, 0, 0.1), transparent 50%);
+      background-attachment: fixed;
+    }
+    
+    body { 
+      font-family: var(--font-family); 
+      color: var(--text-primary); 
+      min-height: 100vh; 
+      line-height: 1.4; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    
+    body.pwa-mobile { 
+      padding-top: env(safe-area-inset-top, 0); 
+    }
+    
+    a { 
+      color: inherit; 
+      text-decoration: none; 
+    }
 
-            --color-text-primary: #FFFFFF;
-            --color-text-secondary: #C8C8C8;
-            --color-text-tertiary: #646464;
-            --color-text-disabled: rgba(255, 255, 255, 0.4);
+    .device-container { 
+      width: 100%; 
+      max-width: min(100vw, var(--container-standard)); 
+      margin: 0 auto; 
+      position: relative; 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    @media (min-width: 768px) { 
+      .device-container { 
+        min-height: calc(100vh - 32px); 
+        margin: 16px auto; 
+        border-radius: 28px; 
+        box-shadow: 0 24px 80px rgba(0,0,0,0.8); 
+        border: 1px solid rgba(255,255,255,0.05); 
+        overflow: hidden; 
+        background: #0c0c0e; 
+      } 
+    }
 
-            --color-outline: #474747;
-            --color-outline-variant: rgba(71, 71, 71, 0.4);
-            
-            --color-error: #CF0404;
-            --color-success: #00D2BE;
-            --color-info: #60C4E8;
+    .top-fixed-section { 
+      flex-shrink: 0; 
+      z-index: 20; 
+      position: relative; 
+    }
+    
+    .content-scroll { 
+      flex-grow: 1; 
+      overflow-y: auto; 
+      padding-bottom: 140px; 
+      scroll-behavior: smooth; 
+    }
+    
+    .content-scroll::-webkit-scrollbar { 
+      display: none; 
+    }
 
-            --color-scrim: rgba(25, 25, 25, 0.8);
+    /* =========================================
+       3. Header & Icons
+       ========================================= */
+    .header { 
+      padding: 32px 16px 16px; 
+      text-align: center; 
+      position: relative; 
+    }
+    
+    .header-title-row { 
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      text-align: center;
+    }
+    
+    .header-top-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      min-height: 38px;
+    }
+    .header h1 { 
+      font-size: clamp(30px, 6.4vw, 40px); 
+		font-weight: 800; 
+      letter-spacing: 0.5px; 
+      text-shadow: 0 4px 16px rgba(0,0,0,0.5); 
+      line-height: 1.2;
+    }
+    
+    .header h1.title-shine {
+      background: linear-gradient(120deg, #fef08a 0%, #ffffff 28%, #67e8f9 55%, #fde68a 78%, #ffffff 100%);
+      background-size: 220% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: titleShimmer 3.2s ease-in-out infinite, titlePulse 2.4s ease-in-out infinite;
+    }
 
-            /* 📐 Shape Tokens (Mode 1) */
-            --shape-none: 0px;
-            --shape-xs: 4px;
-            --shape-sm: 8px;
-            --shape-md: 12px;
-            --shape-lg: 16px;
-            --shape-xl: 28px;
-            --shape-full: 1000px;
+    @keyframes titleShimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
 
-            /* 📏 Spacing Tokens (Mode 1) */
-            --space-1: 2px;
-            --space-2: 4px;
-            --space-3: 8px;
-            --space-4: 12px;
-            --space-5: 16px;
-            --space-6: 24px;
-            --space-7: 32px;
-            --space-8: 40px;
-            --space-9: 48px;
-            --space-10: 64px;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background-color: var(--color-surface);
-            color: var(--color-text-primary);
-            font-family: 'PingFang TC', -apple-system, 'Helvetica Neue', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: var(--space-7) var(--space-5);
-        }
-
-        .container { 
-            max-width: 960px; /* Aligned with Desktop Token Standard */
-            width: 100%; 
-            display: flex;
-            flex-direction: column;
-            min-height: calc(100vh - var(--space-7) * 2);
-        }
-
-        /* ── Loader ── */
-        #loader-overlay {
-            position: fixed; inset: 0;
-            background: var(--color-surface);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 9999;
-            transition: opacity 0.4s ease;
-        }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(0,210,190,0.15);
-            border-top: 4px solid var(--color-primary);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-            margin-bottom: var(--space-5);
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loader-text {
-            color: var(--color-primary);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* ── Header ── */
-        header { text-align: center; margin-bottom: var(--space-7); }
-
-        .brand-title {
-            font-size: 28px;
-            font-weight: 600; /* Semi Bold from tokens */
-            letter-spacing: 1px;
-            color: var(--color-text-primary);
-            margin-bottom: var(--space-4);
-        }
-        .brand-title span { color: var(--color-primary); }
-
-        .user-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-3);
-            background: var(--color-surface-container);
-            border: 1px solid var(--color-outline-variant);
-            padding: var(--space-3) var(--space-5);
-            border-radius: var(--shape-full);
-            min-height: 40px; /* Touch target > 40px */
-        }
-        .user-dot {
-            width: 8px; height: 8px;
-            background: var(--color-success);
-            border-radius: 50%;
-        }
-        #u-name { font-weight: 600; font-size: 14px; color: var(--color-text-primary); }
-        #u-lv { color: var(--color-primary); font-weight: 600; font-size: 14px; }
-
-        /* ── Notice ── */
-        .anchor-notice {
-            color: var(--color-primary);
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: var(--space-5);
-            text-align: center;
-            border: 1px dashed var(--color-primary-pressed);
-            padding: var(--space-4) var(--space-5);
-            border-radius: var(--shape-md);
-            background: var(--color-primary-dim);
-            line-height: 1.6;
-        }
-
-        .system-hint {
-            text-align: center; 
-            margin-bottom: var(--space-6); 
-            padding: var(--space-4) var(--space-5); 
-            background: var(--color-surface-container); 
-            border-radius: var(--shape-md); 
-            border: 1px solid var(--color-outline-variant);
-        }
-        .system-hint span {
-            font-size: 12px; 
-            color: var(--color-text-tertiary); 
-            line-height: 1.6;
-        }
-
-        /* ── Card Grid ── */
-        .benefit-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Optimised for touch devices */
-            gap: var(--space-5);
-            width: 100%;
-            flex: 1;
-        }
-
-        .card {
-            background: var(--color-surface-container);
-            border: 1px solid var(--color-outline-variant);
-            border-radius: var(--shape-xl);
-            padding: var(--space-6);
-            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-            position: relative;
-        }
-        .card-main {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-            border-radius: var(--shape-lg);
-            transition: opacity 0.2s ease;
-            position: relative;            
-        }
-        .card-main-locked {
-            position: relative;
-        }
-        .card-main-locked .card-name,
-        .card-main-locked .card-level,
-        .card-main-locked .party-info,
-        .card-main-locked .card-status > span,
-        .card-main-locked .card-status > button,
-        .card-main-locked .card-status > a:not(.lock-booking-cta) {
-            opacity: 0.35;
-        }
-        .card-main-locked .lock-booking-cta {
-            position: absolute;
-            right: var(--space-2);
-            bottom: var(--space-2);
-            z-index: 3;
-            opacity: 1;
-        }
-
-        .card:not(.locked):hover {
-            border-color: var(--color-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px -8px rgba(0,210,190,0.2);
-            cursor: pointer;
-        }
-        .card.locked { cursor: not-allowed; }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: var(--space-3);
-        }
-        .card-name {
-            font-size: 18px; /* Title Small */
-            font-weight: 600;
-            color: var(--color-text-primary);
-            line-height: 1.3;
-              display: flex;
-            align-items: center;
-            gap: var(--space-2);
-        }
-        .card-name-icon {
-            width: 56px;
-            height: 56px;
-            flex-shrink: 0;
-            object-fit: contain;
-        }
-        .card-status {
-            font-size: 14px;
-            font-weight: 600;
-            flex-shrink: 0;
-            min-height: 40px; /* Touch target hint */
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            text-align: right;
-            flex-direction: column;
-            gap: var(--space-2);
-        }
-        .lock-booking-cta {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-2);
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            color: var(--color-surface);
-            background: var(--color-primary);
-            border: 1px solid var(--color-primary);
-            border-radius: var(--shape-full);
-            padding: 0 var(--space-4);
-            min-height: 36px;
-            transition: background 0.2s ease, border-color 0.2s ease;
-            box-shadow: 0 0 0 1px rgba(0, 245, 221, 0.2), 0 4px 12px rgba(0, 210, 190, 0.35);            
-        }
-        .lock-booking-cta:hover {
-            color: var(--color-surface);
-            background: #15f0dc;
-            border-color: #15f0dc;
-        }
-        .card-level {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        /* Party info block */
-        .party-info {
-            margin-top: var(--space-2);
-            font-size: 14px;
-            color: var(--color-text-secondary);
-            line-height: 1.6;
-            border-left: 2px solid var(--color-primary);
-            padding-left: var(--space-4);
-        }
-        .party-info strong { color: var(--color-text-primary); font-weight: 600; }
-        .party-btn {
-            margin-top: var(--space-4);
-            background: transparent;
-            border: 1px solid var(--color-primary);
-            color: var(--color-primary);
-            padding: 0 var(--space-5);
-            min-height: 40px; /* ❗ Touch target > 40px */
-            border-radius: var(--shape-sm);
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: background 0.15s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .party-btn:hover { background: var(--color-primary-dim); }
-       .party-btn-row {
-            margin-top: var(--space-4);
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-3);
-        }
-        .party-btn-row .party-btn { margin-top: 0; }
-
-        #announcement-modal {
-            position: fixed;
-            inset: 0;
-            background: var(--color-scrim);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2100;
-            padding: var(--space-5);
-        }
-        .announcement-content {
-            width: min(760px, 100%);
-            max-height: min(88vh, 960px);
-            overflow-y: auto;
-            background: var(--color-surface-container);
-            border: 1px solid var(--color-outline);
-            border-radius: var(--shape-lg);
-            padding: var(--space-6);
-            position: relative;
-            line-height: 1.8;
-        }
-        .announcement-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--color-primary);
-            margin-bottom: var(--space-5);
-        }
-        .announcement-section {
-            margin-top: var(--space-5);
-        }
-        .announcement-section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--color-text-primary);
-            margin-bottom: var(--space-2);
-        }
-        .announcement-list {
-            padding-left: var(--space-5);
-            color: var(--color-text-secondary);
-        }
-        .announcement-list li + li {
-            margin-top: var(--space-2);
-        }
-        .announcement-intro {
-            color: var(--color-text-secondary);
-            margin-bottom: var(--space-4);
-        }
-
-        /* History */
-        .card-history {
-            border-top: 1px solid var(--color-outline-variant);
-            padding-top: var(--space-4);
-            display: flex;
-            justify-content: center;
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-        }
-     
-        }
-        .history-group {
-            border-left: 2px solid var(--color-primary);
-            padding-left: var(--space-4);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-3);
-        }
-        .detail-line {
-            display: flex;
-            gap: var(--space-3);
-            font-size: 12px;
-            flex-wrap: wrap;
-        }
-        .detail-label { color: var(--color-text-secondary); font-weight: 600; flex-shrink: 0; }
-        .detail-value { color: var(--color-text-primary); word-break: break-all; }
-        .detail-expand {
-            margin-top: var(--space-2);
-            border-top: 1px dashed var(--color-outline-variant);
-            padding-top: var(--space-2);
-     }
-        .detail-extra {
-            margin-top: var(--space-2);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-2);
-        }
-        .detail-arrow-btn {
-            border: none;
-            background: transparent;
-            color: var(--color-primary);
-            font-size: 20px;
-            line-height: 1;
-            font-weight: 700;
-            cursor: pointer;
-            padding: var(--space-1) var(--space-2);
-            align-self: center;
-        }
-        .detail-collapse-btn {
-            margin-top: var(--space-2);
-            color: var(--color-text-secondary);
-        }
-
-        
-        .history-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: var(--space-3);
-            background: rgba(255,255,255,0.02);
-            padding: var(--space-3);
-            border-radius: var(--shape-md);
-        }
-        .history-info {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-2);
-            flex: 1;
-        }
-        .history-line {
-            display: flex;
-            gap: var(--space-3);
-            font-size: 12px;
-        }
-        .history-label { color: var(--color-text-secondary); font-weight: 600; }
-        
-        .status-badge {
-            padding: var(--space-2) var(--space-3);
-            border-radius: var(--shape-sm);
-            font-size: 12px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        .status-green { background: rgba(0,210,190,0.12); color: var(--color-primary); }
-        .status-red { background: rgba(207,4,4,0.12); color: var(--color-error); }
-
-        /* ── Footer ── */
-        .page-footer {
-            text-align: center;
-            margin-top: var(--space-8);
-            padding-bottom: var(--space-4);
-            font-size: 14px;
-            color: var(--color-text-tertiary);
-            font-weight: 400;
-        }
-
-        /* ── Modal ── */
-        #modal {
-            position: fixed; inset: 0;
-            background: var(--color-scrim);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: var(--space-5);
-            backdrop-filter: blur(8px);
-        }
-        .modal-content {
-            background: var(--color-surface-container);
-            border: 1px solid var(--color-outline);
-            border-radius: var(--shape-xl);
-            width: 100%;
-            max-width: 480px; /* Desktop Modal-width Token */
-            padding: var(--space-7);
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .modal-close {
-            position: absolute; top: var(--space-5); right: var(--space-5);
-            background: none; border: none;
-            color: var(--color-text-tertiary);
-            font-size: 24px; cursor: pointer;
-            width: 40px; height: 40px; /* ❗ Touch target >= 40px */
-            display: flex; align-items: center; justify-content: center;
-            border-radius: var(--shape-sm);
-            transition: background 0.15s, color 0.15s;
-        }
-        .modal-close:hover { background: var(--color-surface-variant); color: var(--color-text-primary); }
-        .modal-title { font-size: 20px; font-weight: 600; margin-bottom: var(--space-6); }
-
-        /* ── Form Elements ── */
-        .form-group { margin-bottom: var(--space-5); }
-        .form-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-2);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .char-count { color: var(--color-primary); font-weight: 600; }
-
-        input[type="text"],
-        input[type="url"],
-        input[type="number"],
-        select,
-        textarea {
-            width: 100%;
-            min-height: 48px; /* ❗ Touch target > 40px */
-            background: var(--color-surface);
-            border: 1px solid var(--color-outline);
-            border-radius: var(--shape-md);
-            padding: var(--space-3) var(--space-4);
-            color: var(--color-text-primary);
-            outline: none;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.15s;
-            appearance: none;
-        }
-        textarea { min-height: 80px; resize: vertical; }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--color-primary);
-        }
-        select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23646464' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            padding-right: 40px;
-            cursor: pointer;
-        }
-        select option { background: var(--color-surface-container); }
-
-        .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            font-size: 14px;
-            color: var(--color-text-secondary);
-            margin-bottom: var(--space-5);
-            cursor: pointer;
-            min-height: 40px; /* ❗ Touch target > 40px */
-        }
-        .checkbox-row input[type="checkbox"] {
-            width: 20px; height: 20px;
-            accent-color: var(--color-primary);
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        /* ── Buttons ── */
-        .btn-submit {
-            width: 100%;
-            min-height: 48px; /* ❗ Touch target > 40px */
-            padding: 0 var(--space-5);
-            border-radius: var(--shape-lg);
-            border: none;
-            background: var(--color-primary);
-            color: var(--color-surface);
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: var(--space-5);
-            transition: background 0.15s, transform 0.1s;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-submit:hover { background: var(--color-primary-hover); }
-        .btn-submit:active { transform: scale(0.98); }
-        .btn-submit:disabled {
-            background: var(--color-surface-variant);
-            color: var(--color-text-disabled);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-check {
-            width: 100%;
-            min-height: 48px; /* ❗ Touch target > 40px */
-            padding: 0 var(--space-4);
-            border-radius: var(--shape-md);
-            border: 1px solid rgba(255,153,0,0.5);
-            background: rgba(255,153,0,0.1);
-            color: #FFA500;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: var(--space-3);
-            transition: background 0.15s;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-check:hover { background: rgba(255,153,0,0.2); }
-        .btn-check:disabled {
-            border-color: var(--color-outline);
-            background: transparent;
-            color: var(--color-text-tertiary);
-            cursor: not-allowed;
-        }
-
-        .lunch-hint {
-            font-size: 12px;
-            color: var(--color-primary);
-            margin-bottom: var(--space-4);
-            font-weight: 400;
-        }
-           .text-field-hint {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin-top: calc(var(--space-2) * -1);
-            margin-bottom: var(--space-4);
-            line-height: 1.6;
-        }
+    @keyframes titlePulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 4px rgba(253, 224, 71, 0.45));
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.65));
+        transform: translateY(-1px) scale(1.02);
+      }
+    }
+    .icon-group { 
+      display: flex; 
+      gap: 8px; 
+    }
 
 
-        .hidden { display: none !important; }
-    </style>
+    .header-controls {
+      position: static;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+  .locale-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(20, 22, 44, 0.72);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    .locale-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.26);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.92);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .locale-btn.active {
+      background: linear-gradient(180deg, #ffd978 0%, #f6b63f 100%);
+      color: #111;
+      border-color: rgba(252, 211, 77, 0.95);
+      box-shadow: 0 4px 12px rgba(246, 182, 63, 0.45);
+    }
+
+    .locale-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.5);
+     }   
+    .action-icon { 
+      display: inline-flex; 
+      justify-content: center; 
+      align-items: center; 
+      width: 36px; 
+      height: 36px; 
+      border-radius: 50%; 
+      border: 1px solid var(--outline-variant); 
+      cursor: pointer; 
+      transition: 0.2s; 
+      color: var(--text-secondary); 
+      background: rgba(255,255,255,0.03); 
+      backdrop-filter: blur(8px); 
+      font-size: 16px; 
+    }
+    
+    .action-icon:hover { 
+      background: rgba(255,255,255,0.1); 
+      color: #fff; 
+      transform: scale(1.05); 
+      border-color: rgba(255,255,255,0.2); 
+    }
+    
+    
+    .countdown-banner {
+      margin: 16px auto 0;
+      display: flex;
+      flex-direction: column;     
+      align-items: center;
+      gap: 2px;
+      padding: 10px 20px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(0,210,190,0.3);
+      font-size: 12px;
+      background: rgba(0,210,190,0.05);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 16px rgba(0,210,190,0.1);
+      color: #6ee8de;
+      transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+    }
+    
+        #countdown-label,
+    .countdown-time {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .countdown-time {
+      color: inherit;
+      font-weight: 800;
+      font-family: monospace;
+      font-size: 15px;
+      margin-top: 2px;
+    }
+
+    .countdown-banner.daily-theme {
+      color: #6ee8de;
+      border-color: rgba(52, 211, 197, 0.45);
+      background: rgba(14, 116, 112, 0.16);
+      box-shadow: 0 4px 16px rgba(20, 184, 166, 0.2);
+    }
+
+    .countdown-banner.weekly-theme {
+      color: #93c5fd;
+      border-color: rgba(96, 165, 250, 0.45);
+      background: rgba(30, 64, 175, 0.16);
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+    }
+
+    /* =========================================
+       4. Segmented Control (雙層導航)
+       ========================================= */
+    .nav-container { 
+      padding: 0 16px 8px; 
+      position: sticky; 
+      top: 0; 
+      z-index: 25; 
+      background: rgba(10,10,12,0.85); 
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px); 
+      border-bottom: 1px solid var(--outline-variant); 
+    }
+    
+    .segmented-control { 
+      position: relative; 
+      display: flex; 
+      background: rgba(255,255,255,0.06); 
+      border-radius: 14px; 
+      padding: 4px; 
+      margin-bottom: 12px; 
+    }
+    
+    .segmented-control input { display: none; }
+    
+    .segmented-control label { 
+      flex: 1; 
+      text-align: center; 
+      padding: 10px 0; 
+      color: var(--text-secondary); 
+      font-size: 15px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      z-index: 2; 
+      transition: 0.3s; 
+    }
+    
+    .segmented-control input:checked + label { color: #111; }
+    
+    .glider { 
+      position: absolute; 
+      top: 4px; 
+      bottom: 4px; 
+      width: calc(50% - 4px); 
+      background: linear-gradient(135deg, var(--brand-primary), #00A396); 
+      border-radius: 10px; 
+      z-index: 1; 
+      transition: 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); 
+      box-shadow: 0 4px 12px rgba(0, 210, 190, 0.3); 
+    }
+    
+    #mode-hof:checked ~ .glider { 
+      transform: translateX(100%); 
+      background: linear-gradient(135deg, #FFD700, #FFA500); 
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3); 
+    }
+
+    .sub-tabs-wrapper { 
+      position: relative; 
+      height: 36px; 
+      overflow: hidden; 
+    }
+    
+    .sub-tabs { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      display: flex; 
+      gap: 8px; 
+      opacity: 0; 
+      pointer-events: none; 
+      transform: translateY(10px); 
+      transition: 0.3s ease; 
+    }
+    
+    .sub-tabs.active { 
+      opacity: 1; 
+      pointer-events: auto; 
+      transform: translateY(0); 
+    }
+    
+    .tab-item { 
+      flex: 1; 
+      text-align: center; 
+      padding: 8px 0; 
+      border-radius: 10px; 
+      font-size: 14px; 
+      color: var(--text-tertiary); 
+      cursor: pointer; 
+      transition: 0.3s; 
+      font-weight: 500; 
+      border: 1px solid transparent;
+    }
+    
+    .tab-item.active { 
+      background: rgba(255,255,255,0.1); 
+      color: #fff; 
+      font-weight: 600; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+      border: 1px solid rgba(255,255,255,0.15); 
+    }
+       /* current-tabs 色系：今日/昨日同色系，本週/上週同色系 */
+    .current-tabs .tab-item[data-tab="daily"] {
+      color: #6ee8de;
+      border-color: rgba(52, 211, 197, 0.3);
+      background: rgba(14, 116, 112, 0.12);
+    }
+
+    .current-tabs .tab-item[data-tab="prev_daily"] {
+      color: #53cfc4;
+      border-color: rgba(20, 184, 166, 0.28);
+      background: rgba(15, 118, 110, 0.08);
+    }
+
+    .current-tabs .tab-item[data-tab="weekly"] {
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.3);
+      background: rgba(30, 64, 175, 0.14);
+    }
+
+    .current-tabs .tab-item[data-tab="prev_weekly"] {
+      color: #7fb3f7;
+      border-color: rgba(37, 99, 235, 0.28);
+      background: rgba(30, 58, 138, 0.09);
+    }
+
+    .current-tabs .tab-item[data-tab="daily"].active {
+      color: #ffffff;
+      border-color: rgba(94, 234, 212, 0.75);
+      background: linear-gradient(135deg, #14b8a6, #0f766e);
+      box-shadow: 0 6px 16px rgba(20, 184, 166, 0.35);
+    }
+
+    .current-tabs .tab-item[data-tab="prev_daily"].active {
+      color: #ffffff;
+      border-color: rgba(45, 212, 191, 0.75);
+      background: linear-gradient(135deg, #0d9488, #115e59);
+      box-shadow: 0 6px 16px rgba(13, 148, 136, 0.34);
+    }
+
+    .current-tabs .tab-item[data-tab="weekly"].active {
+      color: #ffffff;
+      border-color: rgba(147, 197, 253, 0.75);
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+    }
+
+    .current-tabs .tab-item[data-tab="prev_weekly"].active {
+      color: #ffffff;
+      border-color: rgba(125, 170, 255, 0.75);
+      background: linear-gradient(135deg, #2563eb, #1e3a8a);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.34);
+    }
+
+    /* hof-tabs 色系：日累冠軍/周累冠軍對應日榜/週榜色系 */
+    .hof-tabs .tab-item[data-tab="cumulative_daily"] {
+      color: #63ddd3;
+      border-color: rgba(45, 212, 191, 0.3);
+      background: rgba(15, 118, 110, 0.1);
+    }
+
+    .hof-tabs .tab-item[data-tab="cumulative_weekly"] {
+      color: #89bbfb;
+      border-color: rgba(96, 165, 250, 0.3);
+      background: rgba(30, 64, 175, 0.12);
+    }
+
+    .hof-tabs .tab-item[data-tab="cumulative_daily"].active {
+      color: #ffffff;
+      border-color: rgba(94, 234, 212, 0.78);
+      background: linear-gradient(135deg, #14b8a6, #0f766e);
+      box-shadow: 0 6px 16px rgba(20, 184, 166, 0.35);
+    }
+
+    .hof-tabs .tab-item[data-tab="cumulative_weekly"].active {
+      color: #ffffff;
+      border-color: rgba(147, 197, 253, 0.78);
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+    }
+
+    
+    /* =========================================
+       5. Podium (頒獎台) & List (清單)
+       ========================================= */
+    #podiumView { 
+      padding: 16px 16px 20px; 
+    }
+    
+    .podium { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      align-items: end; 
+      justify-items: center;      
+      padding: var(--podium-top-offset) 0 8px; 
+		background: transparent;
+      border-radius: 0; 
+      border: none; 
+      gap: var(--podium-gap); 
+      text-align: center; 
+      box-shadow: none; 
+      backdrop-filter: none; 
+    }
+    
+    .podium-item { 
+      position: relative; 
+      padding: var(--podium-card-padding-y) var(--podium-card-padding-x) calc(var(--podium-card-padding-y) - 2px);
+      width: min(100%, var(--podium-card-max-width)); 
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.04);
+      overflow: visible;   
+      transition: 0.3s; 
+    }
+
+    .podium-item.no1 {
+      background: linear-gradient(180deg, rgba(245, 200, 93, 0.34), rgba(198, 140, 35, 0.2));
+      border-color: rgba(255, 236, 177, 0.42);
+      color: #fff6dc;
+    }
+
+    .podium-item.no2 {
+      background: linear-gradient(180deg, rgba(233, 239, 247, 0.22), rgba(166, 178, 193, 0.14));
+      border-color: rgba(232, 241, 252, 0.34);
+      color: #f3f6fb;
+    }
+
+    .podium-item.no3 {
+      background: linear-gradient(180deg, rgba(214, 146, 95, 0.26), rgba(139, 82, 45, 0.16));
+      border-color: rgba(249, 214, 185, 0.34);
+      color: #ffefe1;
+    }
+
+    
+    .podium-item.no1 { 
+      transform: translateY(calc(var(--podium-no1-lift) * -1)); 
+	 z-index: 2; 
+    }
+    
+    .avatar-wrapper { 
+      position: relative; 
+      margin-bottom: 12px; 
+      display: inline-flex; 
+    }
+    
+    .avatar-round { 
+      width: var(--podium-avatar-size); 
+      height: var(--podium-avatar-size); 
+      border-radius: 50%; 
+      object-fit: cover; 
+      background: #1A1A1A; 
+    }
+    
+    .no1 .avatar-round { 
+      width: var(--podium-avatar-first); 
+      height: var(--podium-avatar-first); 
+      border: 3px solid var(--rank-1-color); 
+      box-shadow: 0 0 28px var(--rank-1-glow); 
+    }
+    
+    .no2 .avatar-round { 
+      border: 2px solid var(--rank-2-color); 
+      box-shadow: 0 0 20px var(--rank-2-glow); 
+    }
+    
+    .no3 .avatar-round { 
+      border: 2px solid var(--rank-3-color); 
+      box-shadow: 0 0 20px var(--rank-3-glow); 
+    }
+    
+    .rank-badge { 
+      position: absolute; 
+      top: -12px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      color: #fff; 
+      font-size: 12px; 
+      font-weight: 800; 
+      padding: 2px 12px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6); 
+    }
+    
+    .badge-1 { background: linear-gradient(135deg, #FFF0A8, #FFD700, #D4AF37); color: #4A2E00; top: auto; bottom: -14px; border: 2px solid #FFF; }
+    .badge-2 { background: linear-gradient(135deg, #FFFFFF, #E0E0E0, #9E9E9E); color: #222; border: 1px solid #FFF; }
+    .badge-3 { background: linear-gradient(135deg, #FFD2A8, #CD7F32, #8B4513); border: 1px solid #FFF; }
+    
+    .crown-icon { 
+      position: absolute; 
+      top: -34px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      width: 40px; 
+      height: 40px; 
+      z-index: 2; 
+      filter: drop-shadow(0 4px 8px rgba(255,215,0,0.5)); 
+    }
+    
+    .nickname { 
+      font-size: 14px; 
+      color: inherit; 
+      display: block; 
+      overflow: hidden; 
+      white-space: nowrap; 
+      text-overflow: ellipsis; 
+      font-weight: 600; 
+    }
+    
+    .at-symbol { 
+      color: var(--text-tertiary); 
+      margin-right: 1px; 
+      font-size: 13px; 
+      font-weight: normal; 
+    }
+    
+    .val-text { 
+      font-size: 13px; 
+      font-weight: 800; 
+      margin-top: 6px; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 4px; 
+      background: rgba(0,0,0,0.25); 
+      padding: 4px 10px; 
+      border-radius: 12px; 
+      border: 1px solid rgba(255,255,255,0.16); 
+    }
+    
+    .diamond-icon { width: 16px; height: 16px; }
+    @media (max-width: 640px) {
+      :root {
+        --podium-avatar-size: 66px;
+        --podium-avatar-first: 86px;
+        --podium-card-max-width: clamp(98px, 31vw, 122px);
+        --podium-card-padding-x: clamp(6px, 2.4vw, 10px);
+        --podium-card-padding-y: clamp(12px, 3.4vw, 16px);
+        --podium-gap: clamp(6px, 1.8vw, 12px);
+        --podium-top-offset: clamp(42px, 13vw, 52px);
+        --podium-no1-lift: clamp(10px, 4.8vw, 20px);
+      }
+      .header {
+        padding: 24px 12px 14px;
+      }
+
+      .locale-switcher {
+        padding: 5px;
+        gap: 6px;
+      }
+
+    
+      #podiumView {
+        padding: 14px 10px 18px;
+      }
+
+      .nickname {
+        font-size: 13px;
+      }
+
+      .val-text {
+        font-size: 12px;
+        padding: 3px 8px;
+      }
+    }
+    
+    /* Desktop spacing tuning for top 3 cards */
+    @media (min-width: 1024px) {
+	      :root {
+        --podium-card-max-width: clamp(152px, 15vw, 182px);
+        --podium-card-padding-x: clamp(12px, 1.2vw, 16px);
+        --podium-card-padding-y: clamp(18px, 1.8vw, 24px);
+      }
+      .header h1 {
+        font-size: clamp(32px, 3.2vw, 40px);
+      }
+	
+      #podiumView {
+        padding: 28px 36px 30px;
+      }
+
+      .podium-item { border-radius: 20px; }
+
+      .avatar-wrapper {
+        margin-bottom: 14px;
+      }
+
+      .nickname {
+        font-size: 15px;
+      }
+
+      .val-text {
+        margin-top: 8px;
+      }
+    }
+    @keyframes slideUpFade { 
+      from { opacity: 0; transform: translateY(16px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    
+    .list-container { 
+      padding: 4px 16px 0; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 8px; 
+    }
+    
+    .list-row { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      padding: 12px 16px; 
+      background: rgba(255,255,255,0.03); 
+      border: 1px solid rgba(255,255,255,0.03); 
+      border-radius: 18px; 
+      animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; 
+    }
+    
+    .rank-num { 
+      width: 32px; 
+      text-align: center; 
+      font-size: 16px; 
+      font-weight: 800; 
+      color: var(--text-tertiary); 
+    }
+    
+    .avatar-square { 
+      width: var(--list-avatar-size); 
+      height: var(--list-avatar-size); 
+      border-radius: 14px; 
+      object-fit: cover; 
+      border: 1px solid rgba(255,255,255,0.1); 
+    }
+    
+    .user-info { 
+      flex: 1; 
+      overflow: hidden; 
+    }
+    
+    .user-name { 
+      font-size: 15px; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      display: block; 
+      font-weight: 600; 
+    }
+    
+    .data-value { 
+      font-size: 15px; 
+      font-weight: 800; 
+      color: #fff; 
+      display: flex; 
+      align-items: center; 
+      gap: 4px; 
+    }
+    
+    .empty-state { 
+      text-align: center; 
+      padding: 48px 16px; 
+      color: var(--text-tertiary); 
+      background: rgba(255,255,255,0.02); 
+      border-radius: 20px; 
+      font-weight: 500; 
+    }
+
+    /* =========================================
+       6. Modals & Settings (視窗設定)
+       ========================================= */
+    .modal-overlay { 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.85); 
+      backdrop-filter: blur(12px); 
+      z-index: 100; 
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      opacity: 0; 
+      transition: 0.3s; 
+      padding: 16px; 
+    }
+    
+    .modal-overlay.show { 
+      display: flex; 
+      opacity: 1; 
+    }
+    
+    .modal-content { 
+      background: #121214; 
+      width: min(100%, 340px); 
+      border-radius: 28px; 
+      padding: 32px 24px; 
+      transform: translateY(20px); 
+      transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+      border: 1px solid rgba(255,255,255,0.1); 
+      box-shadow: 0 24px 80px rgba(0,0,0,0.8); 
+    }
+    
+    .modal-overlay.show .modal-content { 
+      transform: translateY(0); 
+    }
+    
+    .modal-content h2 { 
+      font-size: 22px; 
+      margin-bottom: 24px; 
+      color: #fff; 
+      text-align: center; 
+      font-weight: 800; 
+    }
+    
+    .modal-close-btn { 
+      width: 100%; 
+      margin-top: 24px; 
+      background: rgba(255,255,255,0.1); 
+      color: #FFF; 
+      border: 1px solid rgba(255,255,255,0.1); 
+      padding: 14px; 
+      border-radius: 16px; 
+      font-weight: 700; 
+      font-size: 16px; 
+      cursor: pointer; 
+      transition: 0.2s; 
+    }
+    
+    .achieve-stats { 
+      display: flex; 
+      gap: 8px; 
+      margin-bottom: 24px; 
+    }
+    
+    .achieve-stat-box { 
+      flex: 1; 
+      background: rgba(255,255,255,0.03); 
+      border: 1px solid rgba(255,255,255,0.05); 
+      border-radius: 16px; 
+      padding: 16px 8px; 
+      text-align: center; 
+    }
+    
+    .achieve-stat-box .num { 
+      font-size: 26px; 
+      font-weight: 800; 
+      margin-bottom: 4px; 
+    }
+    
+    .achieve-stat-box .label { 
+      font-size: 12px; 
+      color: var(--text-secondary); 
+    }
+    
+    .achieve-history { 
+      max-height: 240px; 
+      overflow-y: auto; 
+      padding-right: 8px; 
+    }
+    
+    .achieve-row { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 14px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.05); 
+      font-size: 14px; 
+      align-items: center; 
+    }
+    
+    .achieve-date { 
+      color: var(--text-secondary); 
+      font-family: monospace; 
+      font-size: 13px; 
+    }
+    
+    .achieve-type { 
+      font-weight: bold; 
+      padding: 4px 10px; 
+      border-radius: 8px; 
+      font-size: 12px; 
+    }
+    
+    .switch { 
+      position: relative; 
+      display: inline-block; 
+      width: 52px; 
+      height: 30px; 
+      flex-shrink: 0; 
+    }
+    
+    .switch input { opacity: 0; width: 0; height: 0; }
+    
+    .slider { 
+      position: absolute; 
+      cursor: pointer; 
+      top: 0; left: 0; right: 0; bottom: 0; 
+      background-color: rgba(255,255,255,0.1); 
+      transition: .4s; 
+      border-radius: 34px; 
+    }
+    
+    .slider:before { 
+      position: absolute; 
+      content: ""; 
+      height: 22px; 
+      width: 22px; 
+      left: 4px; 
+      bottom: 4px; 
+      background-color: white; 
+      transition: .4s; 
+      border-radius: 50%; 
+    }
+    
+    input:checked + .slider { background-color: var(--brand-primary); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* =========================================
+       7. Floating Pill: Bottom My Rank Bar
+       ========================================= */
+    .my-rank-bar { 
+      position: fixed; 
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
+      left: 50%; 
+      transform: translateX(-50%) translateY(20px); 
+      width: min(100vw, var(--container-standard)); 
+      max-width: none; 
+      z-index: 30; 
+      display: none; 
+      align-items: center; 
+      gap: 16px; 
+      padding: 16px 20px; 
+      background: rgba(24, 24, 28, 0.92); 
+      backdrop-filter: blur(24px); 
+  box-shadow: 0 20px 44px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05) inset; 
+      border-radius: 20px; 
+      border: 2px solid rgba(110, 232, 222, 0.45); 
+      opacity: 0; 
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .my-rank-bar.show { 
+      display: flex; 
+      opacity: 1; 
+      transform: translateX(-50%) translateY(0); 
+    }
+    .my-rank-left { display: flex; flex-direction: column; gap: 6px; }    
+    .my-rank-main { font-size: 18px; font-weight: 800; color: #fff; }
+    .my-rank-privacy-row { display: flex; align-items: center; gap: 8px; }
+    .my-rank-privacy-label { font-size: 12px; color: var(--text-secondary); }
+    .my-rank-right { margin-left: auto; text-align: right; }
+    .my-rank-value { color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+    .my-rank-gap { font-size: 12px; color: var(--brand-primary); margin-top: 4px; font-weight: 600; }
+        .achievement-btn {
+      margin-top: 8px;
+      padding: 10px 18px;
+      border: 1px solid rgba(255, 215, 0, 0.58);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      border-radius: 999px;
+      background: rgba(255, 215, 0, 0.14);
+          color: #FFD86B;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .achievement-btn:hover {
+      background: rgba(255, 215, 0, 0.2);
+    }
+
+    #dev-banner { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      width: 100%; 
+      background: rgba(207, 4, 4, 0.9); 
+      color: #fff; 
+      text-align: center; 
+      padding: 6px; 
+      font-size: 12px; 
+      z-index: 9999; 
+      font-weight: bold; 
+    }
+  </style>
 </head>
 <body>
 
-<div id="loader-overlay">
-    <div class="spinner"></div>
-    <div class="loader-text">Loading</div>
-</div>
+  <!-- 開發者預覽提示 -->
+  <div id="dev-banner">⚠️[DEV MODE] 目前為無 Token 訪客預覽模式</div>
 
-<div class="container">
-    <header>
-        <h1 class="brand-title">SWAG <span>VIP</span> 預約系統</h1>
-        <div class="user-pill">
-            <div class="user-dot"></div>
-            <span id="u-name">Syncing...</span>
-            <span id="u-lv">--</span>
+  <!-- 活動規則 Modal -->
+  <div class="modal-overlay" id="ruleModal" onclick="closeModal('ruleModal', event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h2>活動規則</h2>
+      <p style="color: #fff; font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 8px;">一、榜單規則</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 8px;">1. 日榜：依據當日消耗鑽石進行排名，每日 23:59 結算。</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 8px;">2. 週榜：依據當週消耗鑽石進行排名，每週週日 23:59 結算。</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 12px;">3. 榮耀名人堂：統計歷屆日榜與週榜獲得第 1 名的次數；若次數相同，則以先達成者排名在前。</p>
+
+      <p style="color: #fff; font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 8px;">二、徽章獎勵</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 8px;">1. 日榜徽章（共 5 款）</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 4px;">・第 1 名冠軍徽章</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 4px;">・第 2–10 名榮譽徽章</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 8px;">・累積 7 / 30 / 90 次第 1 名成就徽章</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 8px;">2. 週榜徽章（共 5 款）</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 4px;">・第 1 名冠軍徽章</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 4px;">・第 2–10 名榮譽徽章</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 12px;">・累積 4 / 12 / 36 次第 1 名成就徽章</p>
+
+      <p style="color: #fff; font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 8px;">三、注意事項</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 8px;">1. 活動資料更新約需 5 分鐘同步時間，請以系統最終顯示結果為準。</p>
+      <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 12px;">2. 本活動主辦單位保留修改、變更或終止活動之權利。</p>
+      <button class="modal-close-btn" onclick="closeModal('ruleModal')">我知道了</button>
+    </div>
+  </div>
+
+  <!-- 成就殿堂 Modal -->
+  <div class="modal-overlay" id="achievementModal" onclick="closeModal('achievementModal', event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h2>🏆 我的榮耀殿堂</h2>
+      <div id="achievementContent">
+        <div class="empty-state">讀取中...</div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('achievementModal')">關閉</button>
+    </div>
+  </div>
+
+  <div class="device-container">
+    <div class="top-fixed-section">
+      
+      <!-- 頂部 Header -->
+	      <div class="header">
+	        <div class="header-title-row">
+	          <div class="header-top-row">
+	            <div class="header-controls">
+	              <div class="locale-switcher" id="localeSwitcher" role="group" aria-label="Language">
+	                <button type="button" class="locale-btn" data-locale="zh-TW">繁</button>
+	                <button type="button" class="locale-btn" data-locale="zh-CN">简</button>
+	                <button type="button" class="locale-btn" data-locale="en">EN</button>
+	                <button type="button" class="locale-btn" data-locale="ja">日</button>
+	              </div>
+	              <div class="icon-group">
+	              <div class="action-icon" onclick="openModal('ruleModal')">ⓘ</div>
+	            </div>
+	            </div>
+	          </div>
+	          <h1 class="title-shine" id="pageTitle">璀璨之星爭奪戰</h1>
+	        </div>
+        <div class="countdown-banner" id="countdownBanner">
+          <span id="countdown-label">日榜倒數</span>
+          <span class="countdown-time" id="countdown-time">--</span>
         </div>
-    </header>
+          
+      </div>
 
-    <div id="april-notice" class="anchor-notice hidden">
-        ⚠️ 4/1 起福利等級調整預告：徽章改為 LV.70，蓋板封面改為 LV.80
+      <!-- Segmented Control 導航列 -->
+      <div class="nav-container">
+        <div class="segmented-control">
+          <input type="radio" name="mode" id="mode-current" value="current" checked onchange="switchMode('current')">
+          <label for="mode-current" id="modeCurrentLabel">🔥 當期爭霸</label>
+          <input type="radio" name="mode" id="mode-hof" value="hof" onchange="switchMode('hof')">
+          <label for="mode-hof" id="modeHofLabel">👑 榮耀名人堂</label>
+          <div class="glider"></div>
+        </div>
+        <div class="sub-tabs-wrapper">
+          <!-- 修改處：加入昨日與上週 -->
+          <div class="sub-tabs current-tabs active">
+            <div class="tab-item active" data-tab="daily" id="tab-daily">今日</div>
+            <div class="tab-item" data-tab="prev_daily" id="tab-prev-daily">昨日</div>
+            <div class="tab-item" data-tab="weekly" id="tab-weekly">本週</div>
+            <div class="tab-item" data-tab="prev_weekly" id="tab-prev-weekly">上週</div>
+          </div>
+          <div class="sub-tabs hof-tabs">
+            <div class="tab-item" data-tab="cumulative_daily" id="tab-cumulative-daily">日冠累積</div>
+            <div class="tab-item" data-tab="cumulative_weekly" id="tab-cumulative-weekly">週冠累積</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 頒獎台區塊 -->
+      <div id="podiumView">
+        <div class="podium" id="podiumContent">
+          <div class="empty-state" style="grid-column:span 3;border:none;">資料讀取中...</div>
+        </div>
+      </div>
     </div>
 
-    <div class="system-hint">
-        <span>🔔 福利上架後將透過小鈴噹通知，不再另行發送訊息通知</span>
+    <!-- 列表滾動區塊 -->
+    <div class="content-scroll" id="scrollArea">
+      <div class="list-container" id="leaderboard-list"></div>
     </div>
 
-    <!-- Cards Grid -->
-    <div id="benefit-grid" class="benefit-grid"></div>
-
-    <!-- Footer for Customer Service Info -->
-    <footer class="page-footer">
-        如需修改請聯繫客服
-    </footer>
-</div>
-
-<!-- Modal -->
-<div id="modal">
-    <div class="modal-content">
-        <button class="modal-close" onclick="closeModal()">×</button>
-        <h2 class="modal-title" id="m-title">福利預約</h2>
-
-        <div id="anchor-notice" class="anchor-notice hidden"></div>
-
-        <!-- 徽章 -->
-        <div id="badge-fields" class="hidden">
-            <div class="form-group">
-                <label class="form-label">徽章名稱 <span class="char-count" id="b_name_count">0/8</span></label>
-                <input type="text" id="b_name" oninput="countChars(this,'b_name_count',8)">
-            </div>
-            <div class="form-group">
-                <label class="form-label">元素或文字 <span class="char-count" id="b_elem_count">0/20</span></label>
-                <input type="text" id="b_elem" oninput="countChars(this,'b_elem_count',20)">
-            </div>
-            <div class="form-group">
-                <label class="form-label">示意圖（雲端網址）</label>
-                <input type="url" id="b_url">
-            </div>
-            <div class="form-group">
-                <label class="form-label">贈與帳號（每行一個 ID）</label>
-                <textarea id="b_targets"></textarea>
-            </div>
+    <!-- 底部個人排名膠囊 -->
+    <div class="my-rank-bar" id="myRankBar">
+      <div class="my-rank-left">
+        <div style="font-size: 12px; color: #888;">我的排名</div>
+        <div class="my-rank-main" id="myRankMain">--</div>
+        <div class="my-rank-privacy-row">
+          <span class="my-rank-privacy-label">排行榜隱身</span>
+          <label class="switch">
+            <input type="checkbox" id="privacyToggle" onchange="togglePrivacy(this)">
+            <span class="slider"></span>
+          </label>
         </div>
-
-        <!-- 禮物 -->
-        <div id="gift-fields" class="hidden">
-            <div class="form-group">
-                <label class="form-label">禮物名稱 <span class="char-count" id="g_name_count">0/20</span></label>
-                <input type="text" id="g_name" oninput="countChars(this,'g_name_count',20)">
-            </div>
-            <label class="checkbox-row"><input type="checkbox" id="g_brand"> 是否冠名</label>
-            <div class="form-group">
-                <label class="form-label">禮物圖上文字 <span class="char-count" id="g_txt_count">0/8</span></label>
-                <input type="text" id="g_txt" oninput="countChars(this,'g_txt_count',8)">
-            </div>
-            <div class="form-group">
-                <label class="form-label">禮物鑽石數</label>
-                <input type="number" id="g_dia">
-            </div>
-            <label class="checkbox-row"><input type="checkbox" id="g_photo" onchange="toggleGiftSwagger()"> 需要主播照片作為素材</label>
-        </div>
-
-        <!-- 廣告 -->
-        <div id="ad-fields" class="hidden">
-            <label class="checkbox-row"><input type="checkbox" id="ad_brand"> 是否冠名</label>
-            <div class="form-group">
-                <label class="form-label">客製化文案 <span class="char-count" id="ad_copy_count">0/20</span></label>
-                <input type="text" id="ad_copy" oninput="countChars(this,'ad_copy_count',20)">
-            </div>
-        </div>
-
-        <!-- 午餐 -->
-        <div id="lunch-fields" class="hidden">
-            <p class="lunch-hint">* 請選擇下週開始的三個優先日期</p>
-            <div class="form-group"><label class="form-label">優先日期 1</label><select id="l_1"></select></div>
-            <div class="form-group"><label class="form-label">優先日期 2</label><select id="l_2"></select></div>
-            <div class="form-group"><label class="form-label">優先日期 3</label><select id="l_3"></select></div>
-        </div>
-
-        <!-- 主播帳號 -->
-        <div class="form-group hidden" id="sw-group">
-            <label class="form-label" id="label-swagger">指定主播帳號（請勿填寫 @）</label>
-            <input type="text" id="swagger_id" placeholder="請輸入主播帳號" oninput="resetCheckStatus()">
-            <button id="btn-check" class="btn-check hidden" onclick="syncAndCheck()">🔍 核對名額狀況</button>
-        </div>
-
-        <!-- 日期 -->
-        <div class="form-group hidden" id="date-group">
-            <label class="form-label">選擇日期 / 場次</label>
-            <select id="reserve_date" disabled><option>請先完成核對</option></select>
-        </div>
-
-        <!-- 小鈴噹 -->
-        <div id="bell-fields" class="hidden">
-            <div class="form-group">
-                <label class="form-label">發送文字 <span class="char-count" id="bell_msg_count">0/20</span></label>
-                <input type="text" id="bell_msg" oninput="countChars(this,'bell_msg_count',20)">
-            </div>
-            <label class="checkbox-row"><input type="checkbox" id="bell_brand"> 是否冠名</label>
-        </div>
-
-        <!-- 封面 -->
-        <div id="cover-fields" class="hidden">
-            <div class="form-group">
-                <label class="form-label">客製化文案 <span class="char-count" id="cover_copy_count">0/20</span></label>
-                <input type="text" id="cover_copy" oninput="countChars(this,'cover_copy_count',20)">
-            </div>
-            <label class="checkbox-row"><input type="checkbox" id="cover_brand"> 是否冠名</label>
-        </div>
-        <p class="text-field-hint">＊文字欄位請與主播討論後自行填寫</p>
-
-        <div class="form-group">
-            <label class="form-label">需求備註 <span class="char-count" id="reserve_content_count">0/100</span></label>
-            <textarea id="reserve_content" oninput="countChars(this,'reserve_content_count',100)"></textarea>
-        </div>
-
-        <button id="btn-submit" class="btn-submit" onclick="handleFormSubmit()">確認提交申請</button>
+      </div>
+      <div class="my-rank-right">
+        <div class="my-rank-value" id="myRankValue">--</div>
+        <div class="my-rank-gap" id="myRankGap">--</div>
+        <button class="achievement-btn" id="achievementBtn" onclick="openAchievementModal()" style="display:none;">🏆 我的榮耀殿堂</button>
+      </div>
     </div>
-</div>
-<!-- Announcement Modal -->
-<div id="announcement-modal" onclick="handleAnnouncementBackdrop(event)">
-    <div class="announcement-content">
-        <button class="modal-close" onclick="closeAnnouncement()" aria-label="關閉公告">×</button>
-        <h2 class="announcement-title">📢【重要公告】VIP 實體活動實名身分核驗與違規處置規範</h2>
-        <p class="announcement-intro">各位親愛的用戶：<br>感謝大家一直以來對官方線下活動（女神聚會、VIP 同樂會）的熱情參與。<br>為進一步維護高等級帳號的資產安全，並確保每位用戶的活動權益與現場安全，官方將正式實施「活動行為回溯核驗機制」。針對近期頻發的「帳號外借」或「冒名簽到」等行為，官方已升級系統偵測能力，並將於活動現場及售後進行常態化比對與抽查。</p>
-        <div class="announcement-section">
-            <h3 class="announcement-section-title">📍為什麼我們要嚴格執行實名制？</h3>
-            <ul class="announcement-list">
-                <li><strong>捍衛活動公平性：</strong>活動的初衷是希望高等級用戶能與主播有直接的互動體驗。為確保所有用戶的資格判定標準一致，避免因部分代參與行為影響整體公平，官方必須嚴格執行本人出席制度。</li>
-                <li><strong>確保活動安全性：</strong>為保障主播與現場用戶的人身安全，參與名單必須與後台數據 100% 吻合，嚴防身份冒用所帶來的潛在風險。</li>
-                <li><strong>維護專屬權益價值：</strong>高等級帳號之權利具備排他性。任何共享帳號或名額轉讓之行為，皆會嚴重損害其他 VIP 的應得權益。</li>
-                <li><strong>帳號資產保護：</strong>私自外流帳號憑證將導致資產遭受非授權使用，官方不介入處理任何因外借所衍生的帳號糾紛。</li>
-            </ul>
-        </div>
-        <div class="announcement-section">
-            <h3 class="announcement-section-title">1. 違規行為定義</h3>
-            <ul class="announcement-list">
-                <li><strong>帳號外借：</strong>將本人帳號交由他人代為參加現場活動（不論是否有償）。</li>
-                <li><strong>冒名參加：</strong>使用非本人持有之帳號、分身帳號進行簽到或領取福利。</li>
-                <li><strong>多重簽到：</strong>單一設備登入多個帳號進行重複簽到。</li>
-            </ul>
-        </div>
-        <div class="announcement-section">
-            <h3 class="announcement-section-title">2. 數據核驗與處置</h3>
-            <p class="announcement-intro">官方將針對活動期間之設備識別碼、連線環境及地理位置進行多維度交叉比對。</p>
-            <ul class="announcement-list">
-                <li><strong>處置措施：</strong>經系統偵測及人工覆核屬實者，官方將直接對出借者與受借者之帳號處以「停止所有 VIP 福利 60 天」之處分。</li>
-                <li><strong>累犯加重：</strong>若多次涉及冒名行為，官方保留永久封鎖該帳號活動資格之權利。</li>
-            </ul>
-        </div>
-        <div class="announcement-section">
-            <h3 class="announcement-section-title">3. 現場核身與彈性說明</h3>
-            <p class="announcement-intro">為保障您的權益，活動現場將隨機利用交叉驗證機制核對身份（如：出示 App 登入畫面、驗證電子郵件等）。</p>
-            <ul class="announcement-list">
-                <li><strong>尊重選擇權：</strong>是否由本人出席屬於您的安排權利，官方完全尊重您的選擇；惟若最終確認非本人參與，將依規範處置以維護公平。</li>
-                <li><strong>主動告知義務：</strong>若您因故無法親自參加，請主動聯繫官方協助取消名額，此舉不會影響您帳號的其他既有權益，亦能避免後續因誤會產生之違規紀錄。</li>
-            </ul>
-        </div>
-        <div class="announcement-section">
-            <h3 class="announcement-section-title">4. 權利保留聲明</h3>
-            <p class="announcement-intro">官方將持續優化驗證機制（包含但不限於簡訊驗證或其他科技手段）。我們保留隨時修正身分驗證方式之權利，異動將於活動頁面或官方公告中說明。</p>
-            <p class="announcement-intro">官方提醒：高等級帳號具備珍貴的權益與資產，外借帳密不僅違反規範，更可能導致個資外洩風險。我們理解相關核驗過程可能帶來不便，但為優化流程與長遠福利制度，感謝您的配合與體諒。<br>特此公告。</p>
-        </div>
-    </div>
-</div>
+  </div>
 
-<script>
-    const USER_API = 'https://swag-user-info-api-905468082258.asia-east1.run.app/api/badges';
-    const GAS_API = 'https://script.google.com/macros/s/AKfycby0RkXpyFaRK4QlQCQAPjmwdG_DRdUtnwW_6L-NJTxjFrUDWwULY0VNLFN5tg4wQpvJGA/exec';
+  <script>
+    // ==========================================
+    // 1. 全域變數與常數設定
+    // ==========================================
+    const API_BASE = 'https://swag-bff-api-905468082258.asia-east1.run.app/api';
+    const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzExMTExMSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzgiIHI9IjIyIiBmaWxsPSIjMjgyODI4Ii8+PHBhdGggZD0iTTE1IDEwMGEzNSAzNSAwIDAgMSA3MCAwIiBmaWxsPSIjMjgyODI4Ii8+PC9zdmc+';
+    const CROWN_SVG = `<svg viewBox="0 0 24 24" fill="none" class="crown-icon"><path d="M2 19H22V21H2V19ZM3 5L7 12L12 3L17 12L21 5L19 17H5L3 5Z" fill="#FFF" stroke="rgba(0,0,0,0.1)" stroke-width="0.6"/><path d="M12 9C12.5523 9 13 8.55228 13 8C13 7.44772 12.5523 7 12 7C11.4477 7 11 7.44772 11 8C11 8.55228 11.4477 9 12 9Z" fill="#D4AF37"/></svg>`;
 
-    let user = { id: '', username: '', level: 0 }, userHistory =[], bookings =[], activeWelfare = null;
-    let isDataLoaded = false;
-    const taiwanHolidayCache = new Map();
-    const aprilFirst = new Date('2026-04-01T00:00:00');
- const welfareIconMap = {
-        '大神贊助': 'https://public.swag.live/badges/user_level_benefit_pin_livestream_v2.svg',
-        '女神聚會': 'https://public.swag.live/badges/user_level_benefit_offline_meetup_v2.svg',
-        '訂製小鈴噹通知': 'https://public.swag.live/badges/user_level_benefit_custom_notification.svg',
-        '訂製搜尋框文字': 'https://public.swag.live/badges/user_level_benefit_customer_search_v2.svg',
-        '訂製專屬徽章': 'https://public.swag.live/badges/user_level_benefit_customer_badge_v2.svg',
-        '蓋板創作者封面': 'https://public.swag.live/badges/user_level_benefit_customer_center_girl_v2.svg',
-        '訂製專屬禮物': 'https://public.swag.live/badges/user_level_benefit_customer_gift_v2.svg',
-        '專屬直播欄位廣告': 'https://public.swag.live/badges/user_level_benefit_customer_ad_v2.svg',
-        'CEO午餐': 'https://public.swag.live/badges/user_level_benefit_ceo_lunch_v2.svg'
+    let swagToken = null;
+    let currentUserId = 'Visitor';
+    let currentTab = 'daily'; 
+    let handshakeRetryInterval = null;
+
+    // 修改處：加入 prev_daily, prev_weekly 變數
+    const boardData = { 
+      daily: [], 
+      prev_daily: [],
+      weekly: [], 
+      prev_weekly: [],
+      cumulative_daily: [], 
+      cumulative_weekly: [] 
     };
     
-    function getWelfareList() {
-        const all =[
-            { name: '大神贊助', lv: 50 },
-            { name: '女神聚會', lv: 50 },
-            { name: '訂製小鈴噹通知', lv: 60 },
-            { name: '訂製搜尋框文字', lv: 70 },
-            { name: '訂製專屬徽章', lv:  70 },
-            { name: '蓋板創作者封面', lv: 80 },
-            { name: '訂製專屬禮物', lv: 80 },
-            { name: '專屬直播欄位廣告', lv: 90 },
-            { name: 'CEO午餐', lv: 90 }
-        ];
-        return all.sort((a, b) => a.lv - b.lv);
+    const myStats = { 
+      daily: null, 
+      prev_daily: null,
+      weekly: null, 
+      prev_weekly: null,
+      cumulative_daily: null, 
+      cumulative_weekly: null 
+    }; 
+ let currentLocale = localStorage.getItem('leaderboard_locale') || 'zh-TW';
+    const I18N = {
+      'zh-TW': {
+        title: '璀璨之星爭奪戰',
+        modeCurrent: '🔥 當期爭霸',
+        modeHof: '👑 榮耀名人堂',
+        tabDaily: '今日',
+        tabPrevDaily: '昨日',
+        tabWeekly: '本週',
+        tabPrevWeekly: '上週',
+        tabCumulativeDaily: '日冠累積',
+        tabCumulativeWeekly: '週冠累積',
+        noData: '暫無排名資料',
+        loading: '資料讀取中...',
+        countdownDaily: '日榜倒數',
+        countdownWeekly: '週榜倒數',
+        countdownUnitDay: '日',
+        countdownUnitHour: '時',
+        countdownUnitMin: '分',
+        countdownUnitSec: '秒',
+        unitTimes: '次'
+      },
+      'zh-CN': {
+        title: '璀璨之星争夺战',
+        modeCurrent: '🔥 当期争霸',
+        modeHof: '👑 荣耀名人堂',
+        tabDaily: '今日',
+        tabPrevDaily: '昨日',
+        tabWeekly: '本周',
+        tabPrevWeekly: '上周',
+        tabCumulativeDaily: '日冠累计',
+        tabCumulativeWeekly: '周冠累计',
+        noData: '暂无排名数据',
+        loading: '数据读取中...',
+        countdownDaily: '日榜倒数',
+        countdownWeekly: '周榜倒数',
+        countdownUnitDay: '日',
+        countdownUnitHour: '时',
+        countdownUnitMin: '分',
+        countdownUnitSec: '秒',
+        unitTimes: '次'
+      },      
+      en: {
+        title: 'Star Glory Showdown',
+        modeCurrent: '🔥 Current Season',
+        modeHof: '👑 Hall of Fame',
+        tabDaily: 'Today',
+        tabPrevDaily: 'Yesterday',
+        tabWeekly: 'This Week',
+        tabPrevWeekly: 'Last Week',
+        tabCumulativeDaily: 'Daily Champs',
+        tabCumulativeWeekly: 'Weekly Champs',
+        noData: 'No ranking data yet',
+        loading: 'Loading...',
+        countdownDaily: 'Daily reset in',
+        countdownWeekly: 'Weekly reset in',
+        countdownUnitDay: 'd',
+        countdownUnitHour: 'h',
+        countdownUnitMin: 'm',
+        countdownUnitSec: 's',
+        unitTimes: 'wins'
+      },
+      ja: {
+        title: 'スター栄光ランキング',
+        modeCurrent: '🔥 進行中ランキング',
+        modeHof: '👑 栄光の殿堂',
+        tabDaily: '今日',
+        tabPrevDaily: '昨日',
+        tabWeekly: '今週',
+        tabPrevWeekly: '先週',
+        tabCumulativeDaily: '日間1位累計',
+        tabCumulativeWeekly: '週間1位累計',
+        noData: 'ランキングデータがありません',
+        loading: '読み込み中...',
+        countdownDaily: '日次締切まで',
+        countdownWeekly: '週次締切まで',
+        countdownUnitDay: '日',
+        countdownUnitHour: '時間',
+        countdownUnitMin: '分',
+        countdownUnitSec: '秒',
+        unitTimes: '回'
+      }
+    };
+
+    // ==========================================
+    // 2. 工具與 UI 輔助函式
+    // ==========================================
+    function escapeHtml(str) { 
+      return String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;'); 
     }
 
-    window.onload = function() { init(); };
-
-    async function init() {
-        if (window.self === window.top) {
-            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>請於 SWAG 站內開啟</h2>";
-            return;
-        }
-        const params = new URLSearchParams(window.location.search);
-        const urlId = params.get('user_id');
-        if (!urlId) {
-            document.getElementById('loader-overlay').style.display = 'none';
-            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>⚠️ 缺少使用者資訊，請從 SWAG 站內重新進入</h2>";
-            return;
-        }
-        const isFromSwag = document.referrer.includes('swag.live');
-        const storedRef = sessionStorage.getItem('vip_ref');
-        if (!isFromSwag && !storedRef) {
-            document.getElementById('loader-overlay').style.display = 'none';
-            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>⚠️ 請從官方 SWAG 頁面進入</h2>";
-            return;
-        }
-        if (isFromSwag) sessionStorage.setItem('vip_ref', '1');
-
-        const storedId = sessionStorage.getItem('vip_uid');
-        if (!storedId) {
-            sessionStorage.setItem('vip_uid', urlId);
-        } else if (storedId !== urlId) {
-            document.getElementById('loader-overlay').style.display = 'none';
-            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>⚠️ 身分異常，請重新從官方渠道進入</h2>";
-            return;
-        }
-
-        if (new Date() < aprilFirst) {
-            document.getElementById('april-notice').classList.remove('hidden');
-        }
-
-        renderCards();
-        document.getElementById('loader-overlay').style.display = 'none';
-
-        try {
-            const res = await fetch(USER_API + "?user_id=" + encodeURIComponent(urlId));
-            const data = await res.json();
-            user.id = (data.user_id || data.id || "").toString().trim();
-            if (user.id !== urlId) {
-                document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>身分驗證失敗，請重新進入</h2>";
-                return;
-            }
-            user.username = (data?.username || data?.display_name || user.id).trim();
-            user.level = data?.level || 0;
-            document.getElementById('u-name').innerText = user.username;
-            document.getElementById('u-lv').innerText = "LV." + user.level;
-
-            const hRes = await fetch(GAS_API + "?action=getUserHistory&username=" + encodeURIComponent(user.username) + "&v=" + Date.now());
-            userHistory = JSON.parse(await hRes.text());
-            isDataLoaded = true;
-            renderCards();
-        } catch(e) { console.error(e); }
+    function getAvatarUrl(userId) { 
+      if (!userId || userId === 'hidden') {
+        return DEFAULT_AVATAR;
+      }
+      return `https://public.swag.live/users/${encodeURIComponent(userId)}/picture.jpg?size=512x512&format=jpg`; 
     }
 
-     function normalizeMonthString(raw) {
-        if (!raw) return '';
-        const text = String(raw).trim();
-        const m = text.match(/^(\d{4})[-\/](\d{1,2})$/);
-        if (!m) return '';
-        return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0');
+    function renderDiamondIcon() { 
+      return `<img class="diamond-icon" src="https://swag.live/static/img/ic_diamond_sm.cf6904ca.svg" alt="diamond">`; 
+    }
+   function t(key) {
+      return I18N[currentLocale]?.[key] || I18N['zh-TW'][key] || key;
     }
 
-    function getRecordMonth(record) {
-        const submitMonth = normalizeMonthString(record && record.submitMonth);
-        if (submitMonth) return submitMonth;
-
-        const dateText = String((record && record.date) || '').trim();
-        const dateMatch = dateText.match(/^(\d{4})[-\/](\d{1,2})(?:[-\/]\d{1,2})?/);
-        if (!dateMatch) return '';
-        return dateMatch[1] + '-' + String(parseInt(dateMatch[2], 10)).padStart(2, '0');
+    function applyLocale() {
+      const mapping = {
+        pageTitle: 'title',
+        modeCurrentLabel: 'modeCurrent',
+        modeHofLabel: 'modeHof',
+        'tab-daily': 'tabDaily',
+        'tab-prev-daily': 'tabPrevDaily',
+        'tab-weekly': 'tabWeekly',
+        'tab-prev-weekly': 'tabPrevWeekly',
+        'tab-cumulative-daily': 'tabCumulativeDaily',
+        'tab-cumulative-weekly': 'tabCumulativeWeekly'
+      };
+      Object.entries(mapping).forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = t(key);
+      });
+      document.querySelectorAll('.locale-btn').forEach((button) => {
+        const isActive = button.dataset.locale === currentLocale;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      if (!currentTab.startsWith('cumulative')) {
+        const isWeeklyBoard = currentTab === 'weekly' || currentTab === 'prev_weekly';
+        document.getElementById('countdown-label').textContent = isWeeklyBoard ? t('countdownWeekly') : t('countdownDaily');
+      }
+      renderCurrentBoard();
+      updateCountdown();
     }
 
-    function renderCards() {
-        const grid = document.getElementById('benefit-grid');
-        const welfareList = getWelfareList();
-        const now = new Date();
-        const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0');
-        const todayTime = now.getTime();
-
-        let pm = ((now.getMonth()+1)%2===0) ? now.getMonth()+1 : now.getMonth()+2;
-        let py = now.getFullYear();
-        if (pm > 12) { pm = 2; py += 1; }
-        const targetPartyDate = py + "-" + String(pm).padStart(2,'0');
-
-        grid.innerHTML = welfareList.map(function(w) {
-            const myRecords = userHistory.filter(h => h.benefit === w.name);
-            const iconUrl = welfareIconMap[w.name];
-
-            // 【核心邏輯：嚴格只看本月送出的紀錄】
- const currentMonthRecords = myRecords.filter(h => getRecordMonth(h) === currentMonthStr);
-            const monthCount = currentMonthRecords.length;
-
-            let isQuotaLocked = false;
-            let isPartyLocked = false;
-
-            if (w.name === '女神聚會') {
-                isPartyLocked = myRecords.some(h => h.date === targetPartyDate || h.date === "處理中");
-                isQuotaLocked = isPartyLocked;
-            } else if (w.name === '大神贊助' && user.level >= 90) {
-                isQuotaLocked = monthCount >= 2;
-            } else {
-                isQuotaLocked = monthCount >= 1;
-            }
-
-            const isLevelLocked = isDataLoaded && user.level < w.lv;
-            const locked = !isDataLoaded || isLevelLocked || isQuotaLocked;
-
-            let statusActionHtml = '';
-            let btnTxt = '';
-            if (!isDataLoaded) {
-                btnTxt = "⏳ 讀取中...";
-            } else if (isLevelLocked) {
-                btnTxt = "";
-            } else if (w.name === '女神聚會' && isPartyLocked) {
-                btnTxt = "🔒 已預約";
-            } else if (isQuotaLocked) {
-                const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
-                btnTxt = hasPendingThisMonth ? "⏳ 處理中" : "🔒 已預約";
-                  } else {
-                btnTxt = "立即預約";
-            }
-
-            const btnColor = locked ? "var(--color-text-tertiary)" : "var(--color-primary)";
-            const cardClass = "card" + (locked ? " locked" : "");
-
-            let partyHtml = '';
-            if (w.name === '女神聚會') {
-                partyHtml = `<div class="party-info">
-                    <strong>4月場次：4/25（六）17:50</strong><br>
-                    地點：台北市信義區
-                   <div class="party-btn-row">
-                        <button class="party-btn" onclick="event.stopPropagation();window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935','_blank')">👉🏻 活動資訊</button>
-                        <button class="party-btn" onclick="event.stopPropagation();openAnnouncement()">📢 重要公告</button>
-                    </div>
-                    </div>`;
-            }
-
-            // 過濾要顯示在卡片下方的歷史紀錄
-            const displayRecords = myRecords.filter(h => {
-                if (h.date === "處理中") return true;
-                if (getRecordMonth(h) === currentMonthStr) return true;
-                if (w.name === '女神聚會' && h.date === targetPartyDate) return true;
-                if (h.date && h.date !== "處理中") {
-                    const rd = new Date(h.date);
-                    if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 7) return true;
-                }
-                return false;
-            });
-
-            let historyHtml = '';
-            let detailIdCounter = 0;
-            if (displayRecords.length > 0) {
-                // 按月份分組
-                const groups = {};
-                displayRecords.forEach(h => {
-                    const key = getRecordMonth(h) || currentMonthStr;
-                    if (!groups[key]) groups[key] = [];
-                    groups[key].push(h);
-                });
-
-            historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records], groupIndex) => {
-                    const rowsHtml = records.map((h, recordIndex) => {
-               const isDatePattern = /^\d{4}[-\/]\d{1,2}/.test(h.date);
-                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
-                        if (w.name === '女神聚會') displayStatus = "報名成功";
-                        if (h.date === "處理中") displayStatus = "處理中";
-                        const displayDate = h.date || "處理中";
-                        const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
-
-                        // 🌟 新增：女神聚會專屬出席確認狀態
-                        let hostConfirmHtml = '';
-                        if (w.name === '女神聚會') {
-                            const isConfirmed = (
-                                h.host_confirmed === true ||
-                                h.host_confirmed === 'TRUE' ||
-                                h.host_confirmed === '是' ||
-                                h.host_confirm === true ||
-                                h.host_confirm === 'TRUE' ||
-                                h.host_confirm === '是'
-                            );
-                            const confirmText = isConfirmed ? '✅ 主播同意出席' : '⏳ 與主播確認出席狀況中';
-                            const confirmColor = isConfirmed ? 'var(--color-success)' : 'var(--color-text-secondary)';
-                            hostConfirmHtml = `<div class="detail-line"><span class="detail-label">出席狀態</span><span class="detail-value" style="color:${confirmColor}; font-weight:bold;">${confirmText}</span></div>`;
-                        }
-
-   const hostDetail = h.swagger_id ? `<div class="detail-line"><span class="detail-label">主播</span><span class="detail-value">${h.swagger_id}</span></div>` : '';
-                        const badgeNameDetail = (w.name === '訂製專屬徽章' && h.badge_name)
-                            ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>`
-                            : '';
-                        const extraItems =[
-                        hostConfirmHtml, // 插入出席狀態
-                            w.name === '訂製專屬徽章' ? '' : (h.badge_name ? `<div class="detail-line"><span class="detail-label">徽章名稱</span><span class="detail-value">${h.badge_name}</span></div>` : ''),
-                            h.elem_text ? `<div class="detail-line"><span class="detail-label">元素文字</span><span class="detail-value">${h.elem_text}</span></div>` : '',
-                            h.gift_name ? `<div class="detail-line"><span class="detail-label">禮物名稱</span><span class="detail-value">${h.gift_name}</span></div>` : '',
-                            h.gift_text ? `<div class="detail-line"><span class="detail-label">禮物文字</span><span class="detail-value">${h.gift_text}</span></div>` : '',
-                            h.diamonds ? `<div class="detail-line"><span class="detail-label">鑽石數</span><span class="detail-value">${h.diamonds}</span></div>` : '',
-                            h.message ? `<div class="detail-line"><span class="detail-label">發送文字</span><span class="detail-value">${h.message}</span></div>` : '',
-                            h.copy_text ? `<div class="detail-line"><span class="detail-label">封面文案</span><span class="detail-value">${h.copy_text}</span></div>` : '',
-                            h.custom_copy ? `<div class="detail-line"><span class="detail-label">廣告文案</span><span class="detail-value">${h.custom_copy}</span></div>` : '',
-                            h.is_branded && h.is_branded === '是' ? `<div class="detail-line"><span class="detail-label">冠名</span><span class="detail-value">是</span></div>` : '',
-                            h.remark ? `<div class="detail-line"><span class="detail-label">備註</span><span class="detail-value">${h.remark}</span></div>` : '',
-            ].filter(Boolean);
-
-                        const detailId = `detail-extra-${w.name}-${groupIndex}-${recordIndex}-${detailIdCounter++}`.replace(/\s+/g, '-');
-                        const extraDetails = extraItems.join('');
-                        const detailExpandHtml = (w.name !== '女神聚會' && extraDetails)
-                            ? `<div class="detail-expand">
-                                <button class="detail-arrow-btn detail-expand-btn" onclick="toggleDetailExpand(event, '${detailId}')" aria-label="展開更多資訊">⌄</button>
-                                <div class="detail-extra hidden" id="${detailId}">
-                                    ${extraDetails}
-                                    <button class="detail-arrow-btn detail-collapse-btn" onclick="toggleDetailCollapse(event, '${detailId}')" aria-label="收合資訊">⌃</button>
-                                </div>
-                               </div>`
-                            : '';
-
-                        
-                        return `<div class="history-row">
-                            <div class="history-info">
-                                <div class="history-line"><span class="history-label">上架日期</span><span class="history-value">${displayDate}</span></div>
-                                ${hostDetail}
-                                ${hostConfirmHtml}
-                                ${badgeNameDetail}
-                                ${detailExpandHtml}
-                            </div>
-                            <span class="${badgeClass}">${displayStatus}</span>
-                        </div>`;
-                    }).join('');
-
-                    // 🌟 新增：將 "2026-03" 轉換為 "3月預約"
-                    let monthLabel = month;
-                    if (/^\d{4}-\d{2}$/.test(month)) {
-                        monthLabel = parseInt(month.split('-')[1], 10) + '月預約';
-                    }
-
-                    return `<div class="history-group">
-                        <div style="font-size:12px;font-weight:600;color:var(--color-primary);margin-bottom:var(--space-2);">${monthLabel}</div>
-                        ${rowsHtml}
-                    </div>`;
-                }).join('') + '</div>';
-            }
-            const showLockBookingCta = isLevelLocked;
-            const lockBookingCtaHtml = showLockBookingCta
-                ? `<a class="lock-booking-cta" href="https://swag.live/settings/vvip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"><span aria-hidden="true">🔒</span><span>立即升級</span></a>`
-                : '';
-            
-            return `<div class="${cardClass}" onclick="${locked ? '' : `openBooking('${w.name}')`}">
- <div class="card-main${isLevelLocked ? ' card-main-locked' : ''}">
-                    <div class="card-header">
-                        <div class="card-name">
-                        ${iconUrl ? `<img class="card-name-icon" src="${iconUrl}" alt="${w.name} icon" loading="lazy">` : ''}
-                            <span>${w.name}</span>
-                        </div>
-                        <div class="card-status" style="color:${btnColor}">
-                            ${btnTxt ? `<span>${btnTxt}</span>` : ''}
-                            ${statusActionHtml}
-                            ${lockBookingCtaHtml}
-                            </div>
-                    </div>
-                    ${isLevelLocked ? `<div class="card-level">LV.${w.lv}+</div>` : ''}
-                    ${partyHtml}
-                </div>
-                ${historyHtml}
-            </div>`;
-        }).join('');
+    function isMobileDevice() { 
+      return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''); 
     }
 
-    function toggleDetailExpand(event, detailId) {
-        event.stopPropagation();
-        const container = document.getElementById(detailId);
-        if (!container) return;
-        container.classList.remove('hidden');
-        const expandBtn = container.previousElementSibling;
-        if (expandBtn) expandBtn.classList.add('hidden');
+    function renderUserLink(userId, username) { 
+      if (userId === 'hidden') {
+        return `<span class="nickname"><span class="at-symbol">@</span>${escapeHtml(username)}</span>`;
+      }
+      return `<a class="nickname" href="https://swag.live/u/${escapeHtml(username)}" target="_blank">
+                <span class="at-symbol">@</span>${escapeHtml(username)}
+              </a>`; 
     }
-
-    function toggleDetailCollapse(event, detailId) {
-        event.stopPropagation();
-        const container = document.getElementById(detailId);
-        if (!container) return;
-        container.classList.add('hidden');
-        const expandBtn = container.previousElementSibling;
-        if (expandBtn) expandBtn.classList.remove('hidden');
-    }
-
-    function openBooking(name) {
-        activeWelfare = name;
-        document.getElementById('m-title').innerText = name;
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('swagger_id').value = "";
-        document.getElementById('reserve_content').value = "";
-        resetCheckStatus();
-        const ids = ['sw-group','date-group','btn-check','bell-fields','badge-fields','gift-fields','cover-fields','ad-fields','lunch-fields'];
-        ids.forEach(id => document.getElementById(id).classList.add('hidden'));
-        
-        const isOfficialArrangement = ['蓋板創作者封面','訂製搜尋框文字','專屬直播欄位廣告'].includes(name);
-        const needsMaterialNotice = ['蓋板創作者封面','訂製專屬禮物','專屬直播欄位廣告'].includes(name);
-        const noticeEl = document.getElementById('anchor-notice');
-        let messages = [];
-        if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
-        if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
-        if (name === '女神聚會') {
-            messages.push(`<span style="color:#fff;font-size:13px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br><span style="color:#ff5a5f;font-size:12px;">請先與主播確認是否出席後再填寫主播帳號<br>為維護活動品質與 VIP 權益，活動採實名預約，需由帳號本人出席
-<br>若經查證為借帳號參與，將取消雙方之所有福利權利</span>`);
-        }
-
-        noticeEl.innerHTML = messages.join('<br><br>');
-        noticeEl.classList.toggle('hidden', messages.length === 0);
-
-        if (name === '訂製專屬徽章') {
-            document.getElementById('badge-fields').classList.remove('hidden');
-        } else if (name === '訂製專屬禮物') {
-            document.getElementById('gift-fields').classList.remove('hidden');
-        } else if (name === 'CEO午餐') {
-            document.getElementById('lunch-fields').classList.remove('hidden');
-            renderLunchSelects();
-        } else if (name === '專屬直播欄位廣告') {
-            document.getElementById('sw-group').classList.remove('hidden');
-            document.getElementById('ad-fields').classList.remove('hidden');
-            document.getElementById('btn-check').classList.remove('hidden');
-        } else {
-            document.getElementById('sw-group').classList.remove('hidden');
-            document.getElementById('btn-check').classList.remove('hidden');
-            if (!isOfficialArrangement) document.getElementById('date-group').classList.remove('hidden');
-            if (name === '訂製小鈴噹通知') document.getElementById('bell-fields').classList.remove('hidden');
-            if (name === '蓋板創作者封面') document.getElementById('cover-fields').classList.remove('hidden');
-        }
-    }
-
-    function countChars(input, countId, max) {
-        let count = 0;
-        for (let c of input.value) count += c.charCodeAt(0) > 127 ? 1 : 0.5;
-        count = Math.ceil(count);
-        const el = document.getElementById(countId);
-        if (count > max) {
-            let trimmed = '', cur = 0;
-            for (let c of input.value) {
-                let w = c.charCodeAt(0) > 127 ? 1 : 0.5;
-                if (cur + w > max) break;
-                trimmed += c; cur += w;
-            }
-            input.value = trimmed;
-            el.innerText = max + '/' + max;
-            el.style.color = 'var(--color-error)';
-        } else {
-            el.innerText = count + '/' + max;
-            el.style.color = count >= max * 0.9 ? 'var(--color-error)' : 'var(--color-primary)';
-        }
-    }
-
-    function toggleGiftSwagger() {
-        const checked = document.getElementById('g_photo').checked;
-        document.getElementById('sw-group').classList.toggle('hidden', !checked);
-        document.getElementById('btn-check').classList.toggle('hidden', !checked);
-        if (!checked) { document.getElementById('swagger_id').value = ''; resetCheckStatus(); }
-    }
-
-    async function fetchTaiwanHolidays(year) {
-        if (taiwanHolidayCache.has(year)) return taiwanHolidayCache.get(year);
-
-        const fallbackByYear = {
-            2026: ['2026-01-01', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-27', '2026-04-06', '2026-05-01', '2026-06-19', '2026-09-25', '2026-10-09'],
-            2027: ['2027-01-01', '2027-02-08', '2027-02-09', '2027-02-10', '2027-02-11', '2027-02-12', '2027-02-15', '2027-02-26', '2027-04-05', '2027-05-03', '2027-06-09', '2027-09-15', '2027-10-11']
-        };
-
-        try {
-            const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/TW`);
-            if (!res.ok) throw new Error('Holiday API unavailable');
-            const data = await res.json();
-            const dates = new Set((Array.isArray(data) ? data : []).map(d => d.date).filter(Boolean));
-            taiwanHolidayCache.set(year, dates);
-            return dates;
-        } catch (err) {
-            const fallback = new Set(fallbackByYear[year] || []);
-            taiwanHolidayCache.set(year, fallback);
-            return fallback;
-        }
-    }
-
-    const WEEKDAY_SHORT = ['日', '一', '二', '三', '四', '五', '六'];
-
-    function formatDateWithWeekday(dateString) {
-        const d = new Date(dateString + 'T00:00:00');
-        if (Number.isNaN(d.getTime())) return dateString;
-        return `${dateString}（${WEEKDAY_SHORT[d.getDay()]}）`;
-    }
-
-
     
-    async function renderLunchSelects() {
-        const startDate = new Date();
-        startDate.setHours(0, 0, 0, 0);
-        startDate.setDate(startDate.getDate() + 7);
+    // 自訂 Toast，避免 App 內的 WebView 封鎖原生 alert()
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.position = 'fixed';
+      toast.style.top = '40%';
+      toast.style.left = '50%';
+      toast.style.transform = 'translate(-50%, -50%)';
+      toast.style.background = 'rgba(0, 0, 0, 0.9)';
+      toast.style.color = '#fff';
+      toast.style.padding = '16px 24px';
+      toast.style.borderRadius = '16px';
+      toast.style.zIndex = '9999';
+      toast.style.fontWeight = 'bold';
+      toast.style.backdropFilter = 'blur(8px)';
+      toast.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+      toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
+      toast.style.transition = 'opacity 0.3s';
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => { 
+        toast.style.opacity = '0'; 
+        setTimeout(() => toast.remove(), 300); 
+      }, 2000);
+    }
 
-        const years = new Set([startDate.getFullYear()]);
-        const rangeEnd = new Date(startDate);
-        rangeEnd.setDate(rangeEnd.getDate() + 90);
-        years.add(rangeEnd.getFullYear());
-        const holidaySets = await Promise.all([...years].map(fetchTaiwanHolidays));
-        const allHolidayDates = new Set(holidaySets.flatMap(set => [...set]));
+    // 解析 JWT 取出 userId
+    function parseUserIdFromToken(token) { 
+      try { 
+        const parts = token.split('.'); 
+        if (parts.length < 2) return 'Visitor';
+        
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+        );
+        
+        const payload = JSON.parse(jsonPayload);
+        return payload.user_id || payload.userId || payload.uid || payload.sub || 'Visitor';
+      } catch(e) { 
+        return 'Visitor'; 
+      } 
+    }
 
-        const dateOptions = [];
-        for (let i = 0; i < 90; i++) {
-            const d = new Date(startDate);
-            d.setDate(startDate.getDate() + i);
-            const weekDay = d.getDay();
-            if (weekDay === 0 || weekDay === 6) continue;
+    // ==========================================
+    // 3. 畫面渲染邏輯 (Render)
+    // ==========================================
+    function renderCurrentBoard() {
+      const listContainer = document.getElementById('leaderboard-list');
+      const podiumContainer = document.getElementById('podiumContent');
+      
+      listContainer.innerHTML = ''; 
+      podiumContainer.innerHTML = '';
+      
+      const data = boardData[currentTab] ||[];
+      
+      if (data.length === 0) { 
+        listContainer.innerHTML = `<div class="empty-state">${t('noData')}</div>`; 
+        renderMyRankBar(); 
+        return; 
+      }
 
-            const ds = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
-            if (allHolidayDates.has(ds)) continue;
-            dateOptions.push(ds);
-            if (dateOptions.length >= 30) break;
+      // --- 渲染頒獎台 (Top 3) ---
+      const topThree = [2, 1, 3]
+        .map(rank => data.find(u => u.rank === rank))
+        .filter(u => u !== undefined);
+
+      topThree.forEach((user) => {
+        const div = document.createElement('div'); 
+        div.className = `podium-item no${user.rank}`;
+        
+        const isCum = currentTab.startsWith('cumulative');
+        const badgeHtml = user.rank === 1 
+          ? `${CROWN_SVG}<div class="rank-badge badge-1">1</div>` 
+          : `<div class="rank-badge badge-${user.rank}">${user.rank}</div>`;
+
+        div.innerHTML = `
+          <div class="avatar-wrapper">
+            ${badgeHtml}
+            <img class="avatar-round" src="${getAvatarUrl(user.user_id)}" onerror="this.src='${DEFAULT_AVATAR}'">
+          </div>
+          ${renderUserLink(user.user_id, user.username)}
+          <div class="val-text">${user.total_diamonds.toLocaleString()} ${isCum ? t('unitTimes') : renderDiamondIcon()}</div>
+          `;
+        podiumContainer.appendChild(div);
+      });
+
+      // --- 渲染清單 (Ranks 4+) ---
+      const listUsers = data.slice(3);
+      listUsers.forEach((user, index) => {
+        const item = document.createElement('div'); 
+        item.className = 'list-row'; 
+        item.style.animationDelay = `${(index % 15) * 0.04}s`;
+        
+        const isCum = currentTab.startsWith('cumulative');
+        item.innerHTML = `
+          <div class="rank-num">${user.rank}</div>
+          <img class="avatar-square" src="${getAvatarUrl(user.user_id)}" onerror="this.src='${DEFAULT_AVATAR}'">
+          <div class="user-info">
+            ${renderUserLink(user.user_id, user.username).replace('class="nickname"', 'class="user-name"')}
+          </div>
+          <span class="data-value">${user.total_diamonds.toLocaleString()} ${isCum ? t('unitTimes') : renderDiamondIcon()}</span>
+          `;
+        listContainer.appendChild(item);
+      });
+
+      document.getElementById('scrollArea').scrollTop = 0;
+      renderMyRankBar();
+    }
+
+    function renderMyRankBar() {
+      const bar = document.getElementById('myRankBar');
+      const myData = myStats[currentTab];
+      
+      if (!currentUserId || currentUserId === 'Visitor' || !myData) { 
+        bar.classList.remove('show'); 
+        return; 
+      }
+      
+      const rankText = typeof myData.user_rank === 'number' ? `第 ${myData.user_rank} 名` : myData.user_rank;
+      document.getElementById('myRankMain').textContent = rankText;      
+      const isCum = currentTab.startsWith('cumulative');
+      const gapEl = document.getElementById('myRankGap');
+      const achievementBtn = document.getElementById('achievementBtn');
+      const myRankValue = document.getElementById('myRankValue');
+      const totalDiamonds = myData.total_diamonds || 0;      
+      gapEl.textContent = myData.gap_msg || '';
+      gapEl.style.display = isCum ? 'none' : 'block';
+      achievementBtn.style.display = isCum ? 'inline-flex' : 'none';
+      myRankValue.innerHTML = `${totalDiamonds.toLocaleString()} ${isCum ? t('unitTimes') : renderDiamondIcon()}`;
+      myRankValue.style.display = isCum && totalDiamonds === 0 ? 'none' : 'flex';      
+      bar.classList.add('show');
+    }
+
+    // ==========================================
+    // 4. API 呼叫 (依序請求，完美防範 429 限流)
+    // ==========================================
+    function processData(endpoint, resData) {
+      boardData[endpoint] = (resData.data ||[]).map(r => ({ 
+        user_id: r.user_id, 
+        username: r.profile?.username || r.user_id, 
+        rank: r.user_rank, 
+        total_diamonds: r.total_diamonds 
+      }));
+      myStats[endpoint] = resData.my_rank || null;
+    }
+
+    async function fetchAllData() {
+      try {
+        const headers = swagToken ? { 'Authorization': `Bearer ${swagToken}` } : {};
+        
+        // 【核心優化】優先拉取「當前畫面的榜單」，讓使用者秒看到畫面
+        const currentRes = await fetch(`${API_BASE}/leaderboard/${currentTab}`, { headers });
+        const currentData = await currentRes.json();
+        processData(currentTab, currentData);
+        renderCurrentBoard();
+
+        // 修改處：加入 prev_daily, prev_weekly 至背景抓取列隊
+        const otherEndpoints = [
+          'daily', 'prev_daily', 
+          'weekly', 'prev_weekly', 
+          'cumulative_daily', 'cumulative_weekly'
+        ].filter(ep => ep !== currentTab);
+        
+        for (let i = 0; i < otherEndpoints.length; i++) {
+          const ep = otherEndpoints[i];
+          const bgRes = await fetch(`${API_BASE}/leaderboard/${ep}`, { headers });
+          const bgData = await bgRes.json();
+          processData(ep, bgData);
+          
+          // 如果使用者在背景拉取中途切換了 Tab，立即重繪畫面
+          if (currentTab === ep) {
+            renderCurrentBoard(); 
+          }
         }
+      } catch (err) { 
+        console.error('Fetch error:', err); 
+      }
+    }
 
-        ['l_1', 'l_2', 'l_3'].forEach(id => {
-            const el = document.getElementById(id);
-            el.innerHTML = '';
-            dateOptions.forEach(ds => el.add(new Option(formatDateWithWeekday(ds), ds)));
+    // ==========================================
+    // 5. iOS 雙層分頁切換 & 倒數計時
+    // ==========================================
+    function switchMode(mode) {
+      document.querySelectorAll('.sub-tabs').forEach(el => el.classList.remove('active'));
+      
+      const targetContainer = mode === 'current' 
+        ? document.querySelector('.current-tabs') 
+        : document.querySelector('.hof-tabs');
+        
+      targetContainer.classList.add('active');
+      
+      const activeTabBtn = targetContainer.querySelector('.tab-item.active') || targetContainer.querySelector('.tab-item');
+      switchTab(activeTabBtn.dataset.tab);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+      const targetBtn = document.querySelector(`.tab-item[data-tab="${tabId}"]`);
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+      }
+      
+      currentTab = tabId; 
+      renderCurrentBoard(); 
+      updateCountdown();
+    }
+
+    // 綁定子分頁事件
+    document.querySelectorAll('.tab-item').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    function updateCountdown() {
+      const banner = document.getElementById('countdownBanner');
+      banner.classList.remove('daily-theme', 'weekly-theme');
+      // 累積榜隱藏倒數；昨日/上週榜單也維持顯示倒數
+      if (currentTab.startsWith('cumulative')) {
+        banner.style.visibility = 'hidden';
+        return;
+      }
+      banner.style.visibility = 'visible';
+      
+      const isWeeklyBoard = currentTab === 'weekly' || currentTab === 'prev_weekly';
+      banner.classList.add(isWeeklyBoard ? 'weekly-theme' : 'daily-theme');
+      document.getElementById('countdown-label').textContent = isWeeklyBoard ? t('countdownWeekly') : t('countdownDaily');
+      
+      const now = new Date();
+      const gmt8Now = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 8 * 3600000);
+      const target = new Date(gmt8Now);
+      
+      if (isWeeklyBoard) {
+        const diff = (7 - target.getDay()) % 7;
+        target.setDate(target.getDate() + diff);
+      }
+      target.setHours(23, 59, 59, 999);
+      
+      const sec = Math.floor(Math.max(0, target.getTime() - gmt8Now.getTime()) / 1000);
+      const d = Math.floor(sec / 86400);
+      const h = Math.floor((sec % 86400) / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      
+      const countdownText = isWeeklyBoard
+        ? `${d}${t('countdownUnitDay')} ${h}${t('countdownUnitHour')} ${m}${t('countdownUnitMin')} ${s}${t('countdownUnitSec')}`
+        : `${h}${t('countdownUnitHour')} ${m}${t('countdownUnitMin')} ${s}${t('countdownUnitSec')}`;
+      document.getElementById('countdown-time').textContent = countdownText;
+	}
+
+    // ==========================================
+    // 6. Modals & Settings API
+    // ==========================================
+    function openModal(id) { 
+      const modal = document.getElementById(id); 
+      modal.style.display = 'flex'; 
+      void modal.offsetWidth; 
+      modal.classList.add('show'); 
+    }
+
+    function closeModal(id, event) { 
+      if (event && event.target !== event.currentTarget) return; 
+      const modal = document.getElementById(id); 
+      modal.classList.remove('show'); 
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300); 
+    }
+
+    async function openAchievementModal() {
+      if (!swagToken || currentUserId === 'Visitor') {
+        return showToast("請先登入才能查看專屬您的榮耀殿堂哦！");
+      }
+      
+      openModal('achievementModal');
+      const content = document.getElementById('achievementContent'); 
+      content.innerHTML = '<div class="empty-state">戰績讀取中...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/me/achievements`, { 
+          headers: { 'Authorization': `Bearer ${swagToken}` } 
         });
+        const data = await res.json();
+        
+        if (data.total_wins === 0) { 
+          content.innerHTML = '<div class="empty-state">尚未進入榮耀殿堂，請繼續加油！🏆</div>'; 
+          return; 
+        }
+        
+        const historyHtml = data.history.map(item => {
+          const isDaily = item.period_type === 'prev_daily';
+          const typeClass = isDaily ? 'daily' : 'weekly';
+          const typeName = isDaily ? '日冠' : '週冠';
+          return `
+            <div class="achieve-row">
+              <span class="achieve-date">${item.win_date}</span>
+              <span class="achieve-type ${typeClass}">🏆 ${typeName}</span>
+            </div>
+          `;
+        }).join('');
+        
+        content.innerHTML = `
+          <div class="achieve-stats">
+            <div class="achieve-stat-box">
+              <div class="num" style="color:#FFD700">${data.total_wins}</div>
+              <div class="label">總冠數</div>
+            </div>
+            <div class="achieve-stat-box">
+              <div class="num" style="color:var(--brand-primary)">${data.daily_win_count}</div>
+              <div class="label">日冠</div>
+            </div>
+            <div class="achieve-stat-box">
+              <div class="num" style="color:var(--info)">${data.weekly_win_count}</div>
+              <div class="label">週冠</div>
+            </div>
+          </div>
+          <h3 style="font-size:14px; margin-bottom:12px; color:var(--text-secondary);">歷次紀錄</h3>
+          <div style="max-height: 240px; overflow-y: auto;">
+            ${historyHtml}
+          </div>
+        `;
+      } catch (e) { 
+        content.innerHTML = '<div class="empty-state">讀取失敗，請稍後再試</div>'; 
+      }
     }
 
-    function resetCheckStatus() {
-        const btn = document.getElementById('btn-check');
-        const select = document.getElementById('reserve_date');
-        btn.innerText = "🔍 核對名額狀況";
-        btn.disabled = false;
-        select.innerHTML = '<option>請先完成核對</option>';
-        select.disabled = true;
-        select.value = "";
+    async function loadPrivacySetting() {
+      if (!swagToken || currentUserId === 'Visitor') return;
+
+      
+      try { 
+        const res = await fetch(`${API_BASE}/settings/privacy`, { 
+          headers: { 'Authorization': `Bearer ${swagToken}` } 
+        });
+        const data = await res.json();
+        document.getElementById('privacyToggle').checked = !!data.hide_info; 
+      } catch(e) {
+        console.error('Privacy fetch error', e);
+      }
+    }
+    
+    async function togglePrivacy(element) {
+      const isHidden = element.checked;
+      
+      fetch(`${API_BASE}/settings/privacy`, { 
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${swagToken}` 
+        }, 
+        body: JSON.stringify({ hide_info: isHidden }) 
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        await fetchAllData(); 
+      })
+      .catch((e) => { 
+        element.checked = !isHidden; 
+        showToast("設定失敗，請稍後再試"); 
+      });
     }
 
-    async function syncAndCheck() {
-        const sid = document.getElementById('swagger_id').value.trim();
-        if (!sid) {
-            const btn = document.getElementById('btn-check');
-            btn.innerText = "⚠️ 請先輸入主播帳號";
-            setTimeout(() => btn.innerText = "🔍 核對名額狀況", 2000);
-            return;
+    // ==========================================
+    // 7. App 啟動與 Iframe 通訊握手
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (isMobileDevice()) {
+        document.body.classList.add('pwa-mobile');
+      }
+      
+      updateCountdown(); 
+      setInterval(updateCountdown, 1000); 
+      if (!I18N[currentLocale]) {
+        currentLocale = 'zh-TW';
+      }
+      document.getElementById('localeSwitcher').addEventListener('click', (event) => {
+        const localeButton = event.target.closest('.locale-btn');
+        if (!localeButton) return;
+        currentLocale = localeButton.dataset.locale;
+        localStorage.setItem('leaderboard_locale', currentLocale);
+        applyLocale();
+      });
+      applyLocale();      
+      
+      setTimeout(() => window.parent.postMessage({ type: 'IFRAME_READY' }, '*'), 100);
+      
+      handshakeRetryInterval = setInterval(() => { 
+        if (!swagToken) {
+          window.parent.postMessage({ type: 'IFRAME_READY' }, '*'); 
         }
-        const btn = document.getElementById('btn-check');
-        btn.innerText = "⏳ 驗證主播帳號...";
-        btn.disabled = true;
+      }, 3000);
+      
+      if (window.self === window.top) {
+        setTimeout(() => { 
+          if (!swagToken) { 
+            clearInterval(handshakeRetryInterval); 
+            document.getElementById('dev-banner').style.display = 'block'; 
+            fetchAllData(); 
+          } 
+        }, 2000);
+      }
+    });
 
-        try {
-            const creatorRes = await fetch("https://creator-info-f2327.web.app/api/v1/check-creator?userId=" + encodeURIComponent(sid), {
-                headers: { "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJraWQiOiJCZ0tTWHRMU0FNYmtZVThYRW5sTSIsIm5hbWUiOiJPUOmgkOe0hOezu-e1seafpeipouS4u-aSrSIsInR5cGUiOiJhcGlfa2V5IiwiaWF0IjoxNzc0MzQ2MzgzfQ.LnJL7lQY2D1iaER6k7U8ZfpmZ09Z2lT6vkxbfUWt-4U" }
-            });
-            const creatorData = await creatorRes.json();
-            if (!creatorData || creatorData.found !== true) {
-                btn.innerText = "❌ 查無此主播帳號";
-                btn.disabled = false;
-                setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
-                return;
-            }
-        } catch(e) {
-            btn.innerText = "❌ 驗證失敗，請重試";
-            btn.disabled = false;
-            setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
-            return;
-        }
-
-        if (activeWelfare === '訂製專屬禮物') {
-            btn.innerText = "✅ 主播帳號已確認";
-            return;
-        }
-
-        btn.innerText = "⏳ 檢查中...";
-        try {
-            const actionMap = { '大神贊助':'getGrandSponsorData','女神聚會':'getPartyData','訂製小鈴噹通知':'getBellData','蓋板創作者封面':'getCoverData','訂製搜尋框文字':'getSearchBoxData','專屬直播欄位廣告':'getAdSpotData' };
-            const res = await fetch(GAS_API + "?action=" + actionMap[activeWelfare] + "&v=" + Date.now());
-            bookings = JSON.parse(await res.text());
-            const select = document.getElementById('reserve_date');
-            select.disabled = false;
-            select.innerHTML = '<option value="">請選擇日期</option>';
-            const today = new Date();
-
-            if (activeWelfare === '女神聚會') {
-                let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
-                let y = today.getFullYear(); if(m>12){m=2;y+=1;}
-                const ds = y+"-"+String(m).padStart(2,'0');
- const sidNorm = sid.toLowerCase();
-                const sameSlotBookings = bookings.filter(b =>
-                    String(b.swagger_id || '').trim().toLowerCase() === sidNorm && String(b.date || '').trim() === ds
-                );
-                const hasOwnBooking = sameSlotBookings.some(b =>
-                    String((b.user_id || b.member_uid || b.url_user_id || '')).trim() === String(user.id).trim()
-                );
-                const occupied = sameSlotBookings.length > 0;
-                const occupiedText = hasOwnBooking ? ' (此ID已被預約)' : (occupied ? '（請與主播確認）' : '');
-                select.add(new Option(y+"年 "+m+"月場次"+occupiedText, ds));
-                select.options[select.options.length-1].disabled = hasOwnBooking;
-            } else {
-                const isCover = activeWelfare==='蓋板創作者封面';
-                const isSearch = activeWelfare==='訂製搜尋框文字';
-                let limit;
-                if (isSearch) limit = new Date(today.getFullYear(), today.getMonth()+1, 5);
-                else if (isCover) limit = new Date(today.getFullYear(), today.getMonth()+2, 0);
-                else limit = new Date(today.getFullYear(), today.getMonth()+1, 5);
-
-                let startOffset = isCover ? 14 : 1;
-                if (startOffset === 0) startOffset = 2;
-                for (let i = startOffset; i <= 65; i++) {
-                    const d = new Date(today); d.setDate(today.getDate()+i);
-                    if (d > limit) break;
-                    const ds = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');
-                    const occupied = bookings.some(b => b.swagger_id===sid && b.date===ds);
-                    const dayFull = bookings.filter(b => b.date===ds).length >= (activeWelfare==='大神贊助'?3:1);
-                    let st="", dis=false;
-                    if (occupied) { st=" (此ID已被預約)"; dis=true; }
-                    else if (dayFull && (activeWelfare==='大神贊助'||isCover)) {
-                        if (activeWelfare==='大神贊助' && user.level>=90) st=" (預約額滿，Lv.90 特別權限)";
-                        else { st=" (預約額滿)"; dis=true; }
-                    } else if (dayFull) { st=" (預約額滿)"; dis=true; }
-                    select.add(new Option(formatDateWithWeekday(ds)+st, ds));
-                    select.options[select.options.length-1].disabled = dis;
-                }
-            }
-            btn.innerText = "✅ 核對完成";
-        } catch(e) {
-            btn.innerText = "❌ 連線失敗，請重試";
-            btn.disabled = false;
-            setTimeout(() => { btn.innerText = "🔍 重新核對"; }, 2000);
-        }
-    }
-
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    function openAnnouncement() { document.getElementById('announcement-modal').style.display = 'flex'; }
-    function closeAnnouncement() { document.getElementById('announcement-modal').style.display = 'none'; }
-    function handleAnnouncementBackdrop(event) {
-        if (event.target.id === 'announcement-modal') closeAnnouncement();
-    }    
-
-    async function handleFormSubmit() {
-        const btn = document.getElementById('btn-submit');
-        if (btn.disabled) return;
-
-        const needSwagger = !['大神贊助','女神聚會','訂製專屬徽章','CEO午餐'].includes(activeWelfare);
-        const isGiftNoPhoto = activeWelfare==='訂製專屬禮物' && !document.getElementById('g_photo').checked;
-        if (needSwagger && !isGiftNoPhoto && !document.getElementById('swagger_id').value.trim()) {
-            btn.innerText = "請輸入主播帳號";
-            setTimeout(() => btn.innerText = "確認提交申請", 2000);
-            return;
-        }
-        if (!user.id) {
-            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px;'>請從官方渠道進入</h2>";
-            return;
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+      if (data?.type === 'SET_TOKEN' && swagToken !== data.token) {
+        swagToken = data.token; 
+        currentUserId = data.userId || data.user_id || parseUserIdFromToken(swagToken);
+        
+        if (handshakeRetryInterval) {
+          clearInterval(handshakeRetryInterval);
         }
 
-        const dateSelect = document.getElementById('reserve_date');
-        const noDateNeeded =['訂製搜尋框文字','蓋板創作者封面','專屬直播欄位廣告','訂製專屬禮物','訂製專屬徽章','CEO午餐'].includes(activeWelfare);
-        if (!noDateNeeded && !dateSelect.disabled && !dateSelect.value) {
-            btn.innerText = "⚠️ 請選擇日期";
-            setTimeout(() => btn.innerText = "確認提交申請", 2000);
-            return;
-        }
-        const requiredChecks =[
-            { id: 'bell_msg', welfare: '訂製小鈴噹通知', label: '發送文字' },
-            { id: 'cover_copy', welfare: '蓋板創作者封面', label: '客製化文案' },
-            { id: 'b_name', welfare: '訂製專屬徽章', label: '徽章名稱' },
-            { id: 'b_elem', welfare: '訂製專屬徽章', label: '徽章元素' },
-            { id: 'g_name', welfare: '訂製專屬禮物', label: '禮物名稱' },
-            { id: 'g_txt', welfare: '訂製專屬禮物', label: '禮物圖上文字' },
-            { id: 'ad_copy', welfare: '專屬直播欄位廣告', label: '客製化文案' },
-        ];
-        for (const check of requiredChecks) {
-            if (activeWelfare === check.welfare && !document.getElementById(check.id).value.trim()) {
-                btn.innerText = `⚠️ 請填寫「${check.label}」`;
-                setTimeout(() => btn.innerText = "確認提交申請", 2000);
-                return;
-            }
-        }
-        btn.disabled = true;
-        btn.innerText = "預約中，請稍後...";
-        const dateVal = dateSelect.disabled ? "" : dateSelect.value;
+        loadPrivacySetting();
+        fetchAllData(); 
+      }
+    });
 
-        const payload = {
-            user_id: user.id, url_user_id: user.id, member_uid: user.id,
-            username: user.username, level: user.level,
-            benefit: activeWelfare,
-            swagger_id: document.getElementById('swagger_id').value,
-            date: dateVal,
-            content: document.getElementById('reserve_content').value,
-            host_confirm: "",
-            host_confirmed: "",
-            badge_name: document.getElementById('b_name').value,
-            badge_elements: document.getElementById('b_elem').value,
-            img_url: document.getElementById('b_url').value,
-            target_ids: document.getElementById('b_targets').value,
-            gift_name: document.getElementById('g_name').value,
-            diamonds: document.getElementById('g_dia').value,
-            gift_text: document.getElementById('g_txt').value,
-            is_branded: (document.getElementById('g_brand').checked||document.getElementById('ad_brand').checked||document.getElementById('bell_brand').checked||document.getElementById('cover_brand').checked) ? "是" : "否",
-            need_photo: document.getElementById('g_photo').checked ? "是" : "否",
-            ad_copy: document.getElementById('ad_copy').value,
-            lunch_1: document.getElementById('l_1')?document.getElementById('l_1').value:"",
-            lunch_2: document.getElementById('l_2')?document.getElementById('l_2').value:"",
-            lunch_3: document.getElementById('l_3')?document.getElementById('l_3').value:"",
-            message: document.getElementById('bell_msg').value,
-            copy_text: document.getElementById('cover_copy').value,
-            referrer: window.location.href||"https://swag.live",
-            current_origin: window.location.origin||"https://swag.live",
-            security_code: "SWAG_INTERNAL_2026"
-        };
-
-        try {
-            await fetch(GAS_API, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(payload)
-            });
-            btn.innerText = "提交成功！";
-            setTimeout(() => location.reload(), 1500);
-        } catch(e) {
-            btn.innerText = "網路連線失敗，請重試";
-            btn.disabled = false;
-            setTimeout(() => btn.innerText = "確認提交申請", 3000);
-        }
-    }
-</script>
+    document.addEventListener('click', (event) => {
+      if (window.self === window.top || !isMobileDevice()) return;
+      
+      const link = event.target.closest('a[href]');
+      if (link && link.href.includes('swag.live')) { 
+        event.preventDefault(); 
+        window.parent.postMessage({ type: 'PWA_NAVIGATE', url: link.href }, '*'); 
+      }
+    });
+  </script>
 </body>
 </html>
