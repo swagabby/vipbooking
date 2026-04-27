@@ -911,13 +911,36 @@
     }
 
     function getRecordMonth(record) {
-        const submitMonth = normalizeMonthString(record && record.submitMonth);
-        if (submitMonth) return submitMonth;
+        if (!record) return '';
 
-        const dateText = String((record && record.date) || '').trim();
-        const dateMatch = dateText.match(/^(\d{4})[-\/](\d{1,2})(?:[-\/]\d{1,2})?/);
-        if (!dateMatch) return '';
-        return dateMatch[1] + '-' + String(parseInt(dateMatch[2], 10)).padStart(2, '0');
+        const explicitMonthFields = [
+            record.submitMonth,
+            record.submit_month,
+            record.bookingMonth,
+            record.booking_month
+        ];
+        for (const raw of explicitMonthFields) {
+            const normalized = normalizeMonthString(raw);
+            if (normalized) return normalized;
+        }
+
+        const submitTimeFields = [
+            record.submit_time,
+            record.submitted_at,
+            record.created_at,
+            record.createdAt,
+            record.timestamp,
+            record.apply_time
+        ];
+        for (const raw of submitTimeFields) {
+            if (!raw) continue;
+            const d = new Date(raw);
+            if (Number.isNaN(d.getTime())) continue;
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        }
+
+        // ⚠️ 不再 fallback 到福利上架日期 (record.date)，避免跨月誤鎖。
+        return '';
     }
 
     function renderCards() {
@@ -1426,6 +1449,7 @@
             user_id: user.id, url_user_id: user.id, member_uid: user.id,
             username: user.username, level: user.level,
             benefit: activeWelfare,
+            submitMonth: new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'),          
             swagger_id: document.getElementById('swagger_id').value,
             date: dateVal,
             content: document.getElementById('reserve_content').value,
