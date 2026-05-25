@@ -277,13 +277,50 @@
         /* Party info block */
         .party-info {
             margin-top: var(--space-2);
+            background: rgba(0, 210, 190, 0.08);
+            border: 1px solid rgba(0, 210, 190, 0.24);
+            border-radius: var(--shape-md);
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
             font-size: 14px;
             color: var(--color-text-secondary);
             line-height: 1.6;
-            border-left: 2px solid var(--color-primary);
-            padding-left: var(--space-4);
         }
-        .party-info strong { color: var(--color-text-primary); font-weight: 600; }
+        .party-info-head {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border-radius: var(--shape-full);
+            padding: var(--space-2) var(--space-4);
+            background: var(--color-primary-dim);
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        .party-option-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        .party-option-item {
+            border: 1px solid var(--color-outline-variant);
+            border-radius: var(--shape-sm);
+            padding: var(--space-3);
+            background: var(--color-surface-container);
+        }
+        .party-option-title {
+            color: var(--color-text-primary);
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+        .party-option-meta {
+            color: var(--color-text-secondary);
+            font-size: 13px;
+        }
         .party-btn {
             margin-top: var(--space-4);
             background: transparent;
@@ -1001,9 +1038,17 @@
             let partyHtml = '';
             if (w.name === '女神聚會') {
                 partyHtml = `<div class="party-info">
-                    <strong>六月場次（二選一）</strong><br>
-                    場次 1：6/26（五）貓咪咖啡廳約會（信義區）14:00 ~ 17:40（限 15 人）<br>
-                    場次 2：6/27（六）私人會所派對（信義區）18:00 ~ 21:40
+                    <div class="party-info-head">六月場次（二選一）</div>
+                    <ul class="party-option-list">
+                        <li class="party-option-item">
+                            <div class="party-option-title">場次 1｜6/26（五）貓咪咖啡廳約會</div>
+                            <div class="party-option-meta">信義區・14:00 ~ 17:40・限 15 人</div>
+                        </li>
+                        <li class="party-option-item">
+                            <div class="party-option-title">場次 2｜6/27（六）私人會所派對</div>
+                            <div class="party-option-meta">信義區・18:00 ~ 21:40</div>
+                        </li>
+                    </ul>
                    <div class="party-btn-row">
                         <button class="party-btn" onclick="event.stopPropagation();window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935','_blank')">👉🏻 活動資訊</button>
                         <button class="party-btn" onclick="event.stopPropagation();openAnnouncement()">📢 重要公告</button>
