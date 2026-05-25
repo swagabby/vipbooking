@@ -689,8 +689,8 @@
         <!-- 禮物 -->
         <div id="gift-fields" class="hidden">
             <div class="form-group">
-                <label class="form-label">禮物名稱 <span class="char-count" id="g_name_count">0/20</span></label>
-                <input type="text" id="g_name" oninput="countChars(this,'g_name_count',20)">
+                <label class="form-label">禮物名稱 <span class="char-count" id="g_name_count">0/10</span></label>
+                <input type="text" id="g_name" oninput="countPlainChars(this,'g_name_count',10)">
             </div>
             <label class="checkbox-row"><input type="checkbox" id="g_brand"> 是否冠名</label>
             <div class="form-group">
@@ -751,7 +751,6 @@
             </div>
             <label class="checkbox-row"><input type="checkbox" id="cover_brand"> 是否冠名</label>
         </div>
-        <p class="text-field-hint">＊文字欄位請與主播討論後自行填寫</p>
 
         <div class="form-group">
             <label class="form-label">需求備註 <span class="char-count" id="reserve_content_count">0/100</span></label>
@@ -1220,6 +1219,25 @@
         }
     }
 
+    function countPlainChars(input, countId, max) {
+        const chars = [...input.value];
+        const el = document.getElementById(countId);
+        if (chars.length > max) {
+            input.value = chars.slice(0, max).join('');
+        }
+        const count = [...input.value].length;
+        el.innerText = count + '/' + max;
+        el.style.color = count >= max * 0.9 ? 'var(--color-error)' : 'var(--color-primary)';
+    }
+
+    async function isCreatorAccount(userId) {
+        const res = await fetch("https://creator-info-f2327.web.app/api/v1/check-creator?userId=" + encodeURIComponent(userId), {
+            headers: { "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJraWQiOiJCZ0tTWHRMU0FNYmtZVThYRW5sTSIsIm5hbWUiOiJPUOmgkOe0hOezu-e1seafpeipouS4u-aSrSIsInR5cGUiOiJhcGlfa2V5IiwiaWF0IjoxNzc0MzQ2MzgzfQ.LnJL7lQY2D1iaER6k7U8ZfpmZ09Z2lT6vkxbfUWt-4U" }
+        });
+        const data = await res.json();
+        return !!(data && data.found === true);
+    }
+
     function toggleGiftSwagger() {
         const checked = document.getElementById('g_photo').checked;
         document.getElementById('sw-group').classList.toggle('hidden', !checked);
@@ -1314,11 +1332,8 @@
         btn.disabled = true;
 
         try {
-            const creatorRes = await fetch("https://creator-info-f2327.web.app/api/v1/check-creator?userId=" + encodeURIComponent(sid), {
-                headers: { "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJraWQiOiJCZ0tTWHRMU0FNYmtZVThYRW5sTSIsIm5hbWUiOiJPUOmgkOe0hOezu-e1seafpeipouS4u-aSrSIsInR5cGUiOiJhcGlfa2V5IiwiaWF0IjoxNzc0MzQ2MzgzfQ.LnJL7lQY2D1iaER6k7U8ZfpmZ09Z2lT6vkxbfUWt-4U" }
-            });
-            const creatorData = await creatorRes.json();
-            if (!creatorData || creatorData.found !== true) {
+            const isCreator = await isCreatorAccount(sid);
+            if (!isCreator) {
                 btn.innerText = "❌ 查無此主播帳號";
                 btn.disabled = false;
                 setTimeout(() => { btn.innerText = "🔍 核對名額狀況"; }, 2500);
@@ -1369,7 +1384,7 @@
                 else if (isCover) limit = new Date(today.getFullYear(), today.getMonth()+2, 0);
                 else limit = new Date(today.getFullYear(), today.getMonth()+1, 5);
 
-                let startOffset = isCover ? 14 : 1;
+                let startOffset = isCover ? 14 : (activeWelfare==='訂製小鈴噹通知' ? 2 : 1);
                 if (startOffset === 0) startOffset = 2;
                 for (let i = startOffset; i <= 65; i++) {
                     const d = new Date(today); d.setDate(today.getDate()+i);
@@ -1438,6 +1453,33 @@
             if (activeWelfare === check.welfare && !document.getElementById(check.id).value.trim()) {
                 btn.innerText = `⚠️ 請填寫「${check.label}」`;
                 setTimeout(() => btn.innerText = "確認提交申請", 2000);
+                return;
+            }
+        }
+        if (activeWelfare === '訂製專屬徽章') {
+            const targetIds = document.getElementById('b_targets').value
+                .split('\n')
+                .map(id => id.trim())
+                .filter(Boolean);
+            try {
+                for (const targetId of targetIds) {
+                    if (await isCreatorAccount(targetId)) {
+                        btn.innerText = "❌ 贈與帳號不可填寫主播帳號";
+                        btn.style.background = 'var(--color-error)';
+                        setTimeout(() => {
+                            btn.innerText = "確認提交申請";
+                            btn.style.background = '';
+                        }, 2500);
+                        return;
+                    }
+                }
+            } catch (e) {
+                btn.innerText = "❌ 無法驗證贈與帳號，請稍後再試";
+                btn.style.background = 'var(--color-error)';
+                setTimeout(() => {
+                    btn.innerText = "確認提交申請";
+                    btn.style.background = '';
+                }, 2500);
                 return;
             }
         }
