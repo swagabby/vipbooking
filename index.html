@@ -952,10 +952,7 @@
         const currentMonthStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0');
         const todayTime = now.getTime();
 
-        let pm = ((now.getMonth()+1)%2===0) ? now.getMonth()+1 : now.getMonth()+2;
-        let py = now.getFullYear();
-        if (pm > 12) { pm = 2; py += 1; }
-        const targetPartyDate = py + "-" + String(pm).padStart(2,'0');
+        const partyOptionDates = ['2026-06-26', '2026-06-27'];
 
         grid.innerHTML = welfareList.map(function(w) {
             const myRecords = userHistory.filter(h => h.benefit === w.name);
@@ -969,7 +966,7 @@
             let isPartyLocked = false;
 
             if (w.name === '女神聚會') {
-                isPartyLocked = myRecords.some(h => h.date === targetPartyDate || h.date === "處理中");
+                isPartyLocked = myRecords.some(h => partyOptionDates.includes(String(h.date || '').trim()) || h.date === "處理中");
                 isQuotaLocked = isPartyLocked;
             } else if (w.name === '大神贊助' && user.level >= 90) {
                 isQuotaLocked = monthCount >= 2;
@@ -1001,8 +998,9 @@
             let partyHtml = '';
             if (w.name === '女神聚會') {
                 partyHtml = `<div class="party-info">
-                    <strong>4月場次：4/25（六）17:50</strong><br>
-                    地點：台北市信義區
+                    <strong>六月場次（二選一）</strong><br>
+                    選項1：6/26（五）貓咪咖啡廳約會（信義區）14:00 ~ 17:40（限 15 人）<br>
+                    選項2：6/27（六）私人會所派對（信義區）18:00 ~ 21:40
                    <div class="party-btn-row">
                         <button class="party-btn" onclick="event.stopPropagation();window.open('https://swag-live.zendesk.com/hc/zh-tw/articles/12787753601935','_blank')">👉🏻 活動資訊</button>
                         <button class="party-btn" onclick="event.stopPropagation();openAnnouncement()">📢 重要公告</button>
@@ -1014,7 +1012,7 @@
             const displayRecords = myRecords.filter(h => {
                 if (h.date === "處理中") return true;
                 if (getRecordMonth(h) === currentMonthStr) return true;
-                if (w.name === '女神聚會' && h.date === targetPartyDate) return true;
+                if (w.name === '女神聚會' && partyOptionDates.includes(String(h.date || '').trim())) return true;
                 if (h.date && h.date !== "處理中") {
                     const rd = new Date(h.date);
                     if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 7) return true;
@@ -1176,7 +1174,7 @@
         if (needsMaterialNotice) messages.push("填寫完畢將由官方向主播拿取素材");
         if (isOfficialArrangement) messages.push("⚠️ 上架時間由官方安排");
         if (name === '女神聚會') {
-            messages.push(`<span style="color:#fff;font-size:13px;">4月場次：4/25（六）17:30<br>地點：台北市信義區</span><br><br><span style="color:#ff5a5f;font-size:12px;">請先與主播確認是否出席後再填寫主播帳號<br>為維護活動品質與 VIP 權益，活動採實名預約，需由帳號本人出席
+            messages.push(`<span style="color:#fff;font-size:13px;">六月場次（二選一）<br>選項1：6/26（五）貓咪咖啡廳約會（信義區）14:00 ~ 17:40（限 15 人）<br>選項2：6/27（六）私人會所派對（信義區）18:00 ~ 21:40</span><br><br><span style="color:#ff5a5f;font-size:12px;">用戶僅可擇一場次報名。<br>請先與主播確認是否出席後再填寫主播帳號<br>為維護活動品質與 VIP 權益，活動採實名預約，需由帳號本人出席
 <br>若經查證為借帳號參與，將取消雙方之所有福利權利</span>`);
         }
 
@@ -1374,20 +1372,30 @@
             const today = new Date();
 
             if (activeWelfare === '女神聚會') {
-                let m = ((today.getMonth()+1)%2===0)?today.getMonth()+1:today.getMonth()+2;
-                let y = today.getFullYear(); if(m>12){m=2;y+=1;}
-                const ds = y+"-"+String(m).padStart(2,'0');
- const sidNorm = sid.toLowerCase();
-                const sameSlotBookings = bookings.filter(b =>
-                    String(b.swagger_id || '').trim().toLowerCase() === sidNorm && String(b.date || '').trim() === ds
-                );
-                const hasOwnBooking = sameSlotBookings.some(b =>
-                    String((b.user_id || b.member_uid || b.url_user_id || '')).trim() === String(user.id).trim()
-                );
-                const occupied = sameSlotBookings.length > 0;
-                const occupiedText = hasOwnBooking ? ' (此ID已被預約)' : (occupied ? '（請與主播確認）' : '');
-                select.add(new Option(y+"年 "+m+"月場次"+occupiedText, ds));
-                select.options[select.options.length-1].disabled = hasOwnBooking;
+                const partyOptions = [
+                    { label: '選項1：6/26（五） 貓咪咖啡廳約會（信義區）14:00 ~ 17:40', value: '2026-06-26', capacity: 15 },
+                    { label: '選項2：6/27（六） 私人會所派對（信義區）18:00 ~ 21:40', value: '2026-06-27', capacity: null }
+                ];
+                const userIdNorm = String(user.id).trim();
+
+                partyOptions.forEach(opt => {
+                    const slotBookings = bookings.filter(b => String(b.date || '').trim() === opt.value);
+                    const hasOwnBooking = slotBookings.some(b => String((b.user_id || b.member_uid || b.url_user_id || '')).trim() === userIdNorm);
+                    const isFull = Number.isInteger(opt.capacity) && slotBookings.length >= opt.capacity;
+                    let suffix = '';
+                    let disabled = false;
+
+                    if (hasOwnBooking) {
+                        suffix = '（你已報名此場）';
+                        disabled = true;
+                    } else if (isFull) {
+                        suffix = `（已額滿 ${opt.capacity} 人）`;
+                        disabled = true;
+                    }
+
+                    select.add(new Option(opt.label + (suffix ? ' ' + suffix : ''), opt.value));
+                    select.options[select.options.length - 1].disabled = disabled;
+                });
             } else {
                 const isCover = activeWelfare==='蓋板創作者封面';
                 const isSearch = activeWelfare==='訂製搜尋框文字';
