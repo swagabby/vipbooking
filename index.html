@@ -990,16 +990,6 @@
         return '';
     }
 
-    function getAttendanceMonth(record) {
-        if (!record) return '';
-        // 使用統一日期解析，避免不同資料欄位造成鎖定判斷不一致
-        const rawDate = getAttendanceDateString(record);
-        if (!rawDate || rawDate === '處理中') return '';
-        const m = rawDate.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
-        if (!m) return '';
-        return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0');
-    }
-
     function getAttendanceDateString(record) {
         if (!record) return '';
         const candidates = [
@@ -1016,9 +1006,21 @@
             if (text === '處理中') return '處理中';
             const m = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
             if (!m) continue;
-            return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0') + '-' + String(parseInt(m[3], 10)).padStart(2, '0');
+            const yyyy = m[1];
+            const mm = String(parseInt(m[2], 10)).padStart(2, '0');
+            const dd = String(parseInt(m[3], 10)).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
         }
         return '';
+    }
+
+    function getAttendanceMonth(record) {
+        if (!record) return '';
+        const attendanceDate = getAttendanceDateString(record);
+        if (!attendanceDate || attendanceDate === '處理中') return '';
+        const m = attendanceDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return '';
+        return `${m[1]}-${m[2]}`;
     }
 
     function isPendingRecord(record) {
