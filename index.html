@@ -982,6 +982,10 @@
         return '';
     }
 
+    function isPendingRecord(record) {
+        return !!record && String(record.date || '').trim() === "處理中";
+    }
+
     function renderCards() {
         const grid = document.getElementById('benefit-grid');
         const welfareList = getWelfareList();
@@ -1006,7 +1010,12 @@
             let isPartyLocked = false;
 
             if (w.name === '女神聚會') {
-                isPartyLocked = myRecords.some(h => partyOptionDates.includes(String(h.date || '').trim()) || h.date === "處理中");
+                isPartyLocked = myRecords.some(h => {
+                    const recordDate = String(h.date || '').trim();
+                    if (partyOptionDates.includes(recordDate)) return true;
+                    if (isPendingRecord(h)) return true;
+                    return false;
+                });
                 isQuotaLocked = isPartyLocked;
             } else if (w.name === '大神贊助' && user.level >= 90) {
                 isQuotaLocked = monthCount >= 2;
@@ -1026,8 +1035,8 @@
             } else if (w.name === '女神聚會' && isPartyLocked) {
                 btnTxt = "🔒 已預約";
             } else if (isQuotaLocked) {
-                const hasPendingThisMonth = currentMonthRecords.some(h => h.date === "處理中");
-                btnTxt = hasPendingThisMonth ? "⏳ 處理中" : "🔒 已預約";
+                const hasPendingThisMonth = currentMonthRecords.some(isPendingRecord);
+                btnTxt = hasPendingThisMonth ? "📝 已送出待審核" : "🔒 已預約";
                   } else {
                 btnTxt = "立即預約";
             }
