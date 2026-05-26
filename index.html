@@ -992,6 +992,7 @@
 
     function getAttendanceMonth(record) {
         if (!record) return '';
+        // 使用統一日期解析，避免不同資料欄位造成鎖定判斷不一致
         const rawDate = getAttendanceDateString(record);
         if (!rawDate || rawDate === '處理中') return '';
         const m = rawDate.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
