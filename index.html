@@ -990,6 +990,15 @@
         return '';
     }
 
+    function getAttendanceMonth(record) {
+        if (!record) return '';
+        const rawDate = String(record.date || '').trim();
+        if (!rawDate || rawDate === '處理中') return '';
+        const m = rawDate.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+        if (!m) return '';
+        return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0');
+    }
+
     function isPendingRecord(record) {
         return !!record && String(record.date || '').trim() === "處理中";
     }
@@ -1019,9 +1028,9 @@
 
             if (w.name === '女神聚會') {
                 isPartyLocked = myRecords.some(h => {
-                    const recordDate = String(h.date || '').trim();
-                    if (partyOptionDates.includes(recordDate)) return true;
                     if (isPendingRecord(h)) return true;
+                    const attendanceMonth = getAttendanceMonth(h);
+                    if (attendanceMonth && attendanceMonth === targetPartyDate) return true;
                     return false;
                 });
                 isQuotaLocked = isPartyLocked;
@@ -1154,7 +1163,7 @@
                         
                         return `<div class="history-row">
                             <div class="history-info">
-                                <div class="history-line"><span class="history-label">上架日期</span><span class="history-value">${displayDate}</span></div>
+                                <div class="history-line"><span class="history-label">${w.name === '女神聚會' ? '出席時間' : '上架日期'}</span><span class="history-value">${displayDate}</span></div>
                                 ${hostDetail}
                                 ${hostConfirmHtml}
                                 ${badgeNameDetail}
@@ -1167,7 +1176,7 @@
                     // 🌟 新增：將 "2026-03" 轉換為 "3月預約"
                     let monthLabel = month;
                     if (/^\d{4}-\d{2}$/.test(month)) {
-                        monthLabel = parseInt(month.split('-')[1], 10) + '月預約';
+                        monthLabel = (w.name === '女神聚會') ? month : (parseInt(month.split('-')[1], 10) + '月預約');
                     }
 
                     return `<div class="history-group">
