@@ -938,7 +938,14 @@
             userHistory = JSON.parse(await hRes.text());
             isDataLoaded = true;
             renderCards();
-        } catch(e) { console.error(e); }
+        } catch(e) {
+            console.error('初始化資料讀取失敗：', e);
+            isDataLoaded = true;
+            userHistory = [];
+            document.getElementById('u-name').innerText = '資料載入失敗';
+            document.getElementById('u-lv').innerText = '請重整';
+            renderCards();
+        }
     }
 
      function normalizeMonthString(raw) {
