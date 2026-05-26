@@ -1033,7 +1033,13 @@
             const text = String(raw || '').trim();
             if (!text || text === '處理中') return false;
             const normalized = text.replace(/\s+/g, '');
-            return partyOptionDates.includes(text) || /(?:^|[^\d])(2026[-\/]06[-\/](?:26|27)|6\/2[67]|06\/2[67])(?:[^\d]|$)/.test(normalized);
+            if (partyOptionDates.includes(text)) return true;
+
+            // 只要是 6 月場次（MM=06），都視為已預約並鎖定女神聚會
+            if (/^\d{4}[-\/]06(?:[-\/]\d{1,2})?$/.test(normalized)) return true;
+            if (/^06[-\/]\d{1,2}$/.test(normalized)) return true;
+
+            return /(?:^|[^\d])(?:\d{4}[-\/]06[-\/]\d{1,2}|06[-\/]\d{1,2}|6\/\d{1,2})(?:[^\d]|$)/.test(normalized);
         });
     }
 
@@ -1165,7 +1171,10 @@
                         let displayStatus = (isDatePattern && new Date(attendanceDate).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                         if (w.name === '女神聚會') displayStatus = "報名成功";
                         if (attendanceDate === "處理中") displayStatus = "處理中";
-                        const displayDate = attendanceDate || "處理中";
+                        let displayDate = attendanceDate || "處理中";
+                        if (w.name === '女神聚會' && /^\d{4}-\d{2}$/.test(displayDate)) {
+                            displayDate = displayDate === '2026-05' ? '五月預約' : displayDate + '-01';
+                        }
                         const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
 
                         // 🌟 新增：女神聚會專屬出席確認狀態
@@ -1230,7 +1239,11 @@
                     // 🌟 新增：將 "2026-03" 轉換為 "3月預約"
                     let monthLabel = month;
                     if (/^\d{4}-\d{2}$/.test(month)) {
-                        monthLabel = (w.name === '女神聚會') ? month : (parseInt(month.split('-')[1], 10) + '月預約');
+                        if (w.name === '女神聚會') {
+                            monthLabel = month === '2026-05' ? '五月預約' : month;
+                        } else {
+                            monthLabel = parseInt(month.split('-')[1], 10) + '月預約';
+                        }
                     }
 
                     return `<div class="history-group">
