@@ -990,6 +990,36 @@
         return '';
     }
 
+    function getAttendanceMonth(record) {
+        if (!record) return '';
+        const rawDate = getAttendanceDateString(record);
+        if (!rawDate || rawDate === '處理中') return '';
+        const m = rawDate.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+        if (!m) return '';
+        return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0');
+    }
+
+    function getAttendanceDateString(record) {
+        if (!record) return '';
+        const candidates = [
+            record.date,
+            record.reserved_date,
+            record.reservedDate,
+            record.ReservedDate,
+            record.reserve_date,
+            record.booking_date
+        ];
+        for (const raw of candidates) {
+            const text = String(raw || '').trim();
+            if (!text) continue;
+            if (text === '處理中') return '處理中';
+            const m = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+            if (!m) continue;
+            return m[1] + '-' + String(parseInt(m[2], 10)).padStart(2, '0') + '-' + String(parseInt(m[3], 10)).padStart(2, '0');
+        }
+        return '';
+    }
+
     function isPendingRecord(record) {
         return !!record && String(record.date || '').trim() === "處理中";
     }
@@ -1019,9 +1049,9 @@
 
             if (w.name === '女神聚會') {
                 isPartyLocked = myRecords.some(h => {
-                    const recordDate = String(h.date || '').trim();
-                    if (partyOptionDates.includes(recordDate)) return true;
                     if (isPendingRecord(h)) return true;
+                    const attendanceMonth = getAttendanceMonth(h);
+                    if (attendanceMonth && attendanceMonth === targetPartyDate) return true;
                     return false;
                 });
                 isQuotaLocked = isPartyLocked;
@@ -1075,11 +1105,12 @@
 
             // 過濾要顯示在卡片下方的歷史紀錄
             const displayRecords = myRecords.filter(h => {
-                if (h.date === "處理中") return true;
+                if (getAttendanceDateString(h) === "處理中") return true;
                 if (getRecordMonth(h) === currentMonthStr) return true;
-                if (w.name === '女神聚會' && partyOptionDates.includes(String(h.date || '').trim())) return true;
-                if (h.date && h.date !== "處理中") {
-                    const rd = new Date(h.date);
+                if (w.name === '女神聚會' && partyOptionDates.includes(getAttendanceDateString(h))) return true;
+                const attendanceDate = getAttendanceDateString(h);
+                if (attendanceDate && attendanceDate !== "處理中") {
+                    const rd = new Date(attendanceDate);
                     if (!isNaN(rd.getTime()) && (todayTime - rd.getTime()) / 86400000 <= 7) return true;
                 }
                 return false;
@@ -1091,18 +1122,19 @@
                 // 按月份分組
                 const groups = {};
                 displayRecords.forEach(h => {
-                    const key = getRecordMonth(h) || currentMonthStr;
+                    const key = (w.name === '女神聚會' ? (getAttendanceMonth(h) || getRecordMonth(h)) : getRecordMonth(h)) || currentMonthStr;
                     if (!groups[key]) groups[key] = [];
                     groups[key].push(h);
                 });
 
             historyHtml = '<div class="card-history">' + Object.entries(groups).map(([month, records], groupIndex) => {
                     const rowsHtml = records.map((h, recordIndex) => {
-               const isDatePattern = /^\d{4}[-\/]\d{1,2}/.test(h.date);
-                        let displayStatus = (isDatePattern && new Date(h.date).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
+               const attendanceDate = getAttendanceDateString(h);
+               const isDatePattern = /^\d{4}[-\/]\d{1,2}/.test(attendanceDate);
+                        let displayStatus = (isDatePattern && new Date(attendanceDate).getTime() < todayTime && w.name !== '女神聚會') ? "已完成" : "已收到";
                         if (w.name === '女神聚會') displayStatus = "報名成功";
-                        if (h.date === "處理中") displayStatus = "處理中";
-                        const displayDate = h.date || "處理中";
+                        if (attendanceDate === "處理中") displayStatus = "處理中";
+                        const displayDate = attendanceDate || "處理中";
                         const badgeClass = (displayStatus === "已完成" || displayStatus === "報名成功") ? "status-badge status-green" : "status-badge status-red";
 
                         // 🌟 新增：女神聚會專屬出席確認狀態
@@ -1154,7 +1186,7 @@
                         
                         return `<div class="history-row">
                             <div class="history-info">
-                                <div class="history-line"><span class="history-label">上架日期</span><span class="history-value">${displayDate}</span></div>
+                                <div class="history-line"><span class="history-label">${w.name === '女神聚會' ? '出席時間' : '上架日期'}</span><span class="history-value">${displayDate}</span></div>
                                 ${hostDetail}
                                 ${hostConfirmHtml}
                                 ${badgeNameDetail}
@@ -1167,7 +1199,7 @@
                     // 🌟 新增：將 "2026-03" 轉換為 "3月預約"
                     let monthLabel = month;
                     if (/^\d{4}-\d{2}$/.test(month)) {
-                        monthLabel = parseInt(month.split('-')[1], 10) + '月預約';
+                        monthLabel = (w.name === '女神聚會') ? month : (parseInt(month.split('-')[1], 10) + '月預約');
                     }
 
                     return `<div class="history-group">
