@@ -1021,7 +1021,11 @@
     }
 
     function isPendingRecord(record) {
-        return !!record && String(record.date || '').trim() === "處理中";
+        if (!record) return false;
+        const dateText = getAttendanceDateString(record);
+        if (dateText === '處理中') return true;
+        const statusCandidates = [record.status, record.progress, record.remark, record.host_confirm, record.HostConfirm];
+        return statusCandidates.some(v => String(v || '').includes('處理中'));
     }
 
     function renderCards() {
@@ -1041,7 +1045,7 @@
             const iconUrl = welfareIconMap[w.name];
 
             // 【核心邏輯：嚴格只看本月送出的紀錄】
- const currentMonthRecords = myRecords.filter(h => getRecordMonth(h) === currentMonthStr);
+            const currentMonthRecords = myRecords.filter(h => getRecordMonth(h) === currentMonthStr);
             const monthCount = currentMonthRecords.length;
 
             let isQuotaLocked = false;
