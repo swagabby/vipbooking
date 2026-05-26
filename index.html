@@ -855,6 +855,7 @@
     let isDataLoaded = false;
     const taiwanHolidayCache = new Map();
     const aprilFirst = new Date('2026-04-01T00:00:00');
+    const partyOptionDates = ['2026-06-26', '2026-06-27'];
  const welfareIconMap = {
         '大神贊助': 'https://public.swag.live/badges/user_level_benefit_pin_livestream_v2.svg',
         '女神聚會': 'https://public.swag.live/badges/user_level_benefit_offline_meetup_v2.svg',
@@ -1437,8 +1438,8 @@
 
             if (activeWelfare === '女神聚會') {
                 const partyOptions = [
-                    { label: '選項1：6/26（五） 貓咪咖啡廳約會（信義區）14:00 ~ 17:40', value: '2026-06-26', capacity: 15 },
-                    { label: '選項2：6/27（六） 私人會所派對（大安區）18:00 ~ 21:40', value: '2026-06-27', capacity: null }
+                    { label: '選項1：6/26（五） 貓咪咖啡廳約會（信義區）14:00 ~ 17:40', value: partyOptionDates[0], capacity: 15 },
+                    { label: '選項2：6/27（六） 私人會所派對（大安區）18:00 ~ 21:40', value: partyOptionDates[1], capacity: null }
                 ];
                 const userIdNorm = String(user.id).trim();
 
