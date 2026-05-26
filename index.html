@@ -990,17 +990,38 @@
         return '';
     }
 
+    function getFirstExistingField(record, aliasList) {
+        if (!record || !aliasList || aliasList.length === 0) return '';
+        const keyList = Object.keys(record);
+        for (const alias of aliasList) {
+            if (record[alias] !== undefined && record[alias] !== null) {
+                const raw = String(record[alias]).trim();
+                if (raw) return raw;
+            }
+            const normalizedAlias = alias.toLowerCase().replace(/[^a-z0-9一-龥]/g, '');
+            const matchedKey = keyList.find(k => k.toLowerCase().replace(/[^a-z0-9一-龥]/g, '') === normalizedAlias);
+            if (!matchedKey) continue;
+            const raw = String(record[matchedKey] || '').trim();
+            if (raw) return raw;
+        }
+        return '';
+    }
+
     function getAttendanceDateString(record) {
         if (!record) return '';
-        // 優先顯示「實際預約時間」欄位，避免被 date=處理中 蓋掉。
-        const candidates = [
-            record.reserved_date,
-            record.reservedDate,
-            record.ReservedDate,
-            record.reserve_date,
-            record.booking_date,
-            record.date
-        ];
+        // 優先顯示「實際預約時間」欄位，避免被 date=處理中或 YYYY-MM 蓋掉。
+        const reservedDateText = getFirstExistingField(record, [
+            'reserved_date',
+            'reservedDate',
+            'ReservedDate',
+            'reserve_date',
+            'booking_date',
+            '預約日期',
+            'reserved date'
+        ]);
+        const fallbackDateText = getFirstExistingField(record, ['date']);
+        const candidates = [reservedDateText, fallbackDateText].filter(Boolean);
+
         for (const raw of candidates) {
             const text = String(raw || '').trim();
             if (!text) continue;
